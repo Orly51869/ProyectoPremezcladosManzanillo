@@ -1,0 +1,11 @@
+# Ignorar las dependencias de Node
+node_modules/
+
+# Archivos de log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de caché y compilación
+.cache/
+dist/
