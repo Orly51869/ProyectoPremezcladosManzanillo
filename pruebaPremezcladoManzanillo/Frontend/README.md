@@ -114,4 +114,4 @@ Una descripción general de la organización de la carpeta `src`:
 
 ## 📄 Licencia
 
-Este proyecto se distribuye bajo la Licencia MIT. (Nota: Podemos crear el archivo `LICENSE` si es necesario).
+Este proyecto se distribuye bajo la Licencia MIT. Consulta el archivo `LICENSE` en la raíz del proyecto para más detalles.
