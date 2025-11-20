@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Settings as SettingsIcon, Save } from "lucide-react";
-import * as XLSX from 'xlsx'; // Importar la librería para leer Excel
+import * as XLSX from 'xlsx-js-style'; // Importar la librería para leer Excel
 
 const Settings = () => {
   const [ivaRate, setIvaRate] = useState(16);

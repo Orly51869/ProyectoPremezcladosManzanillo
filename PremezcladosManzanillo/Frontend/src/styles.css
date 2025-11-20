@@ -73,6 +73,10 @@
     padding: 1rem;
     border: 1px solid var(--brand-light);
   }
+
+  .cell-center {
+    text-align: center;
+  }
 }
 
 /* Responsive tweaks: minimal, non-invasive rules to prevent header/menu overlap on small screens */

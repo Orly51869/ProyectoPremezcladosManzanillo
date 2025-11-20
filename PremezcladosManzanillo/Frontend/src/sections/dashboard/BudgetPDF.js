@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import React from 'react'; // Import React
 
 const formatDate = (value) => {
@@ -77,7 +77,7 @@ const BudgetPDF = ({ budget, client }) => {
       (item.total || 0).toLocaleString('es-VE', { style: 'currency', currency: 'USD' }), // Assuming USD
     ]});
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: y,
       head: [tableColumn],
       body: tableRows,
@@ -106,7 +106,7 @@ const BudgetPDF = ({ budget, client }) => {
       ['Total a Pagar:', (budget.total || 0).toLocaleString('es-VE', { style: 'currency', currency: 'USD' })],
     ];
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: y,
       body: totalsTableRows,
       theme: 'plain', // No borders for totals table
