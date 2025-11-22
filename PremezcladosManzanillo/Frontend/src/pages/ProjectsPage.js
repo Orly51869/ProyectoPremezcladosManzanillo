@@ -15,7 +15,7 @@ const ProjectsPage = () => {
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
               Nuestros Proyectos
             </h1>
-            <p className="mt-4 text-lg text-gray-600 max-w-4xl mx-auto">
+            <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
               Desde grandes obras de infraestructura hasta edificaciones comerciales y residenciales, nuestro concreto es la base de los proyectos más importantes de la región.
             </p>
           </div>

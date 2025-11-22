@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom'; // Importar Link
 import ContentCard from '../../components/ContentCard'; 
 
-const ServicesSection = ({ className }) => {
+const ServicesSection = () => {
   // Datos simulados (puedes reemplazarlos más tarde)
   const services = [
     { title: "Servicio de Bombeo", description: "Llegamos a cualquier altura.", imgSrc: "/assets/Bombeo.png" },
@@ -11,7 +11,7 @@ const ServicesSection = ({ className }) => {
   ];
   
   return (
-    <section id="servicios" className={`py-12 ${className}`}>
+    <section id="servicios" className="py-12">
       {/* 💥 Título en Dark Mode 💥 */}
       <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8 text-center">Nuestros Servicios</h2>
       
@@ -28,10 +28,10 @@ const ServicesSection = ({ className }) => {
       </div>
 
       {/* Botón para ver más servicios */}
-      <div className="text-center mt-10">
+      <div className="text-center mt-12">
         <Link
           to="/servicios"
-          className="inline-block bg-transparent border-2 border-brand-primary text-brand-primary dark:border-green-400 dark:text-green-400 font-semibold px-6 py-2 rounded-full hover:bg-brand-primary hover:text-white dark:hover:bg-green-600 dark:hover:text-white transition"
+          className="inline-block px-8 py-3 text-lg font-semibold text-white bg-green-700 rounded-lg shadow-md hover:bg-green-800 transition-colors duration-300 transform hover:scale-105"
         >
           Conocer Más Sobre Nuestros Servicios
         </Link>

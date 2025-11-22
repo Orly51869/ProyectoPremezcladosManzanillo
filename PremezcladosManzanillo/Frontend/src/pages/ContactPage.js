@@ -72,20 +72,19 @@ const ContactPage = () => {
                         {/* Columna Derecha: Datos de Contacto y Mapa */}
                         <div className="space-y-8">
                             <div className="bg-white p-8 rounded-lg shadow-lg">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4">PREMEZCLADOS MANZANILLO, C.A</h3>
-                                <p className="text-gray-700 mb-4">RIF: J-29762187-3</p>
+                                <h3 className="text-xl font-bold text-gray-900 mb-4">Información de Contacto</h3>
                                 <ul className="space-y-4 text-gray-700">
                                     <li className="flex items-center">
                                         <MapPin className="w-6 h-6 mr-3 text-green-600" />
-                                        <span>Av. 31 de Julio, Sector Guatamare. Edo. Nueva Esparta. Venezuela.</span>
+                                        <span>Sector Guatamare, Av. 31 de Julio, Edif. Cantera Manzanillo, Piso PB, Oficina de Administración, Porlamar, Municipio Arismendi, Estado Nueva Esparta</span>
                                     </li>
                                     <li className="flex items-center">
                                         <Phone className="w-6 h-6 mr-3 text-green-600" />
-                                        <span>0295 – 2871422</span>
+                                        <span>0295-287.14.22 / 0295-287.08.45</span>
                                     </li>
                                     <li className="flex items-center">
                                         <Mail className="w-6 h-6 mr-3 text-green-600" />
-                                        <a href="mailto:premezmanzanilloca@gmail.com" className="hover:underline">premezmanzanilloca@gmail.com</a>
+                                        <a href="mailto:ventas@premezcladomanzanillo.com" className="hover:underline">ventas@premezcladomanzanillo.com</a>
                                     </li>
                                     <li className="flex items-center">
                                         <Clock className="w-6 h-6 mr-3 text-green-600" />

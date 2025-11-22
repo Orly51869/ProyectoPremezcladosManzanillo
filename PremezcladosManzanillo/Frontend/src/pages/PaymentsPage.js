@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { FileText } from "lucide-react";
+import { FileText, List, LayoutGrid } from "lucide-react";
 import PaymentsList from "../sections/dashboard/PaymentsList";
 import PaymentForm from "../sections/dashboard/PaymentForm";
 import ReceiptModal from "../sections/dashboard/ReceiptModal";
-import ValidationModal from "../sections/dashboard/ValidationModal"; // Importamos el nuevo modal
-import { mockPayments, mockBudgets, mockClients } from "../mock/data"; // Consolidado en una línea
+import { mockPayments, mockBudgets } from "../mock/data";
+import { mockClients } from "../mock/data";
 import { generateId } from "../utils/helpers";
 
 // Usuario actual simulado (en una app real proviene del sistema de autenticación)
@@ -14,7 +14,7 @@ const PaymentsPage = () => {
   const [payments, setPayments] = useState(mockPayments || []);
   const [showForm, setShowForm] = useState(false);
   const [receipt, setReceipt] = useState(null);
-  const [paymentToValidate, setPaymentToValidate] = useState(null); // Estado para el modal
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'canvas'
 
   const registerPayment = (payload) => {
     // Validar que el presupuesto exista y esté aprobado
@@ -69,6 +69,19 @@ const PaymentsPage = () => {
             validatedAt: new Date(),
             observations,
           };
+          // Generar comprobante en memoria (simulado)
+          const budget = mockBudgets.find((b) => b.id === validated.budgetId);
+          const client = mockClients.find((c) => c.id === budget?.clientId);
+          const newReceipt = {
+            id: generateId(),
+            paymentId: validated.id,
+            budgetId: validated.budgetId,
+            budgetTitle: budget?.title,
+            clientName: client?.name,
+            amount: validated.paidAmount || validated.amount,
+            date: validated.validatedAt || new Date(),
+          };
+          setReceipt(newReceipt);
           return validated;
         }
         return {
@@ -80,27 +93,11 @@ const PaymentsPage = () => {
         };
       })
     );
-    setPaymentToValidate(null); // Cierra el modal después de la acción
   };
 
   const handleDownloadReceipt = (r) => {
     // Simulación de descarga de comprobante (PDF)
     alert(`Descargando comprobante ${r.id} (simulado)`);
-  };
-
-  const handleViewReceipt = (payment) => {
-    const budget = mockBudgets.find((b) => b.id === payment.budgetId);
-    const client = mockClients.find((c) => c.id === budget?.clientId);
-    const receiptData = {
-      id: payment.budgetId,
-      paymentId: payment.id,
-      budgetId: payment.budgetId,
-      budgetTitle: budget?.title,
-      clientName: client?.name,
-      amount: payment.paidAmount || payment.amount,
-      date: payment.validatedAt || payment.date,
-    };
-    setReceipt(receiptData);
   };
 
   const resendForValidation = (paymentId) => {
@@ -111,11 +108,6 @@ const PaymentsPage = () => {
     );
   };
 
-  // Abre el modal de validación en lugar de validar directamente
-  const handleOpenValidationModal = (paymentId) => {
-    setPaymentToValidate(payments.find(p => p.id === paymentId));
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -124,6 +116,14 @@ const PaymentsPage = () => {
           <h1 className="text-3xl font-bold text-brand-primary dark:text-dark-primary">Pagos</h1>
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex gap-2">
+            <button onClick={() => setViewMode('canvas')} className={`p-2 rounded-lg ${viewMode === 'canvas' ? 'bg-brand-primary text-white' : 'bg-gray-200 dark:bg-dark-surface text-gray-600 dark:text-gray-300'}`}>
+              <LayoutGrid className="w-5 h-5" />
+            </button>
+            <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-brand-primary text-white' : 'bg-gray-200 dark:bg-dark-surface text-gray-600 dark:text-gray-300'}`}>
+              <List className="w-5 h-5" />
+            </button>
+          </div>
           <button
             onClick={() => setShowForm(true)}
             className="bg-brand-primary text-white px-4 py-2 rounded-xl hover:bg-brand-mid"
@@ -144,10 +144,9 @@ const PaymentsPage = () => {
 
       <PaymentsList
         payments={payments}
-        onValidate={(id) => handleOpenValidationModal(id)}
-        currentUser={currentUser}
+        viewMode={viewMode}
+        onValidate={(id, payload) => validatePayment(id, payload)}
         onResend={(id) => resendForValidation(id)}
-        onViewReceipt={handleViewReceipt}
       />
 
       {receipt && (
@@ -157,12 +156,6 @@ const PaymentsPage = () => {
           onDownload={handleDownloadReceipt}
         />
       )}
-
-      <ValidationModal
-        payment={paymentToValidate}
-        onClose={() => setPaymentToValidate(null)}
-        onConfirm={validatePayment}
-      />
     </div>
   );
 };

@@ -9,10 +9,10 @@ const Footer = () => {
         <footer className="w-full bg-white dark:bg-dark-primary border-t border-gray-200 dark:border-gray-700 py-8">
             <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Main Footer Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-8 border-b border-gray-200 dark:border-gray-700"> {/* Changed lg:grid-cols-4 to lg:grid-cols-3 */}
 
                     {/* Sección 1: Empresa */}
-                    <div className="md:col-span-1">
+                    <div>
                         <Link to="/" className="flex items-center mb-4">
                             <img
                                 src={"/assets/LOGO_PREMEZCLADOS.svg"}
@@ -29,26 +29,30 @@ const Footer = () => {
                         </p>
                     </div>
 
-                    {/* Sección 2: Contacto */}
+                    <div className="hidden lg:block"></div> {/* Spacer div */}
+
+                    {/* Sección 3: Contacto */}
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Contacto</h3>
                         <ul className="space-y-2">
                             <li className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                 <MapPin className="w-4 h-4 mr-2 text-brand-primary" />
-                                Av. 31 de Julio, Sector Guatamare. Edo. Nueva Esparta. Venezuela.
+                                Sector Guatamare, Av. 31 de Julio, Edif. Cantera Manzanillo.
                             </li>
                             <li className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                 <Phone className="w-4 h-4 mr-2 text-brand-primary" />
-                                0295 – 2871422
+                                0295-287.14.22 / 0295-287.08.45
                             </li>
                             <li className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                 <Mail className="w-4 h-4 mr-2 text-brand-primary" />
-                                premezmanzanilloca@gmail.com
+                                info@premezclados.com
                             </li>
                         </ul>
                     </div>
 
-                    {/* Sección 3: Clientes */}
+                    <div className="hidden lg:block"></div> {/* Spacer div */}
+
+                    {/* Sección 4: Clientes */}
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Clientes</h3>
                         <ul className="space-y-2">

@@ -11,8 +11,6 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { Line } from "react-chartjs-2";
-import { useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -38,8 +36,6 @@ import { mockClients, mockBudgets, mockPayments } from "../mock/data";
 import { formatDate, formatCurrency } from "../utils/helpers";
 
 const Dashboard = () => {
-  const { user } = useAuth0();
-  const navigate = useNavigate();
   const totalClients = mockClients.length;
   const totalBudgets = mockBudgets.length;
   const totalIncome = mockPayments.reduce((sum, p) => sum + p.paidAmount, 0);
@@ -136,14 +132,19 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div
+      className="min-h-screen"
+      style={{
+        background: "linear-gradient(180deg, #F4F9F5 0%, #E7F3E9 100%)",
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 py-6 relative">
         <div className="bg-white/60 dark:bg-dark-primary/60 backdrop-blur-sm rounded-b-xl p-4 mb-6 border border-brand-light dark:border-dark-surface">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <p className="text-sm text-brand-text dark:text-gray-300">
                 {formatDate(new Date())} • Bienvenido,{" "}
-                <span className="font-medium">{user?.name || 'Usuario'}</span>
+                <span className="font-medium">Usuario</span>
               </p>
             </div>
             <div className="text-left sm:text-right">
@@ -336,7 +337,7 @@ const Dashboard = () => {
                   <p className="text-sm font-medium dark:text-gray-200">
                     2 presupuestos aprobados
                   </p>
-                  <button onClick={() => navigate('/budgets')} className="text-xs text-brand-mid dark:text-green-400 mt-1">
+                  <button className="text-xs text-brand-mid dark:text-green-400 mt-1">
                     Ver detalle
                   </button>
                 </div>
@@ -348,7 +349,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium dark:text-gray-200">1 pago próximo a vencer</p>
-                  <button onClick={() => navigate('/payments')} className="text-xs text-brand-mid dark:text-green-400 mt-1">
+                  <button className="text-xs text-brand-mid dark:text-green-400 mt-1">
                     Ver detalle
                   </button>
                 </div>
@@ -360,7 +361,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium dark:text-gray-200">Pago vencido</p>
-                  <button onClick={() => navigate('/payments')} className="text-xs text-brand-mid dark:text-green-400 mt-1">
+                  <button className="text-xs text-brand-mid dark:text-green-400 mt-1">
                     Ver detalle
                   </button>
                 </div>

@@ -1,3 +1,9 @@
+/*************************************/
+/**            HeroSection          **/
+/*************************************/
+// Archivo para renderizar la sección Hero de la página de inicio
+
+// Librerías y módulos 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -34,7 +40,7 @@ const HeroSection = () => {
 
   return (
     // Contenedor principal con márgenes, altura, bordes redondeados y overflow hidden
-    <section className="relative h-[50vh] flex items-end justify-center text-white overflow-hidden rounded-lg">
+    <section className="relative h-[80vh] flex items-end justify-center text-white overflow-hidden rounded-lg mb-16">
       
       <AnimatePresence>
         <motion.img

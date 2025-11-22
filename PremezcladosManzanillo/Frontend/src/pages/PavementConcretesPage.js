@@ -9,25 +9,29 @@ import ProductSubtypeCard from '../components/ProductSubtypeCard';
 // Componente para una Sección de Categoría completa
 const CategorySection = ({ category }) => (
     <div className="mb-16">
-        {/* Banner Section - Full Width */}
-        <div className="relative h-[450px] flex items-center justify-center text-white mb-10 shadow-xl overflow-hidden">
-            <img 
-                src={category.heroImageSrc || "/assets/HERO.png"} 
-                alt={`Fondo para ${category.title}`}
-                className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-80"></div>
-            <div className="relative z-10 text-center px-4 max-w-4xl text-white">
-                <h2 className="text-4xl font-extrabold tracking-tight text-white mb-2">
+        {/* Title Section - Full Width */}
+        <div className="bg-white dark:bg-dark-surface shadow-md">
+            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center">
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
                     {category.title}
                 </h2>
-                <p className="text-lg font-medium">
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
                     {category.subtitle}
                 </p>
             </div>
         </div>
+
+        {/* Hero Image Section - Full Width */}
+        <div
+            className="w-full bg-cover bg-center"
+            style={{ 
+                height: '400px',
+                backgroundImage: `url(${category.heroImageSrc || "/assets/HERO.png"})` 
+            }}
+        />
+
         {/* Content Section - Constrained Width */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
             <p className="text-center text-gray-700 dark:text-gray-300 mb-10 italic max-w-4xl mx-auto">
                 {category.description}
             </p>
@@ -61,7 +65,7 @@ const PavementConcretesPage = () => {
     return (
         <div className="relative min-h-screen bg-white dark:bg-dark-primary">
             <HomepageNavbar />
-            <main className="pt-24 pb-16">
+            <main className="pt-32 pb-16">
                 <CategorySection category={category} />
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <OtherCategoriesSection currentCategoryId="pavimentos" />

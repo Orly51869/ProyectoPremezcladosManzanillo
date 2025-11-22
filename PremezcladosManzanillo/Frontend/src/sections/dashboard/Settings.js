@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Settings as SettingsIcon, Save } from "lucide-react";
-import * as XLSX from 'xlsx-js-style'; // Importar la librería para leer Excel
 
 const Settings = () => {
   const [ivaRate, setIvaRate] = useState(16);
@@ -9,33 +8,9 @@ const Settings = () => {
     "Premezclados Manzanillo C.A."
   );
   const [logo, setLogo] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState('');
 
   const handleSave = () => {
     alert("Configuraciones guardadas (simulado)!");
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploadStatus(`Leyendo archivo "${file.name}"...`);
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = new Uint8Array(evt.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(worksheet);
-
-      // --- SIMULACIÓN ---
-      // En una app real, aquí enviarías 'json' al estado global (Context/Redux)
-      // o al backend. Por ahora, lo mostramos en una alerta.
-      console.log("Productos leídos desde Excel:", json);
-      alert(`¡Simulación exitosa! Se leyeron ${json.length} productos. Revisa la consola del navegador para ver los datos.`);
-      setUploadStatus(`¡Éxito! Se cargaron ${json.length} productos desde ${file.name}.`);
-    };
-    reader.readAsArrayBuffer(file);
   };
 
   return (
@@ -94,26 +69,6 @@ const Settings = () => {
             {logo && (
               <p className="text-sm text-green-600 dark:text-green-400 mt-2">
                 Logo seleccionado: {logo.name}
-              </p>
-            )}
-          </div>
-
-          <hr className="my-2 border-gray-200 dark:border-gray-700" />
-
-          <div>
-            <label className="block text-sm font-medium text-brand-text dark:text-gray-300 mb-2">
-              Cargar Productos desde Excel (Simulación)
-            </label>
-            <input
-              type="file"
-              onChange={handleFileUpload}
-              className="w-full p-3 border border-brand-light dark:border-gray-600 rounded-xl bg-brand-soft-bg dark:bg-dark-surface dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-mid"
-              accept=".xlsx, .xls"
-              aria-label="Cargar productos desde archivo Excel"
-            />
-            {uploadStatus && (
-              <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                {uploadStatus}
               </p>
             )}
           </div>

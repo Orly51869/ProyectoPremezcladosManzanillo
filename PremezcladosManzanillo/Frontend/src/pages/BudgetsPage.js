@@ -1,6 +1,5 @@
-//--- file src/pages/BudgetsPage.js ---
 import React, { useState, useEffect } from 'react';
-import { FileText } from 'lucide-react'; // 💥 ÍCONO AÑADIDO 💥
+import { FileText, List, LayoutGrid } from 'lucide-react'; // 💥 ÍCONOS AÑADIDOS 💥
 import BudgetForm from '../sections/dashboard/BudgetForm';
 import BudgetList from '../sections/dashboard/BudgetList';
 import BudgetDetail from '../sections/dashboard/BudgetDetail';
@@ -13,6 +12,7 @@ const BudgetsPage = () => {
   const [editingClient, setEditingClient] = useState(null);
   const [viewBudget, setViewBudget] = useState(null);
   const [editBudget, setEditBudget] = useState(null);
+  const [viewMode, setViewMode] = useState('canvas'); // 'canvas' or 'list'
 
   useEffect(() => {
     if (Array.isArray(mockBudgets)) setBudgets([...mockBudgets]);
@@ -38,6 +38,12 @@ const BudgetsPage = () => {
         clientName: editingClient?.name || formData.clientName || editBudget.clientName,
       };
 
+      // actualizar mockBudgets in-memory
+      if (Array.isArray(mockBudgets)) {
+        const idx = mockBudgets.findIndex(b => b.id === editBudget.id);
+        if (idx >= 0) mockBudgets[idx] = { ...mockBudgets[idx], ...updated };
+      }
+
       setBudgets(prev => prev.map(b => b.id === editBudget.id ? updated : b));
       setEditBudget(null);
       setEditingClient(null);
@@ -46,13 +52,9 @@ const BudgetsPage = () => {
       return;
     }
 
-    const year = new Date().getFullYear();
-    const lastBudgetForYear = budgets
-      .filter(b => b.id.startsWith(`P-${year}`))
-      .map(b => parseInt(b.id.split('-')[2])) // Assuming format P-YYYY-NNN
-      .sort((a, b) => b - a)[0] || 0;
-    const newId = (lastBudgetForYear + 1).toString().padStart(3, '0');
-    const folio = `P-${year}-${newId}`;
+    // crear nuevo
+    const id = (typeof generateId === 'function') ? generateId() : String(Date.now());
+    const folio = `P-${id}`;
 
     const newBudget = {
       id: folio,
@@ -65,6 +67,7 @@ const BudgetsPage = () => {
       createdAt: new Date().toISOString(),
     };
 
+    if (Array.isArray(mockBudgets)) mockBudgets.unshift(newBudget);
     setBudgets(prev => [newBudget, ...prev]);
 
     setShowBudgetForm(false);
@@ -87,12 +90,18 @@ const BudgetsPage = () => {
     const id = (typeof generateId === 'function') ? generateId() : String(Date.now());
     const folio = `P-${id}`;
     const copy = { ...b, id: folio, folio, title: `${b.title} (Copia)`, createdAt: new Date().toISOString() };
+    if (Array.isArray(mockBudgets)) mockBudgets.unshift(copy);
     setBudgets(prev => [copy, ...prev]);
     alert(`Presupuesto duplicado — Folio: ${folio}`);
   };
 
   const handleDelete = (b) => {
     if (!confirm('¿Eliminar presupuesto?')) return;
+    // eliminar de mock
+    if (Array.isArray(mockBudgets)) {
+      const idx = mockBudgets.findIndex(x => x.id === b.id);
+      if (idx >= 0) mockBudgets.splice(idx, 1);
+    }
     // actualizar estado
     setBudgets(prev => prev.filter(x => x.id !== b.id));
     // si estaba abierto en vista o editando, cerrar
@@ -114,6 +123,14 @@ const BudgetsPage = () => {
         </div>
         <div className="flex items-center gap-2">
           {/* Botón: Sigue el estilo primario */}
+          <div className="flex gap-2">
+            <button onClick={() => setViewMode('canvas')} className={`p-2 rounded-lg ${viewMode === 'canvas' ? 'bg-brand-primary text-white' : 'bg-gray-200 dark:bg-dark-surface text-gray-600 dark:text-gray-300'}`}>
+              <LayoutGrid className="w-5 h-5" />
+            </button>
+            <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-brand-primary text-white' : 'bg-gray-200 dark:bg-dark-surface text-gray-600 dark:text-gray-300'}`}>
+              <List className="w-5 h-5" />
+            </button>
+          </div>
           <button onClick={openNewBudget} className="bg-brand-primary text-white px-4 py-2 rounded-xl hover:bg-brand-mid transition duration-150">
             Nuevo Presupuesto
           </button>
@@ -137,6 +154,7 @@ const BudgetsPage = () => {
         <>
           <BudgetList
             budgets={budgets}
+            viewMode={viewMode}
             onView={handleView}
             onEdit={handleEdit}
             onDuplicate={handleDuplicate}

@@ -51,7 +51,7 @@ const DashboardNavbar = () => {
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="ml-1 hidden md:block whitespace-nowrap py-1">
+            <span className="ml-1 hidden md:block whitespace-nowrap leading-tight">
               <span className="text-base font-bold text-gray-900 dark:text-gray-100 block">Premezclado</span>
               <span className="text-sm font-medium text-gray-600 dark:text-gray-300 block">Manzanillo, C.A.</span>
             </span>
@@ -93,7 +93,7 @@ const DashboardNavbar = () => {
                 {user.picture ? (
                   <img
                   src={user.picture}
-                  alt={user.name || 'Usuario'}
+                  alt={user.name ? user.name.split(' ')[0] : 'Usuario'}
                   className="user-avatar"
                   referrerPolicy="no-referrer"
                   loading="lazy"
@@ -103,11 +103,11 @@ const DashboardNavbar = () => {
                 />
                 ) : (
                   <div className="user-avatar-placeholder">
-                    <span>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</span>
+                    <span>{user.name ? user.name.split(' ')[0].charAt(0).toUpperCase() : 'U'}</span>
                   </div>
                 )}
                 <div className="hidden md:block">
-                  <p className="user-name">{user.name || 'Usuario'}</p>
+                  <p className="user-name">{user.name ? user.name.split(' ')[0] : 'Usuario'}</p>
                   <p
                     className="hidden 2xl:block text-[11px] text-gray-500 dark:text-gray-400 max-w-[120px] truncate"
                     title={user.email}

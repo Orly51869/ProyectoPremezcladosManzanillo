@@ -47,7 +47,7 @@ const ChatWidget = () => {
     <>
       {/* Botón flotante */}
       <motion.button
-        className="fixed bottom-4 right-4 bg-brand-primary dark:bg-green-600 text-white shadow-lg hover:bg-brand-dark dark:hover:bg-green-700 transition-colors duration-300 z-50 w-16 h-16 flex items-center justify-center rounded-2xl"
+        className="fixed bottom-4 right-4 bg-brand-primary dark:bg-green-600 text-white shadow-lg hover:bg-brand-dark dark:hover:bg-green-700 transition-colors duration-300 z-[9999] w-16 h-16 flex items-center justify-center rounded-2xl"
         aria-label="Abrir chat"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -63,7 +63,7 @@ const ChatWidget = () => {
 
       {/* Panel de chat */}
       {open && (
-        <div className="fixed bottom-24 right-4 w-[92vw] max-w-md h-[70vh] bg-white dark:bg-dark-surface border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden">
+        <div className="fixed bottom-24 right-4 w-[92vw] max-w-md h-[70vh] bg-white dark:bg-dark-surface border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl z-[9999] flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-brand-primary text-white dark:bg-dark-btn">
             <span className="font-semibold">Asistente</span>
             <button aria-label="Cerrar" onClick={() => setOpen(false)} className="p-1 rounded hover:bg-white/20">

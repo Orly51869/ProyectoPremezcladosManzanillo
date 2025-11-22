@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { mockBudgets, mockPayments } from '../../mock/data';
+import { mockBudgets } from '../../mock/data';
 
 const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {} }) => {
   const [idPresupuesto, setIdPresupuesto] = useState("");
@@ -18,19 +18,7 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {} }) => {
       return;
     }
 
-    const normalizedInput = idPresupuesto.toUpperCase();
-    const budget = mockBudgets.find((b) => {
-      // Exact match (case-insensitive)
-      if (b.id.toUpperCase() === normalizedInput) {
-        return true;
-      }
-      // Partial match for just the sequential number (e.g., "001" should match "P-2024-001")
-      const parts = b.id.split('-');
-      if (parts.length === 3 && parts[2] === normalizedInput) {
-        return true;
-      }
-      return false;
-    });
+    const budget = mockBudgets.find((b) => b.id === idPresupuesto);
     if (!budget) {
       alert("Presupuesto no encontrado.");
       return;
@@ -38,14 +26,6 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {} }) => {
     if (budget.status !== "approved") {
       alert("Solo se permiten pagos para presupuestos aprobados.");
       return;
-    }
-
-    const paymentsForBudget = mockPayments.filter(p => p.budgetId === budget.id);
-    const totalPaid = paymentsForBudget.reduce((acc, p) => acc + p.paidAmount, 0);
-
-    if (totalPaid >= budget.amount) {
-        alert("Este presupuesto ya ha sido pagado en su totalidad.");
-        return;
     }
 
     const payload = {

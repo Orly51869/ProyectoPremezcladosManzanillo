@@ -6,8 +6,8 @@ export const mockClients = [
 
 export const mockBudgets = [
   {
-    id: 'P-2024-001',
-    folio: 'P-2024-001',
+    id: 'p-001',
+    folio: 'P-001',
     clientId: 1,
     clientName: 'Constructora XYZ',
     title: 'Edificio Residencial A',
@@ -22,8 +22,8 @@ export const mockBudgets = [
     volumen: 80.5,
   },
   {
-    id: 'P-2024-002',
-    folio: 'P-2024-002',
+    id: 'p-002',
+    folio: 'P-002',
     clientId: 2,
     clientName: 'Inversiones Marítimas C.A.',
     title: 'Muro de contención puerto',
@@ -39,8 +39,8 @@ export const mockBudgets = [
 ];
 
 export const mockPayments = [
-  { id: 1, budgetId: 'P-2024-001', paidAmount: 5000, pending: 7500.50, date: '2024-07-20T11:00:00Z', status: 'Pendiente' },
-  { id: 2, budgetId: 'P-2024-001', paidAmount: 2500.50, pending: 5000, date: '2024-08-01T15:00:00Z', status: 'Pendiente' },
+  { id: 1, budgetId: 'p-001', paidAmount: 5000, pending: 7500.50, date: '2024-07-20T11:00:00Z' },
+  { id: 2, budgetId: 'p-001', paidAmount: 2500.50, pending: 5000, date: '2024-08-01T15:00:00Z' },
 ];
 
 export const mockProducts = {
@@ -123,7 +123,7 @@ export const productCategories = [
         title: 'Concretos para Pavimentos',
         subtitle: 'Diseñados para soportar tránsito vehicular y ofrecer una superficie durable y uniforme.',
         description: 'Recomendados para calles, avenidas, patios de maniobra y zonas industriales.',
-        heroImageSrc: '/assets/Concreto Pavimento.png',
+        heroImageSrc: '/assets/Concreto-Pavimento.png',
         products: [
             { id: 'pavi-vial-40', title: 'PAVI-VIAL 40', description: 'Pavimentos de tráfico ligero.', f_c: null, imageSrc: '/assets/Carretera.png' },
             { id: 'pavi-vial-45', title: 'PAVI-VIAL 45', description: 'Calles urbanas o estacionamientos.', f_c: null, imageSrc: '/assets/Carretera.png' },

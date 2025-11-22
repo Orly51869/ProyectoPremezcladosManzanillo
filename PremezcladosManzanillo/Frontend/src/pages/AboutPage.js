@@ -2,37 +2,65 @@ import React from 'react';
 import HomepageNavbar from '../components/HomepageNavbar';
 import Footer from '../components/Footer';
 
-const companyValues = [
+const storyMilestones = [
   {
-    title: 'Servicio al cliente',
+    year: '1998',
+    title: 'Fundación en Manzanillo',
     description:
-      'Enfocado hacia la satisfacción de las necesidades del cliente, comprendiendo que esto es el elemento diferenciador para competir y alcanzar nuestras metas.',
-    icon: '🤝',
+      'Nacimos como una planta familiar para atender proyectos residenciales en la isla de Margarita.',
   },
   {
-    title: 'Integridad',
+    year: '2008',
+    title: 'Expansión Logística',
     description:
-      'Actuando siempre de manera respetuosa, honesta y responsable.',
+      'Incorporamos nuestra primera flotilla de camiones mezcladores y el servicio de bombeo para obras verticales.',
+  },
+  {
+    year: '2016',
+    title: 'Certificación de Calidad',
+    description:
+      'Obtuvimos la certificación nacional que avala la calidad de nuestras mezclas y procesos de producción.',
+  },
+  {
+    year: '2024',
+    title: 'Impulso Tecnológico',
+    description:
+      'La digitalización de nuestros procesos comerciales nos acerca más a nuestros clientes y socios.',
+  },
+];
+
+const companyValues = [
+  {
+    title: 'Compromiso con la Calidad',
+    description:
+      'Cada entrega se somete a controles rigurosos para garantizar la resistencia y durabilidad de nuestros concretos.',
+    icon: '🏗️',
+  },
+  {
+    title: 'Seguridad Primero',
+    description:
+      'Invertimos en capacitación continua para nuestro personal y aliados en obra, asegurando operaciones sin riesgos.',
     icon: '🛡️',
   },
   {
-    title: 'Competitividad',
+    title: 'Alianza con el Cliente',
     description:
-      'El conjunto de conductas de todos los niveles de la organización que permiten disputar o competir con los demás agentes del mercado en la prestación del servicio, con alta calidad y al menor costo posible.',
-    icon: '🏆',
+      'Trabajamos mano a mano con constructores, arquitectos e ingenieros para adaptar cada mezcla a sus necesidades.',
+    icon: '🤝',
   },
   {
-    title: 'Compromiso',
+    title: 'Innovación Sostenible',
     description:
-      'Se manifiesta por la identificación y lealtad del trabajador con la empresa, la mística en el trabajo y el sentido de responsabilidad; en una institución que prioriza el trato justo y se ocupa del desarrollo integral del trabajador y su calidad de vida.',
-    icon: '🌟',
+      'Optimizamos procesos para reducir desperdicios y consumo energético dentro de la planta.',
+    icon: '🌱',
   },
 ];
 
 const highlightStats = [
-  { value: '+15', label: 'Años impulsando proyectos en Nueva Esparta' },
+  { value: '+25', label: 'Años impulsando proyectos en Nueva Esparta' },
   { value: '180+', label: 'Obras industriales, residenciales y viales atendidas' },
   { value: '24/7', label: 'Monitoreo y soporte para obras críticas' },
+  { value: '99%', label: 'Índice de entregas puntuales en 2024' },
 ];
 
 const AboutPage = () => {
@@ -70,14 +98,18 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl p-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Nuestra Misión</h2>
-              <p className="text-gray-700 dark:text-gray-200 leading-relaxed text-justify">
-                Producir y distribuir el mejor concreto premezclado, siguiendo los mas altos estándares de Eficiencia, Calidad y Confiabilidad; mediante el mejoramiento continuo de nuestros procesos, cubriendo todas las necesidades y expectativas de nuestros clientes.
+              <p className="text-gray-700 dark:text-gray-200 leading-relaxed">
+                Proveer soluciones de concreto confiables y adaptadas a cada proyecto,
+                con un servicio cercano y flexible que permita a nuestros clientes construir
+                con seguridad, puntualidad y eficiencia.
               </p>
             </div>
             <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl p-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Nuestra Visión</h2>
-              <p className="text-gray-700 dark:text-gray-200 leading-relaxed text-justify">
-                Ser reconocida como la mejor empresa proveedora de Concreto Premezclado del Estado Nueva Esparta, brindando un excelente servicio profesional y comercializando los mejores productos de altísima calidad, satisfaciendo las necesidades y expectativas de construcción de nuestros clientes, ayudando al desarrollo económico y social de la empresa, de nuestros trabajadores , de la región y del país en general.
+              <p className="text-gray-700 dark:text-gray-200 leading-relaxed">
+                Ser la empresa de referencia en soluciones de concreto del oriente venezolano,
+                integrando innovación, tecnología y procesos sostenibles que eleven el estándar
+                constructivo de la región.
               </p>
             </div>
           </div>
@@ -87,9 +119,12 @@ const AboutPage = () => {
         <section className="mt-16 bg-white dark:bg-dark-surface">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white">
-              Nuestros Valores
+              Nuestros Valores nos Guían
             </h2>
-
+            <p className="mt-4 max-w-3xl mx-auto text-center text-gray-600 dark:text-gray-300">
+              Un equipo comprometido, procesos transparentes y decisiones orientadas a la seguridad
+              y la satisfacción de nuestros clientes.
+            </p>
             <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
               {companyValues.map((value) => (
                 <div
@@ -101,7 +136,7 @@ const AboutPage = () => {
                   </span>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{value.title}</h3>
-                    <p className="mt-2 text-gray-600 dark:text-gray-300 leading-relaxed text-justify">
+                    <p className="mt-2 text-gray-600 dark:text-gray-300 leading-relaxed">
                       {value.description}
                     </p>
                   </div>
@@ -117,7 +152,7 @@ const AboutPage = () => {
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white text-center">
               Resultados que respaldan nuestra trayectoria
             </h2>
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {highlightStats.map((stat) => (
                 <div
                   key={stat.label}
@@ -135,10 +170,63 @@ const AboutPage = () => {
           </div>
         </section>
 
-        </main>
+        {/* Historia */}
+        <section className="mt-16 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white">
+            Nuestra Historia en Breve
+          </h2>
+          <div className="mt-10 space-y-8">
+            {storyMilestones.map((milestone, index) => (
+              <div
+                key={milestone.year}
+                className="relative bg-white dark:bg-dark-surface border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-lg overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 h-full w-1 bg-brand-primary dark:bg-dark-btn" />
+                <div className="pl-6">
+                  <span className="inline-block text-sm font-semibold text-brand-primary dark:text-dark-btn uppercase tracking-wide">
+                    {milestone.year}
+                  </span>
+                  <h3 className="mt-2 text-xl font-bold text-gray-900 dark:text-white">
+                    {milestone.title}
+                  </h3>
+                  <p className="mt-2 text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {milestone.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="mt-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl bg-gradient-to-r from-brand-primary to-emerald-700 dark:from-dark-btn dark:to-emerald-500 shadow-2xl px-10 py-12 md:py-16 text-white text-center md:text-left">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-center">
+              <div className="md:col-span-2">
+                <h2 className="text-3xl md:text-4xl font-extrabold leading-tight">
+                  Construyamos la próxima obra emblemática de Margarita
+                </h2>
+                <p className="mt-4 text-lg text-white/80">
+                  Nuestro equipo comercial y técnico está listo para asesorarte desde la planificación
+                  hasta la colocación final del concreto.
+                </p>
+              </div>
+              <div className="flex md:justify-end">
+                <a
+                  href="/contacto"
+                  className="inline-flex items-center justify-center px-6 py-3 text-lg font-semibold rounded-full bg-white text-brand-primary hover:bg-green-100 transition"
+                >
+                  Coordinar una Reunión
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
       <Footer />
     </div>
   );
 };
 
 export default AboutPage;
+

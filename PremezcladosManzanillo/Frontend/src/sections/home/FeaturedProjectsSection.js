@@ -11,7 +11,7 @@ const chunk = (arr, size) =>
     arr.slice(i * size, i * size + size)
   );
 
-const FeaturedProjectsSection = ({ className }) => {
+const FeaturedProjectsSection = () => {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
 
@@ -39,13 +39,13 @@ const FeaturedProjectsSection = ({ className }) => {
   };
 
   return (
-    <section id="proyectos-destacados" className={`py-16 bg-gray-50 dark:bg-dark-surface overflow-hidden ${className}`}>
-      <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-10 text-center pt-16">
-        Proyectos Destacados
+    <section id="proyectos-destacados" className="py-16 bg-gray-50 dark:bg-dark-surface overflow-hidden">
+      <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-10 text-center">
+        Proyectos Destacados de la Región
       </h2>
+      
       <div className="relative max-w-6xl mx-auto">
-        <div className="relative h-[450px] overflow-hidden rounded-2xl bg-white dark:bg-dark-box border border-gray-200/70 dark:border-white/10 shadow-lg">
-
+        <div className="relative h-[450px] overflow-hidden rounded-2xl bg-white dark:bg-dark-green-darker border border-gray-200/70 dark:border-white/10 shadow-lg">
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
               key={index}

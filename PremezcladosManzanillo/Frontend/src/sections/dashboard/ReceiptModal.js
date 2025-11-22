@@ -6,21 +6,18 @@ const ReceiptModal = ({
   receipt,
   onClose = () => {},
   onDownload = () => {},
-  bgColor = "bg-white dark:bg-dark-primary",
-  textColor = "text-brand-text dark:text-gray-400",
-  title = "Comprobante de Pago",
 }) => {
   if (!receipt) return null;
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className={`${bgColor} rounded-2xl w-full max-w-2xl p-4 shadow-lg border border-brand-light dark:border-dark-surface`}>
-        <div className="flex items-start justify-between mb-1">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-white dark:bg-dark-primary rounded-2xl w-full max-w-2xl p-6 shadow-lg border border-brand-light dark:border-dark-surface">
+        <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className={`text-xl font-bold text-brand-primary dark:text-gray-100`}>
-              {title}
+            <h3 className="text-xl font-bold text-brand-primary dark:text-gray-100">
+              Comprobante de Pago
             </h3>
-            <p className={`${textColor}`}>ID: {receipt.id}</p>
+            <p className="text-sm text-brand-text dark:text-gray-400">ID: {receipt.id}</p>
           </div>
           <button
             onClick={onClose}
@@ -30,26 +27,26 @@ const ReceiptModal = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
-            <p className={`${textColor}`}>Cliente</p>
-            <p className={`font-medium text-gray-800 dark:text-gray-100`}>{receipt.clientName || "—"}</p>
+            <p className="text-sm text-brand-text dark:text-gray-400">Cliente</p>
+            <p className="font-medium text-gray-800 dark:text-gray-100">{receipt.clientName || "—"}</p>
           </div>
           <div>
-            <p className={`${textColor}`}>Fecha</p>
-            <p className={`font-medium text-gray-800 dark:text-gray-100`}>
+            <p className="text-sm text-brand-text dark:text-gray-400">Fecha</p>
+            <p className="font-medium text-gray-800 dark:text-gray-100">
               {new Date(receipt.date).toLocaleString()}
             </p>
           </div>
         </div>
 
-        <div className="mb-1 bg-gray-50 dark:bg-dark-surface/50 p-2 rounded-lg">
-          <p className={`${textColor}`}>Presupuesto</p>
-          <p className={`font-medium text-gray-800 dark:text-gray-100`}>
+        <div className="mb-4 bg-gray-50 dark:bg-dark-surface/50 p-4 rounded-lg">
+          <p className="text-sm text-brand-text dark:text-gray-400">Presupuesto</p>
+          <p className="font-medium text-gray-800 dark:text-gray-100">
             {receipt.budgetTitle || receipt.budgetId}
           </p>
-          <p className={`${textColor} mt-1`}>Monto</p>
-          <p className={`font-bold text-brand-dark dark:text-gray-100`}>
+          <p className="text-sm text-brand-text dark:text-gray-400 mt-2">Monto</p>
+          <p className="font-bold text-brand-dark dark:text-gray-100">
             {formatCurrency(receipt.amount)}
           </p>
         </div>

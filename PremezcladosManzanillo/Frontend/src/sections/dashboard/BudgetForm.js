@@ -60,7 +60,7 @@ const BudgetForm = ({ initialValues = {}, onSave = () => {}, onCancel = () => {}
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="bg-white dark:bg-dark-primary rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-dark-surface max-w-4xl mx-auto"
+      className="bg-white dark:bg-dark-primary rounded-2xl p-6 shadow-lg border border-brand-light dark:border-dark-surface max-w-4xl mx-auto"
     >
       <h2 className="text-xl font-semibold text-green-800 dark:text-green-300 mb-4">Nuevo Presupuesto</h2>
 
@@ -219,7 +219,7 @@ const BudgetForm = ({ initialValues = {}, onSave = () => {}, onCancel = () => {}
           <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-dark-surface text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600">
             Cancelar
           </button>
-          <button type="submit" className="px-5 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700">
+          <button type="submit" className="px-5 py-2 rounded-lg bg-green-700 text-white hover:bg-green-600">
             Guardar Presupuesto
           </button>
         </div>

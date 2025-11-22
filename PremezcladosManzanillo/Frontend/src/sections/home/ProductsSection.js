@@ -24,10 +24,10 @@ const productCategoriesCards = [
     }    
 ];
 
-const ProductsSection = ({ className }) => {
+const ProductsSection = () => {
   return (
-    <section id="productos" className={`py-12 ${className}`}>
-      <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8 text-center">Nuestros Productos</h2>
+    <section id="productos" className="py-12">
+      <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8 text-center">Nuestros Productos Destacados</h2>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Enlaces dinámicos a cada categoría de producto */}

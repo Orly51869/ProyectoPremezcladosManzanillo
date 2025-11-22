@@ -73,10 +73,6 @@
     padding: 1rem;
     border: 1px solid var(--brand-light);
   }
-
-  .cell-center {
-    text-align: center;
-  }
 }
 
 /* Responsive tweaks: minimal, non-invasive rules to prevent header/menu overlap on small screens */
@@ -187,56 +183,6 @@ html {
     font-weight: bold;
     font-size: 20px;
     border: 2px solid var(--brand-primary);
-}
-
-@media print {
-  /* Ocultar todo por defecto */
-  body * {
-    visibility: hidden;
-  }
-
-  /* Mostrar solo el área imprimible y su contenido */
-  .printable-area, .printable-area * {
-    visibility: visible;
-  }
-
-  /* Asegurarse de que el área imprimible ocupe toda la página */
-  .printable-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: auto;
-    padding: 0;
-    margin: 0;
-  }
-
-  /* Ocultar elementos no deseados específicamente */
-  .non-printable {
-    display: none;
-  }
-
-  /* Resetear estilos del body para impresión */
-  body {
-    background-color: #fff;
-    margin: 0;
-  }
-
-  /* Evitar que los contenedores flex interfieran */
-  div, section {
-    display: block !important;
-  }
-
-  /* Forzar que el contenedor del PDF no tenga estilos de modal */
-  #budget-pdf {
-    box-shadow: none !important;
-    border: none !important;
-    color: #000 !important; /* Forzar texto negro para impresión */
-  }
-  
-  #budget-pdf * {
-    color: #000 !important; /* Asegurar que todo el texto dentro sea negro */
-  }
 }
 
 /* fin de styles.css */
