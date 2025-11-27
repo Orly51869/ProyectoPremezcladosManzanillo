@@ -31,6 +31,7 @@ import ContactPage from "./pages/ContactPage";
 import ProjectsPage from "./pages/ProjectsPage";
 
 import DashboardLayout from "./layouts/DashboardLayout";
+import AuthenticatedApiProvider from "./components/AuthenticatedApiProvider"; // Importar el nuevo provider
 import ChatWidget from "./components/ChatWidget";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -54,6 +55,9 @@ const ScrollToAnchor = () => {
 // Componente para proteger rutas
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuth0();
+
+  // Log para depurar el estado de la ruta protegida
+  console.log(`[ProtectedRoute] isLoading: ${isLoading}, isAuthenticated: ${isAuthenticated}`);
 
   if (isLoading) {
     return <div>Cargando...</div>; // O un spinner/componente de carga más elaborado
@@ -98,7 +102,11 @@ const App = () => {
 
         {/* Rutas Protegidas */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<DashboardLayout />}>
+          <Route element={
+            <AuthenticatedApiProvider>
+              <DashboardLayout />
+            </AuthenticatedApiProvider>
+          }>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/clients" element={<ClientsPage />} />
             <Route path="/budgets/*" element={<BudgetsPage />} />

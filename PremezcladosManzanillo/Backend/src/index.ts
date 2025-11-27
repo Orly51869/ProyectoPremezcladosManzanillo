@@ -1,5 +1,6 @@
 import express from 'express';
 import * as dotenv from 'dotenv';
+import { auth } from 'express-oauth2-jwt-bearer';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -7,12 +8,27 @@ dotenv.config();
 const app = express();
 const port = 3001;
 
+// Authorization middleware. Attaches the user payload to the request object.
+// All routes defined after this will be protected.
+const jwtCheck = auth({
+  audience: 'https://premezclados-api.com',
+  issuerBaseURL: 'https://dev-bellooswaldo.us.auth0.com/',
+  tokenSigningAlg: 'RS256'
+});
+
+// Enforce on all endpoints
+// app.use(jwtCheck); // Uncomment this to protect all routes by default
+
 // Other middleware like express.json() should be mounted AFTER the auth handler.
 app.use(express.json());
 
+// A public endpoint that doesn't require authentication
 app.get('/', (req, res) => {
   res.send('Backend is running!');
 });
+
+// A protected endpoint that requires authentication
+// Example: app.get('/api/protected', jwtCheck, (req, res) => { ... });
 
 // Minimal CORS for local development
 app.use((req, res, next) => {
@@ -25,7 +41,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// AI Chat proxy (Groq - OpenAI compatible)
+// AI Chat proxy (Groq - OpenAI compatible) - This remains public as per original logic
 app.post('/api/chat', async (req, res) => {
   try {
     const apiKey = process.env.GROQ_API_KEY;

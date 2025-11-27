@@ -1,11 +1,11 @@
 {
-	"folders": [
-		{
-			"path": "."
-		},
-		{
-			"path": "E:/Proyectos/Web/React/pruebaPremezcladoManzanillo"
-		}
-	],
-	"settings": {}
+  "folders": [
+	{
+		"path": "."
+	},
+	{
+		"path": "E:/Proyectos/Web/React/pruebaPremezcladoManzanillo"
+	}
+],
+  "settings": {}
 }

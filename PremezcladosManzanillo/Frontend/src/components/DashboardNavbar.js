@@ -9,6 +9,9 @@ const DashboardNavbar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Obtener roles del usuario desde Auth0
+  const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+
   // --- Dark Mode Logic (sin cambios) ---
   const [theme, setTheme] = useState(
     localStorage.getItem('theme') ||
@@ -22,18 +25,42 @@ const DashboardNavbar = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  // --- DEBUGGING FLAG ---
+  // Este useEffect se ejecuta cuando el objeto 'user' está disponible y muestra su contenido.
+  useEffect(() => {
+    if (user) {
+      console.log("--- Auth0 User Data ---");
+      console.log(user);
+      const roles = user['https://premezcladomanzanillo.com/roles'] || [];
+      console.log("--- User Roles ---");
+      console.log(roles);
+      console.log("--------------------");
+    }
+  }, [user]);
+  // --- END DEBUGGING FLAG ---
+
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   const navItems = [
     { path: "/dashboard", icon: Home, label: "Panel" },
-    { path: "/clients", icon: Users, label: "Clientes" },
-    { path: "/budgets", icon: FileText, label: "Presupuestos" },
-    { path: "/payments", icon: FileText, label: "Comprobantes" },
-    { path: "/reports", icon: BarChart3, label: "Reportes" },
-    { path: "/settings", icon: Settings, label: "Configuración" },
+    { path: "/clients", icon: Users, label: "Clientes", requiredRoles: ["Administrador", "Comercial"] },
+    { path: "/budgets", icon: FileText, label: "Presupuestos", requiredRoles: ["Administrador", "Comercial"] },
+    { path: "/payments", icon: FileText, label: "Comprobantes", requiredRoles: ["Administrador", "Contable"] },
+    { path: "/reports", icon: BarChart3, label: "Reportes", requiredRoles: ["Administrador", "Contable"] },
+    { path: "/settings", icon: Settings, label: "Configuración", requiredRoles: ["Administrador"] },
   ];
+
+  // Filtrar navItems basado en los roles del usuario
+  const availableNavItems = navItems.filter(item => {
+    // Si no se requieren roles, el item es visible para todos.
+    if (!item.requiredRoles || item.requiredRoles.length === 0) {
+      return true;
+    }
+    // Si se requieren roles, verifica si el usuario tiene al menos uno de ellos.
+    return userRoles.some(userRole => item.requiredRoles.includes(userRole));
+  });
 
   return (
     <motion.nav
@@ -68,7 +95,7 @@ const DashboardNavbar = () => {
           <div
             className={`md:flex ${isOpen ? "flex" : "hidden"} md:items-center md:gap-2 md:ml-3 absolute md:static top-full left-0 w-full md:w-auto md:flex-1 md:min-w-0 md:justify-end bg-white md:bg-transparent md:border-none border-t md:shadow-none shadow-sm z-10 overflow-hidden`}
           >
-            {navItems.map((item) => {
+            {availableNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               return (

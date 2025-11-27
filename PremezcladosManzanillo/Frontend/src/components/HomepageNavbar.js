@@ -101,7 +101,10 @@ const HomepageNavbar = () => {
                 </button>
               </Link>
               <button
-                onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                onClick={() => {
+                  console.log('[Auth-Action] Attempting to log out (Desktop).');
+                  logout({ logoutParams: { returnTo: window.location.origin } });
+                }}
                 type="button"
                 aria-label="Cerrar sesión"
                 className="p-2 rounded-full text-red-600 dark:text-red-500 hover:bg-red-100 dark:hover:bg-gray-800 transition"
@@ -112,14 +115,20 @@ const HomepageNavbar = () => {
           ) : (
             <>
               <button
-                onClick={() => loginWithRedirect({ appState: { returnTo: '/dashboard' } })}
+                onClick={() => {
+                  console.log('[Auth-Action] Attempting to log in (Desktop).');
+                  loginWithRedirect({ appState: { returnTo: '/dashboard' } });
+                }}
                 type="button"
                 className="w-32 text-center px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-transparent rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
               >
                 Iniciar sesión
               </button>
               <button
-                onClick={() => loginWithRedirect({ appState: { returnTo: '/dashboard' }, authorizationParams: { screen_hint: 'signup' } })}
+                onClick={() => {
+                  console.log('[Auth-Action] Attempting to sign up (Desktop).');
+                  loginWithRedirect({ appState: { returnTo: '/dashboard' }, authorizationParams: { screen_hint: 'signup' } });
+                }}
                 type="button"
                 className="w-32 text-center px-4 py-2 text-sm font-semibold text-white bg-green-700 rounded-md border border-green-800 hover:bg-green-800 transition shadow-md"
               >
@@ -181,6 +190,7 @@ const HomepageNavbar = () => {
                 </Link>
                 <button
                   onClick={() => {
+                    console.log('[Auth-Action] Attempting to log out (Mobile).');
                     logout({ logoutParams: { returnTo: window.location.origin } });
                     setIsMobileMenuOpen(false);
                   }}
@@ -196,6 +206,7 @@ const HomepageNavbar = () => {
               <>
                 <button
                   onClick={() => {
+                    console.log('[Auth-Action] Attempting to log in (Mobile).');
                     loginWithRedirect({ appState: { returnTo: '/dashboard' } });
                     setIsMobileMenuOpen(false);
                   }}
@@ -206,6 +217,7 @@ const HomepageNavbar = () => {
                 </button>
                 <button
                   onClick={() => {
+                    console.log('[Auth-Action] Attempting to sign up (Mobile).');
                     loginWithRedirect({ appState: { returnTo: '/dashboard' }, authorizationParams: { screen_hint: 'signup' } });
                     setIsMobileMenuOpen(false);
                   }}

@@ -8,6 +8,11 @@ import "./styles.css";
 import App from "./App";
 
 const root = createRoot(document.getElementById("root"));
+
+// Log para verificar las variables de entorno de Auth0
+console.log("Auth0 Domain:", process.env.REACT_APP_AUTH0_DOMAIN);
+console.log("Auth0 Client ID:", process.env.REACT_APP_AUTH0_CLIENT_ID);
+
 root.render(
   <StrictMode>
     <Auth0Provider
@@ -15,6 +20,8 @@ root.render(
       clientId={process.env.REACT_APP_AUTH0_CLIENT_ID}
       authorizationParams={{
         redirect_uri: window.location.origin,
+        audience: "https://premezclados-api.com",
+        scope: "openid profile email read:permissions"
       }}
     >
       <App />
