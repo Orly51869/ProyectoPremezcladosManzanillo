@@ -64,7 +64,7 @@ const ClientList = () => {
               placeholder="Buscar por nombre o RIF..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 p-3 border border-brand-light dark:border-dark-surface rounded-xl bg-brand-soft-bg dark:bg-dark-surface focus:outline-none focus:ring-2 focus:ring-brand-mid dark:text-gray-200"
+              className="flex-1 p-3 border border-brand-light dark:border-dark-surface rounded-xl dark:bg-dark-surface focus:outline-none focus:ring-2 focus:ring-brand-mid dark:text-gray-200"
             />
           </div>
           <div className="flex gap-2">

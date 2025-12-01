@@ -5,7 +5,7 @@ const ClientTable = ({ clients, onView, onDelete }) => {
   return (
     <div className="overflow-x-auto bg-white dark:bg-dark-primary rounded-2xl shadow-lg border border-brand-light dark:border-dark-surface">
       <table className="min-w-full divide-y divide-brand-light dark:divide-dark-surface">
-        <thead className="bg-brand-soft-bg dark:bg-dark-surface">
+        <thead className="dark:bg-dark-surface">
           <tr>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
               Nombre

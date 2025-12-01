@@ -31,7 +31,7 @@ const ServicesSection = () => {
       <div className="text-center mt-12">
         <Link
           to="/servicios"
-          className="inline-block px-8 py-3 text-lg font-semibold text-white bg-green-700 rounded-lg shadow-md hover:bg-green-800 transition-colors duration-300 transform hover:scale-105"
+          className="inline-block bg-white text-brand-primary font-bold px-8 py-3 rounded-full text-lg border-2 border-brand-primary hover:bg-green-50 transition shadow-md dark:bg-dark-surface dark:text-gray-100 dark:border-brand-primary"
         >
           Conocer Más Sobre Nuestros Servicios
         </Link>

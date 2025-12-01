@@ -23,11 +23,11 @@ const ProductDetailContent = ({ product }) => {
                     
                     {/* Botones de Acción */}
                     <div className="flex space-x-4">
-                        <Link to="/cotizaciones" className="bg-brand-primary text-white px-6 py-3 rounded-xl hover:bg-brand-mid transition duration-150">
+                        <Link to="/cotizaciones" className="bg-brand-primary text-white px-8 py-3 rounded-full text-lg hover:bg-brand-mid transition duration-150">
                             Solicitar Cotización
                         </Link>
                         {/* Asumimos que la ficha técnica existe en /assets/data/ficha-tecnica-[id].pdf */}
-                        <a href={`/assets/data/ficha-tecnica-${product.id}.pdf`} target="_blank" rel="noopener noreferrer" className="border border-brand-primary text-brand-primary dark:border-green-400 dark:text-green-400 px-6 py-3 rounded-xl hover:bg-brand-primary hover:text-white transition duration-150">
+                        <a href={`/assets/data/ficha-tecnica-${product.id}.pdf`} target="_blank" rel="noopener noreferrer" className="border border-brand-primary text-brand-primary dark:border-green-400 dark:text-green-400 px-8 py-3 rounded-full text-lg hover:bg-brand-primary hover:text-white transition duration-150">
                             Descargar Ficha Técnica
                         </a>
                     </div>
@@ -49,7 +49,7 @@ const ProductDetailContent = ({ product }) => {
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {product.benefits && product.benefits.map((benefit, index) => (
-                        <div key={index} className="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-dark-surface rounded-lg">
+                        <div key={index} className="flex items-start space-x-3 p-4 dark:bg-dark-surface rounded-lg">
                             <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
                             <p className="text-gray-700 dark:text-gray-300">{benefit}</p>
                         </div>

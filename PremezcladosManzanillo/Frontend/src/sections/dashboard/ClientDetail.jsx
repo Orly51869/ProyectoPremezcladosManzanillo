@@ -30,7 +30,7 @@ const ClientDetail = ({ client, onClose = () => {} }) => {
           </div>
         </div>
 
-        <div className="mb-4 bg-gray-50 dark:bg-dark-surface/50 p-4 rounded-lg">
+        <div className="mb-4 dark:bg-dark-surface/50 p-4 rounded-lg">
           <p className="text-sm text-brand-text dark:text-gray-400">Transacciones</p>
           <p className="font-medium text-gray-800 dark:text-gray-100">{client.transactions || 0}</p>
           <p className="text-sm text-brand-text dark:text-gray-400 mt-2">Balance</p>

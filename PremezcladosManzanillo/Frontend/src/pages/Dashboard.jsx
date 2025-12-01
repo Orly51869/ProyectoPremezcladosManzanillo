@@ -132,12 +132,7 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: "linear-gradient(180deg, #F4F9F5 0%, #E7F3E9 100%)",
-      }}
-    >
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-6 relative">
         <div className="bg-white/60 dark:bg-dark-primary/60 backdrop-blur-sm rounded-b-xl p-4 mb-6 border border-brand-light dark:border-dark-surface">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

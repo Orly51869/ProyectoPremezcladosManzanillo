@@ -11,13 +11,10 @@ const ProductsCatalogPage = () => {
             <HomepageNavbar />
 
             {/* Encabezado General del Catálogo */}
-            <header className="pt-24 pb-12 bg-gray-50 dark:bg-dark-secondary text-center">
-                <h1 className="text-5xl font-extrabold text-gray-900 dark:text-gray-100 mb-3">
-                    Catálogo Completo de Productos
+            <header className="pt-32 md:pt-40 lg:pt-44 pb-12 dark:bg-dark-secondary text-center min-h-[160px]">
+                <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-gray-100 mb-3 whitespace-normal leading-tight max-w-4xl mx-auto">
+                    Catálogo de productos
                 </h1>
-                <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-                    Explora nuestra gama completa de soluciones de concreto premezclado y especializados.
-                </p>
             </header>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

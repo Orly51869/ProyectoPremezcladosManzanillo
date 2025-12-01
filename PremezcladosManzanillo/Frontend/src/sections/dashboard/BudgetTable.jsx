@@ -33,6 +33,7 @@ const BudgetTable = ({ budgets, onView, onEdit, onDuplicate, onDelete }) => (
                 <button onClick={() => onView && onView(b)} className="text-gray-500 hover:text-emerald-600">Ver</button>
                 <button onClick={() => onEdit && onEdit(b)} className="text-gray-500 hover:text-emerald-600">Editar</button>
                 <button onClick={() => onDelete && onDelete(b)} className="text-gray-500 hover:text-red-600">Eliminar</button>
+                {/* PDF removed from table row — use PDF button in modal (BudgetDetail) instead */}
               </div>
             </td>
           </tr>

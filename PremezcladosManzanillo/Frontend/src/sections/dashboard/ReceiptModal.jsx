@@ -40,7 +40,7 @@ const ReceiptModal = ({
           </div>
         </div>
 
-        <div className="mb-4 bg-gray-50 dark:bg-dark-surface/50 p-4 rounded-lg">
+        <div className="mb-4 dark:bg-dark-surface/50 p-4 rounded-lg">
           <p className="text-sm text-brand-text dark:text-gray-400">Presupuesto</p>
           <p className="font-medium text-gray-800 dark:text-gray-100">
             {receipt.budgetTitle || receipt.budgetId}
@@ -60,7 +60,7 @@ const ReceiptModal = ({
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-dark-surface dark:text-gray-200"
+            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-surface"
           >
             Cerrar
           </button>

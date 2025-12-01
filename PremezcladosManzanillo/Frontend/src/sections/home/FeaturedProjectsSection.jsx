@@ -39,7 +39,7 @@ const FeaturedProjectsSection = () => {
   };
 
   return (
-    <section id="proyectos-destacados" className="py-16 bg-gray-50 dark:bg-dark-surface overflow-hidden">
+    <section id="proyectos-destacados" className="py-16 dark:bg-dark-surface overflow-hidden">
       <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-10 text-center">
         Proyectos Destacados de la Región
       </h2>

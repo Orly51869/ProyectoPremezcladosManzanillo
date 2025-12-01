@@ -37,6 +37,53 @@ const PaymentsList = ({
     }
   };
 
+  const downloadCSV = () => {
+    if (!Array.isArray(filtered) || filtered.length === 0) {
+      alert('No hay pagos para exportar');
+      return;
+    }
+
+    const rows = filtered.map((p) => ({
+      ID: p.id,
+      Presupuesto: p.budgetId || '',
+      Fecha: p.date ? new Date(p.date).toLocaleDateString() : '',
+      Monto: (p.amount || p.paidAmount || 0),
+      Metodo: p.method || p.metodo || '',
+      Estado: p.status || '',
+      Referencia: p.reference || '',
+      Cliente: p.clientName || '',
+    }));
+
+    const headers = Object.keys(rows[0]);
+    const escapeCell = (value) => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      // Escape double quotes
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
+    const csv = [headers.join(',')]
+      .concat(rows.map(r => headers.map(h => escapeCell(r[h])).join(',')))
+      .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const filename = `pagos-${new Date().toISOString().slice(0,19).replace(/[:T]/g, '-')}.csv`;
+
+    if (navigator.msSaveBlob) { // IE 10+
+      navigator.msSaveBlob(blob, filename);
+    } else {
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-dark-primary rounded-2xl p-4 shadow-lg border border-brand-light dark:border-dark-surface">
       <div className="flex items-center justify-between mb-4">
@@ -44,7 +91,7 @@ const PaymentsList = ({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-brand-light dark:border-gray-600 rounded-lg bg-white dark:bg-dark-surface dark:text-gray-200"
+            className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-surface dark:text-gray-200"
           >
             <option value="all">Todos los estados</option>
             <option value="Pendiente">Pendiente</option>
@@ -55,13 +102,13 @@ const PaymentsList = ({
             placeholder="Buscar referencia"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="px-3 py-2 border border-brand-light dark:border-gray-600 rounded-lg bg-white dark:bg-dark-surface dark:text-gray-200"
+            className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-surface dark:text-gray-200"
           />
         </div>
         <div>
           <button
-            onClick={() => alert("Exportando CSV (simulado)")}
-            className="px-3 py-2 bg-gray-100 dark:bg-dark-surface dark:text-gray-200 rounded-lg"
+            onClick={downloadCSV}
+            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-dark-surface dark:text-gray-200 rounded-lg"
           >
             Exportar CSV
           </button>
@@ -109,12 +156,13 @@ const PaymentsList = ({
                   </td>
                   <td className="p-2 text-sm">
                     <div className="flex gap-2">
-                      {p.status === "Pendiente" && (
+                      {(p.status === "Pendiente" || !p.status) && (
                         <button
                           onClick={() => handleValidateClick(p)}
-                          className="px-2 py-1 bg-brand-mid text-white rounded-lg"
+                          title="Validar pago"
+                          className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
                         >
-                          Validar
+                          ✅ Validar
                         </button>
                       )}
                       {p.status === "Rechazado" && (

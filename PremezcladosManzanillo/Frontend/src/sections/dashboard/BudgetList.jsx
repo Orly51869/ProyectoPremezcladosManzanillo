@@ -100,7 +100,7 @@ const BudgetList = ({
         <select
           value={clientFilter}
           onChange={(e) => setClientFilter(e.target.value)}
-          className="px-3 py-2 bg-white dark:bg-dark-surface dark:text-gray-200 border border-emerald-100 dark:border-gray-600 rounded-lg text-sm flex-1"
+          className="px-3 py-2 bg-white dark:bg-dark-surface dark:text-gray-200 border border-gray-200 dark:border-gray-600 rounded-lg text-sm flex-1"
         >
           {clientOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -112,7 +112,7 @@ const BudgetList = ({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 bg-white dark:bg-dark-surface dark:text-gray-200 border border-emerald-100 dark:border-gray-600 rounded-lg text-sm flex-1 sm:flex-none"
+          className="px-3 py-2 bg-white dark:bg-dark-surface dark:text-gray-200 border border-gray-200 dark:border-gray-600 rounded-lg text-sm flex-1 sm:flex-none"
         >
           <option value="all">Todos los estados</option>
           <option value="pending">Pendiente</option>
@@ -124,14 +124,15 @@ const BudgetList = ({
           type="date"
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}
-          className="px-3 py-2 bg-white dark:bg-dark-surface dark:text-gray-200 border border-emerald-100 dark:border-gray-600 rounded-lg text-sm flex-1 sm:flex-none"
+          className="px-3 py-2 bg-white dark:bg-dark-surface dark:text-gray-200 border border-gray-200 dark:border-gray-600 rounded-lg text-sm flex-1 sm:flex-none"
           placeholder="dd/mm/aaaa"
         />
       </div>
 
       {viewMode === 'canvas' ? (
         groups.map((group) => (
-          <div key={`${group.clientId || group.clientName}`} className="bg-white dark:bg-dark-primary rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-dark-surface">
+          <React.Fragment key={`${group.clientId || group.clientName}`}>
+            <div className="bg-white dark:bg-dark-primary rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-dark-surface">
             <div className="flex justify-between items-start">
               <div className="mb-3">
                 <h4 className="text-emerald-800 dark:text-green-300 font-semibold">{group.clientName}</h4>
@@ -165,33 +166,31 @@ const BudgetList = ({
                     )}
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 gap-0 md:max-w-md">
-                    <button
-                      onClick={() => onView && onView(b)}
-                      className="px-3 py-2 bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-sm rounded-l-lg hover:bg-gray-50 dark:hover:bg-gray-600"
-                    >
-                      Ver
-                    </button>
-                    <button
-                      onClick={() => onEdit && onEdit(b)}
-                      className="px-3 py-2 bg-emerald-600 text-white text-sm rounded-r-lg hover:bg-emerald-700"
-                    >
-                      Editar
-                    </button>
-                  </div>
-
-                  <div className="mt-2 grid grid-cols-2 gap-0 md:max-w-md">
-                    <button
-                      onClick={() => onDelete && onDelete(b)}
-                      className="px-3 py-2 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-sm rounded-r-lg hover:bg-red-200 dark:hover:bg-red-900"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
+                        <div className="mt-3 grid grid-cols-3 gap-0 md:max-w-md">
+                          <button
+                            onClick={() => onView && onView(b)}
+                            className="px-3 py-2 bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-sm rounded-l-lg hover:bg-gray-50 dark:hover:bg-gray-600"
+                          >
+                            Ver
+                          </button>
+                          <button
+                            onClick={() => onEdit && onEdit(b)}
+                            className="px-3 py-2 bg-emerald-600 text-white text-sm hover:bg-emerald-700"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => onDelete && onDelete(b)}
+                            className="px-3 py-2 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-sm rounded-r-lg hover:bg-red-200 dark:hover:bg-red-900"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
                 </div>
               ))}
             </div>
-          </div>
+            </div>
+          </React.Fragment>
         ))
       ) : (
         <BudgetTable budgets={filteredBudgets} onView={onView} onEdit={onEdit} onDuplicate={onDuplicate} onDelete={onDelete} />

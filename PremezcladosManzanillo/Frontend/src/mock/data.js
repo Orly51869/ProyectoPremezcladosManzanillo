@@ -39,8 +39,8 @@ export const mockBudgets = [
 ];
 
 export const mockPayments = [
-  { id: 1, budgetId: 'p-001', paidAmount: 5000, pending: 7500.50, date: '2024-07-20T11:00:00Z' },
-  { id: 2, budgetId: 'p-001', paidAmount: 2500.50, pending: 5000, date: '2024-08-01T15:00:00Z' },
+  { id: 1, budgetId: 'p-001', paidAmount: 5000, pending: 7500.50, date: '2024-07-20T11:00:00Z', status: 'Pendiente' },
+  { id: 2, budgetId: 'p-001', paidAmount: 2500.50, pending: 5000, date: '2024-08-01T15:00:00Z', status: 'Validado' },
 ];
 
 export const mockProducts = {

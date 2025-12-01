@@ -86,14 +86,14 @@ const DashboardNavbar = () => {
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-brand-soft-bg text-brand-mid"
+            className="md:hidden p-2 rounded-lg text-brand-mid"
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
 
           {/* Contenedor de Navegación */}
           <div
-            className={`md:flex ${isOpen ? "flex" : "hidden"} md:items-center md:gap-2 md:ml-3 absolute md:static top-full left-0 w-full md:w-auto md:flex-1 md:min-w-0 md:justify-end bg-white md:bg-transparent md:border-none border-t md:shadow-none shadow-sm z-10 overflow-hidden`}
+            className={`md:flex ${isOpen ? "flex" : "hidden"} md:items-center md:gap-2 md:ml-3 md:mr-4 absolute md:static top-full left-0 w-full md:w-auto md:flex-1 md:min-w-0 md:justify-end bg-white md:bg-transparent md:border-none border-t md:shadow-none shadow-sm z-10 overflow-hidden md:overflow-visible md:pr-2 lg:pr-3 xl:pr-4`}
           >
             {availableNavItems.map((item) => {
               const Icon = item.icon;
@@ -102,19 +102,19 @@ const DashboardNavbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all duration-300 ease-in-out transform ${isActive ? "bg-brand-primary text-white dark:bg-dark-btn dark:text-white" : "text-brand-text dark:text-gray-300 hover:bg-brand-primary hover:text-white hover:scale-105 dark:hover:bg-dark-btn dark:hover:text-white dark:hover:scale-105"}`}
+                  className={`flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 h-10 rounded-lg transition-all duration-300 ease-in-out transform min-w-0 ${isActive ? "bg-brand-primary text-white dark:bg-dark-btn dark:text-white" : "text-brand-text dark:text-gray-300 hover:bg-brand-primary hover:text-white hover:scale-105 dark:hover:bg-dark-btn dark:hover:text-white dark:hover:scale-105"}`}
                   title={item.label}
                   onClick={() => setIsOpen(false)}
                 >
-                  <Icon className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="hidden xl:inline text-xs md:text-sm font-medium">{item.label}</span>
+                  <Icon className="w-5 h-5" />
+                  <span className="hidden lg:inline text-xs md:text-sm font-medium whitespace-nowrap truncate">{item.label}</span>
                 </Link>
               );
             })}
           </div>
 
           {/* Perfil de Usuario y Logout */}
-          <div className="flex items-center gap-4 ml-auto flex-shrink-0">
+          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
             {user && (
               <div className="user-profile">
                 {user.picture ? (
@@ -147,9 +147,9 @@ const DashboardNavbar = () => {
             <button
               onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
               aria-label="Cerrar sesión"
-              className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center justify-center"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-5 h-5 md:w-6 md:h-6" />
             </button>
           </div>
 
@@ -157,7 +157,7 @@ const DashboardNavbar = () => {
           <button
             onClick={toggleTheme}
             aria-label={`Cambiar a modo ${theme === 'light' ? 'oscuro' : 'claro'}`}
-            className="p-2 ml-4 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition border-none flex-shrink-0"
+            className="p-2 ml-4 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition border-none flex-shrink-0 flex items-center justify-center"
           >
             {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
           </button>

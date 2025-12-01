@@ -50,17 +50,17 @@ const HomepageNavbar = () => {
         className="flex items-center flex-shrink-0"
         aria-label="Premezclados - Ir al inicio"
       >
-        <div className="w-28 h-28 md:w-32 md:h-32 flex items-center justify-center">
+        <div className="w-24 h-24 flex items-center justify-center"> {/* Reducido el tamaño del logo para consistencia */}
           <img
             className="w-full h-full object-contain"
-            alt="Logo PREMEZCLADOS"
+            alt="Logo Premezclados Manzanillo"
             src={"/assets/LOGO_PREMEZCLADOS.svg"}
           />
         </div>
         <div className="ml-2 hidden md:block">
           <span className="block text-lg font-bold text-gray-900 dark:text-gray-100 leading-none">Premezclado</span>
           <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 leading-none">Manzanillo, C.A.</span>
-        </div>
+        </div> {/* Esta es la etiqueta de cierre que faltaba */}
       </Link>
 
       {/* 2. Navegación (Centro) - Oculta en pantallas pequeñas */}
@@ -157,7 +157,7 @@ const HomepageNavbar = () => {
 
       {/* Menú Móvil (Panel) */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 top-[96px] bg-white dark:bg-dark-primary z-40 flex flex-col items-center py-8 lg:hidden">
+        <div className="fixed inset-0 top-[96px] bg-white dark:bg-dark-primary z-40 flex flex-col items-center py-8 lg:hidden animate-fade-in-down"> {/* Ajustado top y añadido animación */}
           <nav className="flex flex-col items-center gap-6" aria-label="Navegación móvil">
             {navigationItems.map((item) => (
               <Link

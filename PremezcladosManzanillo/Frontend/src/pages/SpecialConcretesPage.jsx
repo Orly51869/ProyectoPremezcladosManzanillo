@@ -19,7 +19,7 @@ const FeatureListItem = ({ item }) => {
     const IconComponent = iconMap[item.icon] || iconMap['default'];
     
     return (
-        <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-dark-secondary rounded-lg">
+        <div className="flex items-start space-x-4 p-4 dark:bg-dark-secondary rounded-lg">
             <IconComponent size={24} className="text-brand-primary dark:text-green-400 flex-shrink-0 mt-1" />
             <div>
                 <h4 className="text-lg font-semibold text-gray-900">{item.title}</h4>

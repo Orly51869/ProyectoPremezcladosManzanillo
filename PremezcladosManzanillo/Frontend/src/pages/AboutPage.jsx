@@ -65,7 +65,7 @@ const highlightStats = [
 
 const AboutPage = () => {
   return (
-    <div className="relative min-h-screen bg-gray-50 dark:bg-dark-primary">
+    <div className="relative min-h-screen dark:bg-dark-primary">
       <HomepageNavbar />
       <main className="pt-32 pb-20">
         {/* Hero */}
@@ -129,7 +129,7 @@ const AboutPage = () => {
               {companyValues.map((value) => (
                 <div
                   key={value.title}
-                  className="flex items-start gap-4 bg-gray-50 dark:bg-dark-primary/60 border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm"
+                  className="flex items-start gap-4 dark:bg-dark-primary/60 border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm"
                 >
                   <span className="text-3xl" aria-hidden="true">
                     {value.icon}
@@ -156,7 +156,7 @@ const AboutPage = () => {
               {highlightStats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="flex flex-col items-center justify-center rounded-2xl bg-gray-50 dark:bg-dark-primary/70 border border-gray-200 dark:border-white/10 p-6 shadow-sm text-center"
+                  className="flex flex-col items-center justify-center rounded-2xl dark:bg-dark-primary/70 border border-gray-200 dark:border-white/10 p-6 shadow-sm text-center"
                 >
                   <span className="text-3xl font-extrabold text-brand-primary dark:text-dark-btn">
                     {stat.value}
@@ -198,30 +198,7 @@ const AboutPage = () => {
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="mt-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-gradient-to-r from-brand-primary to-emerald-700 dark:from-dark-btn dark:to-emerald-500 shadow-2xl px-10 py-12 md:py-16 text-white text-center md:text-left">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-center">
-              <div className="md:col-span-2">
-                <h2 className="text-3xl md:text-4xl font-extrabold leading-tight">
-                  Construyamos la próxima obra emblemática de Margarita
-                </h2>
-                <p className="mt-4 text-lg text-white/80">
-                  Nuestro equipo comercial y técnico está listo para asesorarte desde la planificación
-                  hasta la colocación final del concreto.
-                </p>
-              </div>
-              <div className="flex md:justify-end">
-                <a
-                  href="/contacto"
-                  className="inline-flex items-center justify-center px-6 py-3 text-lg font-semibold rounded-full bg-white text-brand-primary hover:bg-green-100 transition"
-                >
-                  Coordinar una Reunión
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* CTA removed per user request */}
       </main>
       <Footer />
     </div>

@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import React from 'react'; // Import React
+import { Download } from 'lucide-react';
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -11,7 +12,7 @@ const formatDate = (value) => {
   return value;
 };
 
-const BudgetPDF = ({ budget, client }) => {
+const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
   if (!budget) return null;
 
   const generatePDF = () => {
@@ -140,16 +141,19 @@ const BudgetPDF = ({ budget, client }) => {
     doc.text("3. Favor hacer depósitos ó transferencia al Banco en la cuenta número", 14, y);
 
     // Save the PDF
-    doc.save(`cotizacion-${budget.folio || budget.id}.pdf`);
+    doc.save(`presupuesto-${budget.folio || budget.id}.pdf`);
   };
 
   return (
     <div>
       <button
         onClick={generatePDF}
-        className="px-5 py-2 rounded-lg bg-green-700 text-white hover:bg-green-600"
+        aria-label="Generar Presupuesto"
+        title="Generar Presupuesto"
+        className={`${small ? 'px-3 py-1 text-sm rounded-md' : 'px-4 py-2 text-base rounded-md'} bg-green-700 text-white hover:bg-green-600 flex items-center gap-2 ${className}`}
       >
-        Generar PDF
+        <Download className={`${small ? 'w-3 h-3' : 'w-5 h-5'}`} />
+        {small ? 'Generar' : 'Generar Presupuesto'}
       </button>
     </div>
   );

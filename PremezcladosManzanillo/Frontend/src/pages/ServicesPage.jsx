@@ -43,7 +43,7 @@ const ServiceSection = ({ service, reverseLayout }) => (
 
 const ServicesPage = () => {
     return (
-        <div className="relative min-h-screen bg-gray-50 dark:bg-dark-primary">
+        <div className="relative min-h-screen dark:bg-dark-primary">
             <HomepageNavbar />
             <main className="pt-24 pb-16">
                 {/* Encabezado de la página */}

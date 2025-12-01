@@ -37,12 +37,14 @@ const PaymentCard = ({ payment, onValidate, onResend }) => {
         <p className="text-sm text-gray-600 dark:text-gray-400">Método: {payment.method || payment.metodo || "-"}</p>
       </div>
       <div className="mt-4 flex gap-2">
-        {payment.status === "Pendiente" && (
+        {(payment.status === "Pendiente" || !payment.status) && (
           <button
             onClick={handleValidateClick}
-            className="flex-1 px-2 py-1 bg-brand-mid text-white rounded-lg text-sm"
+            title="Validar pago"
+            className="flex-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm flex items-center justify-center gap-2"
           >
-            Validar
+            ✅
+            <span>Validar</span>
           </button>
         )}
         {payment.status === "Rechazado" && (

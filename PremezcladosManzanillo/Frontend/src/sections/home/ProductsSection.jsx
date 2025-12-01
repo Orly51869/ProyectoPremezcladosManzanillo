@@ -14,7 +14,7 @@ const productCategoriesCards = [
         id: 'pavimentos', 
         title: "Concretos para Pavimentos", 
         description: "Diseñados para soportar cargas dinámicas en vialidades y patios de maniobra.", 
-        imgSrc: "/assets/Concreto Pavimento.png"
+        imgSrc: "/assets/Concreto-Pavimento.png"
     },
     { 
         id: 'especiales', 
@@ -45,10 +45,10 @@ const ProductsSection = () => {
       
       <div className="text-center mt-10">
         <Link 
-            to="/productos" 
-            className="inline-block bg-transparent border-2 border-brand-primary text-brand-primary dark:border-green-400 dark:text-green-400 font-semibold px-6 py-2 rounded-full hover:bg-brand-primary hover:text-white dark:hover:bg-green-600 dark:hover:text-white transition"
+          to="/productos" 
+          className="inline-block bg-white text-brand-primary font-bold px-8 py-3 rounded-full text-lg border-2 border-brand-primary hover:bg-green-50 transition shadow-md dark:bg-dark-surface dark:text-gray-100 dark:border-brand-primary"
         >
-            Ver Catálogo Completo
+          Ver Catálogo Completo
         </Link>
       </div>
     </section>

@@ -147,9 +147,10 @@ html {
 
 /* Estilos para el perfil de usuario en el DashboardNavbar */
 .user-profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0; /* Prevent profile area from shrinking when nav items expand */
 }
 
 .user-avatar {
@@ -162,7 +163,11 @@ html {
 
 .user-name {
     font-weight: bold;
-    color: var(--brand-text);
+  color: var(--brand-text);
+  max-width: 10rem; /* Prevent the name from stretching nav when too long */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dark .user-name {

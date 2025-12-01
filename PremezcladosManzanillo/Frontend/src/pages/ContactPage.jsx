@@ -8,7 +8,7 @@ const ContactPage = () => {
     const [state, handleSubmit] = useForm("xldozadq");
 
     return (
-        <div className="relative min-h-screen bg-gray-50 dark:bg-dark-primary">
+        <div className="relative min-h-screen dark:bg-dark-primary">
             <HomepageNavbar />
             <main className="pt-32 pb-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

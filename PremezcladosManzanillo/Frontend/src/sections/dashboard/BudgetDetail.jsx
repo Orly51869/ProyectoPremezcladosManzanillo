@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import BudgetPDF from './BudgetPDF.jsx';
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -21,7 +22,7 @@ const formatDate = (value) => {
   return '';
 };
 
-const BudgetDetail = ({ budget, onClose = () => {}, onDuplicate, onConvert }) => {
+const BudgetDetail = ({ budget, onClose = () => {} }) => {
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose();
@@ -69,16 +70,7 @@ const BudgetDetail = ({ budget, onClose = () => {}, onDuplicate, onConvert }) =>
             </div>
 
             <div className="flex gap-2">
-              {onDuplicate && (
-                <button onClick={() => onDuplicate(budget)} className="px-3 py-1 bg-gray-100 dark:bg-dark-surface dark:text-gray-200 rounded-md text-sm">
-                  Duplicar
-                </button>
-              )}
-              {onConvert && (
-                <button onClick={() => onConvert(budget)} className="px-3 py-1 bg-green-700 text-white rounded-md text-sm">
-                  Convertir
-                </button>
-              )}
+              {/* Acciones principales ahora están en el área inferior: duplicar/convertir moved abajo */}
             </div>
           </div>
 
@@ -110,7 +102,9 @@ const BudgetDetail = ({ budget, onClose = () => {}, onDuplicate, onConvert }) =>
             <div className="text-sm text-gray-800 dark:text-gray-300">{project.observaciones || '—'}</div>
           </div>
 
-          <div className="flex justify-end mt-5">
+          <div className="flex justify-end mt-5 gap-2 items-center">
+            {/* Duplicar/Convertir buttons removed by user request */}
+            <BudgetPDF budget={budget} className="ml-1" />
             <button onClick={onClose} className="px-4 py-2 rounded-md bg-gray-100 dark:bg-dark-surface text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-sm">
               Cerrar
             </button>

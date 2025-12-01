@@ -111,15 +111,15 @@ const BudgetsPage = () => {
 
   return (
     // Aseguramos que el contenido use la pantalla completa y padding
-    <div className="w-full p-6"> 
+    <div className="w-full p-6 dark:bg-dark-primary"> 
       
       {/* 💥 ENCABEZADO CORREGIDO CON ÍCONO Y DARK MODE 💥 */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           {/* Ícono: Verde oscuro en modo claro, verde más brillante en modo oscuro */}
           <FileText className="w-8 h-8 text-brand-primary dark:text-green-400" /> 
-          {/* Título: Usa color primario en ambos modos, pero debe contrastar si se cambia el fondo */}
-          <h1 className="text-3xl font-bold text-brand-primary dark:text-dark-primary">Presupuestos</h1> 
+          {/* Título: Usa color primario en modo claro y un color de texto principal en modo oscuro */}
+          <h1 className="text-3xl font-bold text-brand-primary dark:text-white">Presupuestos</h1> 
         </div>
         <div className="flex items-center gap-2">
           {/* Botón: Sigue el estilo primario */}
@@ -167,8 +167,6 @@ const BudgetsPage = () => {
               <BudgetDetail
                 budget={viewBudget}
                 onClose={() => setViewBudget(null)}
-                onDuplicate={handleDuplicate}
-                onConvert={() => alert('Convertir a comprobante (simulado)')}
               />
             </div>
           )}
