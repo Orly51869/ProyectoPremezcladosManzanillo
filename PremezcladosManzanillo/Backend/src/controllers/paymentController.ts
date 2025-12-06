@@ -7,15 +7,15 @@ const prisma = new PrismaClient();
 export const createPayment = async (req: Request, res: Response) => {
   // `req.body` contendrá los campos de texto del formulario
   // `req.file` contendrá la información del archivo subido por uploadReceipt
-  const { budgetId, amount, method, reference, bankFrom, bankTo } = req.body; // receiptUrl ya no se lee del body
+  const { budgetId, paidAmount, method, reference, bankFrom, bankTo } = req.body; // receiptUrl ya no se lee del body
   const authUserId = req.auth?.payload.sub;
   const receiptFile = req.file as Express.Multer.File | undefined; // Acceder al archivo subido
 
   if (!authUserId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
-  if (!budgetId || !amount || !method) {
-    return res.status(400).json({ error: 'Budget ID, amount, and method are required to create a payment.' });
+  if (!budgetId || !paidAmount || !method) {
+    return res.status(400).json({ error: 'Budget ID, paid amount, and method are required to create a payment.' });
   }
 
   try {
@@ -32,7 +32,7 @@ export const createPayment = async (req: Request, res: Response) => {
     }
 
     const currentPaidAmount = budget.payments.reduce((sum, p) => sum + p.paidAmount, 0);
-    const newPaidAmount = parseFloat(amount);
+    const newPaidAmount = parseFloat(paidAmount);
     const totalPending = budget.total - currentPaidAmount;
 
     if (newPaidAmount > totalPending) {
