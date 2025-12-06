@@ -1,119 +1,120 @@
-import React, { useState } from "react";
-import { FileText, List, LayoutGrid } from "lucide-react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import api from "../utils/api";
+import { FileText, List, LayoutGrid, Search } from "lucide-react";
 import PaymentsList from "../sections/dashboard/PaymentsList.jsx";
 import PaymentForm from "../sections/dashboard/PaymentForm.jsx";
 import ReceiptModal from "../sections/dashboard/ReceiptModal.jsx";
-import { mockPayments, mockBudgets } from "../mock/data";
-import { mockClients } from "../mock/data";
-import { generateId } from "../utils/helpers";
-
-// Usuario actual simulado (en una app real proviene del sistema de autenticación)
-const currentUser = { username: "admin", role: "Tesorería" };
 
 const PaymentsPage = () => {
-  const [payments, setPayments] = useState(mockPayments || []);
+  const { user } = useAuth0();
+  const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
+  const currentUserId = user?.sub;
+
+  const [payments, setPayments] = useState([]);
+  const [budgets, setBudgets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const [showForm, setShowForm] = useState(false);
   const [receipt, setReceipt] = useState(null);
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'canvas'
+  const [viewMode, setViewMode] = useState('list');
+  const [search, setSearch] = useState('');
 
-  const registerPayment = (payload) => {
-    // Validar que el presupuesto exista y esté aprobado
-    const budget = mockBudgets.find((b) => b.id === payload.id_presupuesto);
-    if (!budget) {
-      alert("Presupuesto no encontrado.");
-      return;
+  const fetchPayments = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/payments');
+      setPayments(response.data);
+    } catch (err) {
+      setError('Error al cargar pagos.');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    if (budget.status !== "approved") {
-      alert("El presupuesto no está aprobado. No se puede registrar el pago.");
-      return;
+  }, []);
+
+  const fetchBudgets = useCallback(async () => {
+    try {
+      const response = await api.get('/api/budgets');
+      setBudgets(response.data);
+    } catch (err) {
+      console.error('Error al cargar presupuestos:', err);
+      // Don't set global error, as payments might still load
     }
+  }, []);
 
-    const newPayment = {
-      id: generateId(),
-      budgetId: payload.id_presupuesto,
-      amount: payload.monto_pago,
-      paidAmount: payload.monto_pago,
-      pending: Math.max(0, (budget.total || 0) - payload.monto_pago),
-      date: payload.fecha_pago || new Date(),
-      method: payload.metodo_pago,
-      reference: payload.referencia,
-      bankFrom: payload.banco_emisor,
-      bankTo: payload.banco_receptor,
-      receipt: payload.comprobante_archivo || null,
-      status: "Pendiente",
-      observations: "",
-      validator: null,
-      validatedAt: null,
-    };
+  useEffect(() => {
+    fetchPayments();
+    fetchBudgets();
+  }, [fetchPayments, fetchBudgets]);
 
-    setPayments((prev) => [newPayment, ...prev]);
-    setShowForm(false);
-    alert("Pago registrado (simulado). Queda pendiente de validación.");
-  };
+  const approvedBudgets = useMemo(() => {
+    return budgets.filter(budget => budget.status === 'APPROVED');
+  }, [budgets]);
 
-  const validatePayment = (paymentId, { approve, observations = "" }) => {
-    // Solo roles autorizados (Tesorería o Administrador)
-    if (!["Tesorería", "Administrador"].includes(currentUser.role)) {
-      alert("No tiene permisos para validar pagos.");
-      return;
-    }
-
-    setPayments((prev) =>
-      prev.map((p) => {
-        if (p.id !== paymentId) return p;
-        if (approve) {
-          const validated = {
-            ...p,
-            status: "Validado",
-            validator: currentUser.username,
-            validatedAt: new Date(),
-            observations,
-          };
-          // Generar comprobante en memoria (simulado)
-          const budget = mockBudgets.find((b) => b.id === validated.budgetId);
-          const client = mockClients.find((c) => c.id === budget?.clientId);
-          const newReceipt = {
-            id: generateId(),
-            paymentId: validated.id,
-            budgetId: validated.budgetId,
-            budgetTitle: budget?.title,
-            clientName: client?.name,
-            amount: validated.paidAmount || validated.amount,
-            date: validated.validatedAt || new Date(),
-          };
-          setReceipt(newReceipt);
-          return validated;
-        }
-        return {
-          ...p,
-          status: "Rechazado",
-          validator: currentUser.username,
-          validatedAt: new Date(),
-          observations,
-        };
-      })
+  const filteredPayments = useMemo(() => {
+    return payments.filter(payment => 
+      payment.budgetId.toLowerCase().includes(search.toLowerCase()) ||
+      payment.reference?.toLowerCase().includes(search.toLowerCase()) ||
+      payment.method.toLowerCase().includes(search.toLowerCase())
     );
+  }, [payments, search]);
+
+  const handleRegisterPayment = async (formData) => { // Aceptar formData
+    try {
+      // Backend validates budget status and amount
+      await api.post('/api/payments', formData); // Enviar formData directamente
+      setShowForm(false);
+      fetchPayments(); // Refresh payments list
+      alert("Pago registrado con éxito. Pendiente de validación.");
+    } catch (err) {
+      console.error('Error al registrar pago:', err);
+      // Muestra un mensaje de error más específico si el backend lo proporciona
+      setError(err.response?.data?.error || 'Error al registrar pago.');
+    }
   };
 
-  const handleDownloadReceipt = (r) => {
-    // Simulación de descarga de comprobante (PDF)
-    alert(`Descargando comprobante ${r.id} (simulado)`);
+  const handleValidatePayment = async (paymentId, validationData) => {
+    try {
+      await api.put(`/api/payments/${paymentId}`, validationData);
+      fetchPayments(); // Refresh payments list
+      alert("Pago procesado con éxito.");
+    } catch (err) {
+      console.error('Error al validar pago:', err);
+      setError(err.response?.data?.error || 'Error al validar pago.');
+    }
   };
 
-  const resendForValidation = (paymentId) => {
-    setPayments((prev) =>
-      prev.map((p) =>
-        p.id === paymentId ? { ...p, status: "Pendiente", observations: "" } : p
-      )
-    );
+  const handleDownloadReceipt = (payment) => {
+    if (payment.paymentReceiptUrl) {
+      window.open(payment.paymentReceiptUrl, '_blank');
+    } else {
+      alert("No hay comprobante de pago disponible para descargar.");
+    }
   };
+
+  const handleResendForValidation = async (paymentId) => {
+    // This functionality is not yet implemented in backend as a separate endpoint.
+    // For now, it could be a status update or a custom action.
+    // Placeholder for future implementation.
+    alert(`Reenviar para validación ${paymentId} (funcionalidad pendiente de implementar)`);
+  };
+
+  if (loading) {
+    return <div className="p-6 text-center">Cargando pagos...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-center text-red-500">{error}</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <FileText className="w-8 h-8 text-brand-mid dark:text-green-400" />
-          <h1 className="text-3xl font-bold text-brand-primary dark:text-dark-primary">Pagos</h1>
+          <FileText className="w-8 h-8 text-black dark:text-green-400" />
+          <h1 className="text-3xl font-bold text-brand-primary dark:text-white">Pagos</h1>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex gap-2">
@@ -133,20 +134,39 @@ const PaymentsPage = () => {
         </div>
       </div>
 
+      <div className="bg-white dark:bg-dark-primary rounded-2xl p-6 shadow-lg border border-brand-light dark:border-dark-surface mb-6">
+        <div className="flex flex-col md:flex-row items-center gap-3">
+          <div className="flex-1 flex items-center gap-3 w-full md:w-auto">
+            <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+            <input
+              type="text"
+              placeholder="Buscar por ID de presupuesto o referencia..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 p-3 border border-brand-light dark:border-dark-surface rounded-xl dark:bg-dark-surface focus:outline-none focus:ring-2 focus:ring-brand-mid dark:text-gray-200"
+            />
+          </div>
+        </div>
+      </div>
+
       {showForm && (
         <div className="mb-6">
           <PaymentForm
             onCancel={() => setShowForm(false)}
-            onSubmit={registerPayment}
+            onSubmit={handleRegisterPayment}
+            approvedBudgets={approvedBudgets}
           />
         </div>
       )}
 
       <PaymentsList
-        payments={payments}
+        payments={filteredPayments}
         viewMode={viewMode}
-        onValidate={(id, payload) => validatePayment(id, payload)}
-        onResend={(id) => resendForValidation(id)}
+        onValidate={handleValidatePayment}
+        onResend={handleResendForValidation}
+        onDownloadReceipt={handleDownloadReceipt}
+        userRoles={userRoles}
+        currentUserId={currentUserId}
       />
 
       {receipt && (

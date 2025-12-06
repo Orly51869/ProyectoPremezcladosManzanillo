@@ -45,8 +45,8 @@ const Reports = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4 mb-8">
-        <BarChart3 className="w-8 h-8 text-brand-mid dark:text-green-400" />
-        <h1 className="text-3xl font-bold text-brand-primary dark:text-dark-primary">Reportes Financieros</h1>
+        <BarChart3 className="w-8 h-8 text-black dark:text-green-400" />
+        <h1 className="text-3xl font-bold text-brand-primary dark:text-white">Reportes Financieros</h1>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">

@@ -16,6 +16,7 @@ import HomepageNavbar from "./components/HomepageNavbar.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ClientsPage from "./pages/ClientsPage.jsx";
 import BudgetsPage from "./pages/BudgetsPage.jsx";
+import ProductsPage from "./pages/ProductsPage.jsx"; // Import the new page
 import PaymentsPage from "./pages/PaymentsPage.jsx";
 import Reports from "./sections/dashboard/Reports.jsx";
 import Settings from "./sections/dashboard/Settings.jsx";
@@ -72,10 +73,10 @@ const ProtectedRoute = () => {
   }
 
   // Redirigir a usuarios con rol "Usuario" de /dashboard a /budgets
-  if (userRoles.includes("Usuario") && location.pathname === "/dashboard") {
-    console.log("[ProtectedRoute] Usuario role detected, redirecting from /dashboard to /budgets");
-    return <Navigate to="/budgets" replace />;
-  }
+  // if (userRoles.includes("Usuario") && location.pathname === "/dashboard") {
+  //   console.log("[ProtectedRoute] Usuario role detected, redirecting from /dashboard to /budgets");
+  //   return <Navigate to="/budgets" replace />;
+  // }
 
   return <Outlet />;
 };
@@ -112,17 +113,16 @@ const App = () => {
 
         {/* Rutas Protegidas */}
         <Route element={<ProtectedRoute />}>
-          <Route element={
-            <AuthenticatedApiProvider>
-              <DashboardLayout />
-            </AuthenticatedApiProvider>
-          }>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/clients" element={<ClientsPage />} />
-            <Route path="/budgets/*" element={<BudgetsPage />} />
-            <Route path="/payments" element={<PaymentsPage />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/settings" element={<Settings />} />
+          <Route element={<AuthenticatedApiProvider />}> {/* AuthenticatedApiProvider ahora renderiza un Outlet */}
+            <Route element={<DashboardLayout />}> {/* DashboardLayout envuelve las páginas del dashboard */}
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/clients" element={<ClientsPage />} />
+              <Route path="/budgets/*" element={<BudgetsPage />} />
+              <Route path="/products-management" element={<ProductsPage />} />
+              <Route path="/payments" element={<PaymentsPage />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
           </Route>
         </Route>
       </Routes>

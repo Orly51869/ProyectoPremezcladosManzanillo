@@ -1,0 +1,25 @@
+-- CreateTable
+CREATE TABLE "Payment" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "budgetId" TEXT NOT NULL,
+    "amount" REAL NOT NULL,
+    "paidAmount" REAL NOT NULL,
+    "pending" REAL NOT NULL,
+    "date" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "method" TEXT NOT NULL,
+    "reference" TEXT,
+    "bankFrom" TEXT,
+    "bankTo" TEXT,
+    "receiptUrl" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "observations" TEXT,
+    "validatorId" TEXT,
+    "validatedAt" DATETIME,
+    "proFormaInvoiceUrl" TEXT,
+    "fiscalInvoiceUrl" TEXT,
+    "deliveryOrderUrl" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "Payment_budgetId_fkey" FOREIGN KEY ("budgetId") REFERENCES "Budget" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Payment_validatorId_fkey" FOREIGN KEY ("validatorId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);

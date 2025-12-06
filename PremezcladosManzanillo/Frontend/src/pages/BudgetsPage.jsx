@@ -1,176 +1,224 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, List, LayoutGrid } from 'lucide-react'; // 💥 ÍCONOS AÑADIDOS 💥
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import api from '../utils/api';
+import { FileText, PlusCircle, List, LayoutGrid, Search } from 'lucide-react';
 import BudgetForm from '../sections/dashboard/BudgetForm.jsx';
 import BudgetList from '../sections/dashboard/BudgetList.jsx';
-import BudgetDetail from '../sections/dashboard/BudgetDetail.jsx';
-import { mockBudgets } from '../mock/data';
-import { generateId } from '../utils/helpers'; // Asumo que esta función existe o la creaste
+import { format } from 'date-fns';
 
 const BudgetsPage = () => {
-  const [budgets, setBudgets] = useState(() => Array.isArray(mockBudgets) ? [...mockBudgets] : []);
-  const [showBudgetForm, setShowBudgetForm] = useState(false);
-  const [editingClient, setEditingClient] = useState(null);
-  const [viewBudget, setViewBudget] = useState(null);
-  const [editBudget, setEditBudget] = useState(null);
-  const [viewMode, setViewMode] = useState('canvas'); // 'canvas' or 'list'
+  const { user } = useAuth0();
+  const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
 
-  useEffect(() => {
-    if (Array.isArray(mockBudgets)) setBudgets([...mockBudgets]);
+  const [budgets, setBudgets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const [showForm, setShowForm] = useState(false);
+  const [editingBudget, setEditingBudget] = useState(null);
+
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'canvas'
+  const [search, setSearch] = useState('');
+  const [clientFilter, setClientFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
+
+  const fetchBudgets = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/budgets');
+      setBudgets(response.data);
+    } catch (err) {
+      setError('Failed to fetch budgets.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const openNewBudgetForClient = (client) => {
-    setEditingClient(client || null);
-    setEditBudget(null);
-    setShowBudgetForm(true);
-  };
+  useEffect(() => {
+    fetchBudgets();
+  }, [fetchBudgets]);
 
-  const openNewBudget = () => openNewBudgetForClient(null);
-
-  // Guardar: crea o actualiza según exista editBudget
-  const handleSaveBudget = (formData) => {
-    if (editBudget) {
-      // actualizar existente
-      const updated = {
-        ...editBudget,
-        ...formData,
-        title: formData.nombreProyecto || editBudget.title,
-        clientId: editingClient?.id || formData.clientId || editBudget.clientId,
-        clientName: editingClient?.name || formData.clientName || editBudget.clientName,
-      };
-
-      // actualizar mockBudgets in-memory
-      if (Array.isArray(mockBudgets)) {
-        const idx = mockBudgets.findIndex(b => b.id === editBudget.id);
-        if (idx >= 0) mockBudgets[idx] = { ...mockBudgets[idx], ...updated };
+  // Get unique clients from budgets for the filter dropdown
+  const clientOptions = useMemo(() => {
+    const clients = new Map();
+    budgets.forEach(b => {
+      if (b.client) {
+        clients.set(b.client.id, b.client.name);
       }
+    });
+    const options = Array.from(clients, ([id, name]) => ({ value: id, label: name }));
+    return [{ value: 'all', label: 'Todos los Clientes' }, ...options];
+  }, [budgets]);
 
-      setBudgets(prev => prev.map(b => b.id === editBudget.id ? updated : b));
-      setEditBudget(null);
-      setEditingClient(null);
-      setShowBudgetForm(false);
-      alert(`Presupuesto actualizado — Folio: ${updated.folio || updated.id}`);
-      return;
+  const filteredBudgets = useMemo(() => {
+    return budgets.filter(b => {
+      // Search filter
+      const matchesSearch = b.title.toLowerCase().includes(search.toLowerCase()) ||
+                            b.client?.name.toLowerCase().includes(search.toLowerCase());
+
+      // Client filter
+      const matchesClient = clientFilter === 'all' || b.clientId === clientFilter;
+
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || b.status === statusFilter;
+
+      // Date filter
+      const matchesDate = !dateFilter || (b.createdAt && format(new Date(b.createdAt), 'yyyy-MM-dd') === dateFilter);
+
+      return matchesSearch && matchesClient && matchesStatus && matchesDate;
+    });
+  }, [budgets, search, clientFilter, statusFilter, dateFilter]);
+
+  const handleAddNew = () => {
+    setEditingBudget(null);
+    setShowForm(true);
+  };
+
+  const handleEdit = (budget) => {
+    setEditingBudget(budget);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (budgetId) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este presupuesto?')) {
+      try {
+        await api.delete(`/api/budgets/${budgetId}`);
+        fetchBudgets(); // Refresh the list
+      } catch (err) {
+        setError('Failed to delete budget.');
+        console.error(err);
+      }
     }
-
-    // crear nuevo
-    const id = (typeof generateId === 'function') ? generateId() : String(Date.now());
-    const folio = `P-${id}`;
-
-    const newBudget = {
-      id: folio,
-      folio,
-      title: formData.nombreProyecto || `Presupuesto ${folio}`,
-      clientId: editingClient?.id || formData.clientId || null,
-      clientName: editingClient?.name || formData.clientName || 'Cliente desconocido',
-      ...formData,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-
-    if (Array.isArray(mockBudgets)) mockBudgets.unshift(newBudget);
-    setBudgets(prev => [newBudget, ...prev]);
-
-    setShowBudgetForm(false);
-    setEditingClient(null);
-    alert(`Presupuesto guardado — Folio: ${folio}`);
   };
 
-  const handleView = (b) => {
-    setViewBudget(b);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleEdit = (b) => {
-    setEditBudget(b);
-    setEditingClient({ id: b.clientId, name: b.clientName });
-    setShowBudgetForm(true);
-  };
-
-  const handleDuplicate = (b) => {
-    const id = (typeof generateId === 'function') ? generateId() : String(Date.now());
-    const folio = `P-${id}`;
-    const copy = { ...b, id: folio, folio, title: `${b.title} (Copia)`, createdAt: new Date().toISOString() };
-    if (Array.isArray(mockBudgets)) mockBudgets.unshift(copy);
-    setBudgets(prev => [copy, ...prev]);
-    alert(`Presupuesto duplicado — Folio: ${folio}`);
-  };
-
-  const handleDelete = (b) => {
-    if (!confirm('¿Eliminar presupuesto?')) return;
-    // eliminar de mock
-    if (Array.isArray(mockBudgets)) {
-      const idx = mockBudgets.findIndex(x => x.id === b.id);
-      if (idx >= 0) mockBudgets.splice(idx, 1);
+  const handleSave = async (budgetData) => {
+    try {
+      if (editingBudget) {
+        await api.put(`/api/budgets/${editingBudget.id}`, budgetData);
+      } else {
+        await api.post('/api/budgets', budgetData);
+      }
+      setShowForm(false);
+      setEditingBudget(null);
+      fetchBudgets(); // Refresh the list
+    } catch (err) {
+      setError('Failed to save budget.');
+      console.error(err);
     }
-    // actualizar estado
-    setBudgets(prev => prev.filter(x => x.id !== b.id));
-    // si estaba abierto en vista o editando, cerrar
-    if (viewBudget?.id === b.id) setViewBudget(null);
-    if (editBudget?.id === b.id) { setEditBudget(null); setShowBudgetForm(false); }
   };
+
+  const handleApproveBudget = async (budgetId) => {
+    if (window.confirm('¿Estás seguro de que quieres aprobar este presupuesto?')) {
+      try {
+        await api.post(`/api/budgets/${budgetId}/approve`);
+        fetchBudgets();
+      } catch (err) {
+        setError('Failed to approve budget.');
+        console.error(err);
+      }
+    }
+  };
+
+  const handleRejectBudget = async (budgetId, rejectionReason) => {
+    if (window.confirm('¿Estás seguro de que quieres rechazar este presupuesto?')) {
+      try {
+        await api.post(`/api/budgets/${budgetId}/reject`, { rejectionReason });
+        fetchBudgets();
+      } catch (err) {
+        setError('Failed to reject budget.');
+        console.error(err);
+      }
+    }
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingBudget(null);
+  };
+
+  if (loading) {
+    return <div className="p-6 text-center">Cargando presupuestos...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-center text-red-500">{error}</div>;
+  }
 
   return (
-    // Aseguramos que el contenido use la pantalla completa y padding
-    <div className="w-full p-6 dark:bg-dark-primary"> 
-      
-      {/* 💥 ENCABEZADO CORREGIDO CON ÍCONO Y DARK MODE 💥 */}
+    <div className="w-full p-6 dark:bg-dark-primary">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          {/* Ícono: Verde oscuro en modo claro, verde más brillante en modo oscuro */}
-          <FileText className="w-8 h-8 text-brand-primary dark:text-green-400" /> 
-          {/* Título: Usa color primario en modo claro y un color de texto principal en modo oscuro */}
-          <h1 className="text-3xl font-bold text-brand-primary dark:text-white">Presupuestos</h1> 
+          <FileText className="w-8 h-8 text-black dark:text-green-400" />
+          <h1 className="text-3xl font-bold text-brand-primary dark:text-white">Presupuestos</h1>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Botón: Sigue el estilo primario */}
+        <div className="flex items-center gap-3">
           <div className="flex gap-2">
             <button onClick={() => setViewMode('canvas')} className={`p-2 rounded-lg ${viewMode === 'canvas' ? 'bg-brand-primary text-white' : 'bg-gray-200 dark:bg-dark-surface text-gray-600 dark:text-gray-300'}`}>
-              <LayoutGrid className="w-5 h-5" />
+              <LayoutGrid size={20} />
             </button>
             <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-brand-primary text-white' : 'bg-gray-200 dark:bg-dark-surface text-gray-600 dark:text-gray-300'}`}>
-              <List className="w-5 h-5" />
+              <List size={20} />
             </button>
           </div>
-          <button onClick={openNewBudget} className="bg-brand-primary text-white px-4 py-2 rounded-xl hover:bg-brand-mid transition duration-150">
-            Nuevo Presupuesto
-          </button>
+          {!showForm && (
+            <button
+              onClick={handleAddNew}
+              className="bg-brand-primary text-white px-4 py-2 rounded-xl hover:bg-brand-mid transition duration-150 flex items-center gap-2"
+            >
+              <PlusCircle size={20} />
+              Nuevo Presupuesto
+            </button>
+          )}
         </div>
       </div>
-      {/* ---------------------------------------------------- */}
 
-      {showBudgetForm ? (
-        <div className="mb-6">
-          <BudgetForm
-            initialValues={{
-              clientId: editingClient?.id || '',
-              clientName: editingClient?.name || '',
-              ...(editBudget || {}),
-            }}
-            onSave={handleSaveBudget}
-            onCancel={() => { setShowBudgetForm(false); setEditingClient(null); setEditBudget(null); }}
-          />
+      <div className="bg-white dark:bg-dark-primary rounded-2xl p-6 shadow-lg border border-brand-light dark:border-dark-surface mb-6">
+        <div className="flex flex-col md:flex-row items-center gap-3">
+          <div className="flex-1 flex items-center gap-3 w-full md:w-auto">
+            <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+            <input
+              type="text"
+              placeholder="Buscar por título o cliente..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 p-3 border border-brand-light dark:border-dark-surface rounded-xl dark:bg-dark-surface focus:outline-none focus:ring-2 focus:ring-brand-mid dark:text-gray-200"
+            />
+          </div>
+          <div className="flex gap-2 w-full md:w-auto justify-end">
+            <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} className="p-3 border border-brand-light dark:border-dark-surface rounded-xl dark:bg-dark-surface text-sm dark:text-gray-200">
+              {clientOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+            </select>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="p-3 border border-brand-light dark:border-dark-surface rounded-xl dark:bg-dark-surface text-sm dark:text-gray-200">
+              <option value="all">Todos los Estados</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="APPROVED">Aprobado</option>
+              <option value="REJECTED">Rechazado</option>
+            </select>
+            <input type="date" value={dateFilter} onChange={e => setDateFilter(e.target.value)} className="p-3 border border-brand-light dark:border-dark-surface rounded-xl dark:bg-dark-surface text-sm dark:text-gray-200" />
+          </div>
         </div>
-      ) : (
-        <>
-          <BudgetList
-            budgets={budgets}
-            viewMode={viewMode}
-            onView={handleView}
-            onEdit={handleEdit}
-            onDuplicate={handleDuplicate}
-            onDelete={handleDelete}
-            onNewForClient={openNewBudgetForClient}
-          />
+      </div>
 
-          {viewBudget && (
-            <div className="mt-4">
-              <BudgetDetail
-                budget={viewBudget}
-                onClose={() => setViewBudget(null)}
-              />
-            </div>
-          )}
-        </>
+
+      {showForm ? (
+        <BudgetForm
+          initialValues={editingBudget || {}}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
+      ) : (
+        <BudgetList
+          budgets={filteredBudgets}
+          viewMode={viewMode}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onApprove={handleApproveBudget}
+          onReject={handleRejectBudget}
+          userRoles={userRoles}
+          currentUserId={user?.sub}
+        />
       )}
     </div>
   );

@@ -1,4 +1,3 @@
-
 datasource db {
   provider = "sqlite"
   url      = "file:./dev.db"
@@ -8,22 +7,132 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Simplified User model.
-// The 'id' should correspond to the 'sub' claim from the Auth0 JWT token.
-model User {
-  id    String @id
-  email String @unique
-  name  String?
 
-  // Add any other application-specific fields here.
-  // For example, you might associate users with budgets or clients.
-  // budgets Budget[]
+
+// User model linked to Auth0 authentication
+model User {
+  id    String  @id // Corresponds to the 'sub' claim from the Auth0 JWT
+  email String  @unique
+  name  String?
+  role  String? // User role from Auth0
+
+  createdBudgets Budget[] @relation("CreatedBudgets")
+  clients        Client[]
+  processedBudgets Budget[] @relation("ProcessedBudgets") // Added directly to User model
+  payments Payment[] @relation("ValidatedPayments") // Added reverse relation for payments
 }
 
-// Example of other models you might have.
-// model Budget {
-//   id          String  @id @default(cuid())
-//   title       String
-//   author      User    @relation(fields: [authorId], references: [id])
-//   authorId    String
-// }
+// Client model associated with a User
+model Client {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  rif         String?  // Nueva: Registro de Identificación Fiscal (RIF) o Cédula de Identidad
+  phone       String?
+  address     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relation to the User who owns this client record
+  owner   User   @relation(fields: [ownerId], references: [id])
+  ownerId String
+
+  // Relation to Budgets
+  budgets Budget[]
+}
+
+// Budget model
+model Budget {
+  id              String       @id @default(cuid())
+  title           String
+  address         String?      // Nueva: Dirección del proyecto
+  deliveryDate    DateTime?    // Nueva: Fecha estimada de entrega/colado
+  workType        String?      // Nueva: Tipo de obra (vivienda, edificio, etc.)
+  resistance      String?      // Nueva: Resistencia requerida
+  concreteType    String?      // Nueva: Tipo de concreto (convencional, bombeable, etc.)
+  element         String?      // Nueva: Elemento a colar (losa, columna, etc.)
+  observations    String?      // Nueva: Observaciones técnicas
+  status          String @default("PENDING") // Revertido a String
+  total           Float
+  volume          Float?       // Reinsertado: Volumen total estimado del proyecto
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  creator   User   @relation("CreatedBudgets", fields: [creatorId], references: [id])
+  creatorId String
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  products BudgetProduct[]
+  payments Payment[] // Added reverse relation for payments from budget
+
+  paymentReceiptUrl String?
+  proFormaInvoice   String?
+  deliveryOrder     String?
+
+  // Nuevos campos para el proceso de aprobación
+  processedBy   User?   @relation("ProcessedBudgets", fields: [processedById], references: [id])
+  processedById String?
+  processedAt   DateTime?
+  rejectionReason String?
+}
+
+// Payment model
+model Payment {
+  id                String    @id @default(cuid())
+  budgetId          String
+  budget            Budget    @relation(fields: [budgetId], references: [id])
+  amount            Float
+  paidAmount        Float     // Amount actually paid
+  pending           Float     // Remaining amount owed
+  date              DateTime  @default(now())
+  method            String
+  reference         String?
+  bankFrom          String?
+  bankTo            String?
+  receiptUrl        String?   // URL to uploaded payment receipt
+  status            String    @default("PENDING") // PENDING, VALIDATED, REJECTED
+  observations      String?
+  validatorId       String?
+  validator         User?     @relation("ValidatedPayments", fields: [validatorId], references: [id])
+  validatedAt       DateTime?
+  proFormaInvoiceUrl String?
+  fiscalInvoiceUrl  String?
+  deliveryOrderUrl  String?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// Model for the products included in a budget (join table)
+model BudgetProduct {
+  id         String @id @default(cuid())
+  quantity   Float
+  unitPrice  Float // Price at the time of budget creation, for historical purposes
+  totalPrice Float
+
+  // Relation to Budget
+  budget   Budget @relation(fields: [budgetId], references: [id])
+  budgetId String
+
+  // Relation to Product
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+}
+
+// Model for Products and Services
+model Product {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  price       Float
+  // Type can be 'CONCRETE', 'BLOCK', 'SERVICE', etc.
+  type        String
+  // Category can be 'Estructurales', 'Pavimentos', 'Asesorias', etc.
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budgets BudgetProduct[]
+}

@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
+import api from '../utils/api';
 
 // Componente principal
 const ChatWidget = () => {
@@ -25,12 +26,8 @@ const ChatWidget = () => {
     setInput('');
     setLoading(true);
     try {
-      const resp = await fetch('http://localhost:3001/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: nextMessages }),
-      });
-      const data = await resp.json();
+      const resp = await api.post('/api/chat', { messages: nextMessages });
+      const data = resp.data;
       const content = data?.content || 'Lo siento, hubo un problema al responder.';
       setMessages((prev) => [...prev, { role: 'assistant', content }]);
     } catch (e) {

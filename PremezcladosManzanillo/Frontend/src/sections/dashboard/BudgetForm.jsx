@@ -1,114 +1,180 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { PlusCircle, Trash2 } from 'lucide-react';
+import api from '../../utils/api';
+import { format } from 'date-fns';
 
-const defaultValues = {
-  nombreProyecto: '',
-  direccion: '',
-  fechaColado: '',
-  tipoObra: 'vivienda',
-  resistencia: '150',
-  tipoConcreto: 'convencional',
-  volumen: '',
-  elemento: 'losa',
-  requiereBomba: 'No',
-  observaciones: '',
-};
+const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
+  // State for data fetched from API
+  const [clients, setClients] = useState([]);
+  const [products, setProducts] = useState([]);
 
-const BudgetForm = ({ initialValues = {}, onSave = () => {}, onCancel = () => {} }) => {
-  const [form, setForm] = useState({ ...defaultValues, ...initialValues });
+  // Form state
+  const [clientId, setClientId] = useState(initialValues.clientId || '');
+  const [title, setTitle] = useState(initialValues.title || '');
+  const [address, setAddress] = useState(initialValues.address || '');
+  const [deliveryDate, setDeliveryDate] = useState(initialValues.deliveryDate ? format(new Date(initialValues.deliveryDate), 'yyyy-MM-dd') : '');
+  const [workType, setWorkType] = useState(initialValues.workType || 'vivienda');
+  const [resistance, setResistance] = useState(initialValues.resistance || '150');
+  const [concreteType, setConcreteType] = useState(initialValues.concreteType || 'convencional');
+  const [element, setElement] = useState(initialValues.element || 'losa');
+  const [observations, setObservations] = useState(initialValues.observations || '');
+  const [volume, setVolume] = useState(initialValues.volume || '');
+
+  const [productItems, setProductItems] = useState(initialValues.products?.map(item => ({
+    productId: item.product.id,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    name: item.product.name,
+  })) || []);
   const [errors, setErrors] = useState({});
 
+  // Fetch initial data (clients and products)
   useEffect(() => {
-    setForm(prev => ({ ...prev, ...initialValues }));
-  }, [initialValues]);
+    const fetchData = async () => {
+      try {
+        const [clientsRes, productsRes] = await Promise.all([
+          api.get('/api/clients'),
+          api.get('/api/products'),
+        ]);
+        setClients(clientsRes.data);
+        setProducts(productsRes.data);
+      } catch (error) {
+        console.error("Failed to fetch data", error);
+        setErrors(prev => ({ ...prev, data: "Failed to load clients or products." }));
+      }
+    };
+    fetchData();
+  }, []);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (checked ? 'Sí' : 'No') : value,
-    }));
+  const handleAddItem = () => {
+    setProductItems([...productItems, { productId: '', quantity: 1, unitPrice: 0, name: '' }]);
+  };
+
+  const handleRemoveItem = (index) => {
+    const newItems = productItems.filter((_, i) => i !== index);
+    setProductItems(newItems);
+  };
+
+  const handleItemChange = (index, field, value) => {
+    const newItems = [...productItems];
+    newItems[index][field] = value;
+
+    // If a product is selected, update its price and name
+    if (field === 'productId') {
+      const selectedProduct = products.find(p => p.id === value);
+      if (selectedProduct) {
+        newItems[index].unitPrice = selectedProduct.price;
+        newItems[index].name = selectedProduct.name;
+      }
+    }
+    setProductItems(newItems);
+  };
+
+  const calculateTotal = () => {
+    return productItems.reduce((total, item) => total + (item.quantity * item.unitPrice), 0);
   };
 
   const validate = () => {
     const err = {};
-    if (!form.nombreProyecto || form.nombreProyecto.trim().length < 3) err.nombreProyecto = 'Nombre del proyecto requerido';
-    if (!form.fechaColado) err.fechaColado = 'Fecha estimada requerida';
-    if (!form.resistencia) err.resistencia = 'Selecciona la resistencia requerida';
-    if (!form.tipoConcreto) err.tipoConcreto = 'Selecciona el tipo de concreto';
-    if (!form.volumen || Number(form.volumen) <= 0) err.volumen = 'Ingresa un volumen válido (m³)';
+    if (!clientId) err.clientId = 'Selecciona un cliente.';
+    if (!title.trim()) err.title = 'El título del presupuesto es requerido.';
+
+    // Validate deliveryDate
+    if (deliveryDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const delivery = new Date(deliveryDate);
+      delivery.setHours(0, 0, 0, 0);
+      if (delivery <= today) {
+        err.deliveryDate = 'La fecha de entrega debe ser al menos un día posterior a la fecha actual.';
+      }
+    }
+
+    if (productItems.length === 0) err.items = 'Añade al menos un producto o servicio.';
+    productItems.forEach((item, index) => {
+      if (!item.productId) {
+        err[`item_${index}`] = 'Selecciona un producto.';
+      }
+      if (!item.quantity || item.quantity <= 0) {
+        err[`item_q_${index}`] = 'La cantidad debe ser mayor a 0.';
+      }
+    });
     return err;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const err = validate();
-    setErrors(err);
-    if (Object.keys(err).length > 0) return;
+    const formErrors = validate();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
 
-    const payload = {
-      ...form,
-      volumen: Number(form.volumen),
-      fechaColado: form.fechaColado,
-      createdAt: new Date().toISOString(),
+    const budgetData = {
+      title,
+      clientId,
+      address,
+      deliveryDate: deliveryDate || undefined,
+      workType,
+      resistance,
+      concreteType,
+      element,
+      observations,
+      volume: volume ? parseFloat(volume) : undefined,
+      products: productItems.map(({ productId, quantity }) => ({ productId, quantity: Number(quantity) })),
     };
-
-    onSave(payload);
+    onSave(budgetData);
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
       className="bg-white dark:bg-dark-primary rounded-2xl p-6 shadow-lg border border-brand-light dark:border-dark-surface max-w-4xl mx-auto"
     >
-      <h2 className="text-xl font-semibold text-green-800 dark:text-green-300 mb-4">Nuevo Presupuesto</h2>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <h2 className="text-xl font-semibold text-brand-primary dark:text-white mb-6">
+        {initialValues.id ? "Editar Presupuesto" : "Nuevo Presupuesto"}
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre del proyecto / referencia</label>
-            <input
-              name="nombreProyecto"
-              value={form.nombreProyecto}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
-              placeholder="Ej. Edificio A - Bloque 1"
-            />
-            {errors.nombreProyecto && <p className="text-sm text-red-500 mt-1">{errors.nombreProyecto}</p>}
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Cliente</label>
+            {clients.length > 0 ? (
+              <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary">
+                <option value="">Seleccionar Cliente</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            ) : (
+              <p className="mt-1 text-sm text-gray-500">No hay clientes. <Link to="/clients" className="text-brand-primary hover:underline">Crea uno</Link>.</p>
+            )}
+            {errors.clientId && <p className="text-sm text-red-500 mt-1">{errors.clientId}</p>}
           </div>
-
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Título del Presupuesto</label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" />
+            {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Dirección / Ubicación</label>
-            <input
-              name="direccion"
-              value={form.direccion}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 dark:text-gray-200"
-              placeholder="Calle, sector, ciudad"
-            />
+            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" placeholder="Calle, sector, ciudad" />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha estimada de colado</label>
-            <input
-              name="fechaColado"
-              type="date"
-              value={form.fechaColado}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 dark:text-gray-200"
-            />
-            {errors.fechaColado && <p className="text-sm text-red-500 mt-1">{errors.fechaColado}</p>}
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha estimada de entrega</label>
+            <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" />
+            {errors.deliveryDate && <p className="text-sm text-red-500 mt-1">{errors.deliveryDate}</p>}
           </div>
+        </div>
 
+        <hr className="my-2 border-gray-200 dark:border-gray-700" />
+
+        {/* Project Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de obra</label>
-            <select
-              name="tipoObra"
-              value={form.tipoObra}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 dark:text-gray-200"
-            >
+            <select value={workType} onChange={(e) => setWorkType(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary">
               <option value="vivienda">Vivienda</option>
               <option value="edificio">Edificio</option>
               <option value="pavimento">Pavimento</option>
@@ -117,67 +183,28 @@ const BudgetForm = ({ initialValues = {}, onSave = () => {}, onCancel = () => {}
               <option value="otro">Otro</option>
             </select>
           </div>
-        </div>
-
-        <hr className="my-2 border-gray-200 dark:border-gray-700" />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Resistencia requerida (f’c)</label>
-            <select
-              name="resistencia"
-              value={form.resistencia}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 dark:text-gray-200"
-            >
+            <select value={resistance} onChange={(e) => setResistance(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary">
               <option value="150">150 kg/cm²</option>
               <option value="200">200 kg/cm²</option>
               <option value="250">250 kg/cm²</option>
               <option value="300">300 kg/cm²</option>
               <option value="350">350 kg/cm²</option>
             </select>
-            {errors.resistencia && <p className="text-sm text-red-500 mt-1">{errors.resistencia}</p>}
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de concreto</label>
-            <select
-              name="tipoConcreto"
-              value={form.tipoConcreto}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 dark:text-gray-200"
-            >
+            <select value={concreteType} onChange={(e) => setConcreteType(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary">
               <option value="convencional">Convencional</option>
               <option value="bombeable">Bombeable</option>
               <option value="con_fibra">Con fibra</option>
               <option value="rapido_fraguado">Rápido fraguado</option>
             </select>
-            {errors.tipoConcreto && <p className="text-sm text-red-500 mt-1">{errors.tipoConcreto}</p>}
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Volumen estimado (m³)</label>
-            <input
-              name="volumen"
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.volumen}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 dark:text-gray-200"
-              placeholder="Ej. 12.5"
-            />
-            {errors.volumen && <p className="text-sm text-red-500 mt-1">{errors.volumen}</p>}
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Elemento a colar</label>
-            <select
-              name="elemento"
-              value={form.elemento}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 dark:text-gray-200"
-            >
+            <select value={element} onChange={(e) => setElement(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary">
               <option value="losa">Losa</option>
               <option value="columna">Columna</option>
               <option value="zapata">Zapata</option>
@@ -185,42 +212,62 @@ const BudgetForm = ({ initialValues = {}, onSave = () => {}, onCancel = () => {}
               <option value="otro">Otro</option>
             </select>
           </div>
-
-          <div className="md:col-span-2 flex items-center gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">¿Requiere bomba?</label>
-              <div className="mt-1 flex items-center gap-4">
-                <label className={`inline-flex items-center px-3 py-1 rounded-lg cursor-pointer ${form.requiereBomba === 'Sí' ? 'bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-800' : 'dark:text-gray-300'}`}>
-                  <input type="radio" name="requiereBomba" value="Sí" checked={form.requiereBomba === 'Sí'} onChange={handleChange} className="mr-2" />
-                  Sí
-                </label>
-                <label className={`inline-flex items-center px-3 py-1 rounded-lg cursor-pointer ${form.requiereBomba === 'No' ? 'bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-800' : 'dark:text-gray-300'}`}>
-                  <input type="radio" name="requiereBomba" value="No" checked={form.requiereBomba === 'No'} onChange={handleChange} className="mr-2" />
-                  No
-                </label>
-              </div>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Volumen total estimado (m³)</label>
+            <input type="number" step="0.01" min="0" value={volume} onChange={(e) => setVolume(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" placeholder="Ej. 12.5" />
           </div>
         </div>
-
+        
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Observaciones técnicas</label>
-          <textarea
-            name="observaciones"
-            value={form.observaciones}
-            onChange={handleChange}
-            rows="4"
-            className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 dark:text-gray-200"
-            placeholder="Notas técnicas, referencias, restricciones de acceso, etc."
-          />
+          <textarea value={observations} onChange={(e) => setObservations(e.target.value)} rows="4" className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" placeholder="Notas técnicas, referencias, restricciones de acceso, etc."></textarea>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-dark-surface text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600">
+        <hr className="my-2 border-gray-200 dark:border-gray-700" />
+
+        {/* Product Items */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Productos y Servicios</h3>
+          {productItems.map((item, index) => (
+            <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-dark-surface rounded-lg">
+              <div className="flex-grow">
+                <select value={item.productId} onChange={(e) => handleItemChange(index, 'productId', e.target.value)} className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600">
+                  <option value="">Seleccionar Producto</option>
+                  {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                {errors[`item_${index}`] && <p className="text-sm text-red-500 mt-1">{errors[`item_${index}`]}</p>}
+              </div>
+              <div className="w-24">
+                <input type="number" min="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600" />
+                {errors[`item_q_${index}`] && <p className="text-sm text-red-500 mt-1">{errors[`item_q_${index}`]}</p>}
+              </div>
+              <div className="w-28 text-right dark:text-gray-300">
+                ${(item.quantity * item.unitPrice).toFixed(2)}
+              </div>
+              <button type="button" onClick={() => handleRemoveItem(index)}>
+                <Trash2 className="text-red-500 hover:text-red-700 h-5 w-5" />
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={handleAddItem} className="flex items-center gap-2 text-brand-primary hover:text-brand-dark font-medium">
+            <PlusCircle size={20} />
+            Añadir Item
+          </button>
+          {errors.items && <p className="text-sm text-red-500 mt-1">{errors.items}</p>}
+        </div>
+
+        {/* Total */}
+        <div className="text-right text-2xl font-bold text-gray-800 dark:text-white">
+          Total: ${calculateTotal().toFixed(2)}
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-4">
+          <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300">
             Cancelar
           </button>
-          <button type="submit" className="px-5 py-2 rounded-lg bg-green-700 text-white hover:bg-green-600">
-            Guardar Presupuesto
+          <button type="submit" className="px-6 py-2 rounded-lg bg-brand-primary text-white hover:bg-brand-dark">
+            Guardar
           </button>
         </div>
       </form>

@@ -1,199 +1,190 @@
-import React, { useState, useMemo } from 'react';
-import { mockClients } from '../../mock/data';
+import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Edit, Trash2, CheckCircle, XCircle } from 'lucide-react'; // Added CheckCircle, XCircle
+import { format } from 'date-fns';
 import BudgetTable from './BudgetTable.jsx';
-import { formatCurrency } from '../../utils/helpers';
+import Modal from '../../components/Modal.jsx'; // Assuming a generic Modal component
 
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
+};
 
-const BudgetList = ({
-  budgets = [],
-  viewMode = 'canvas',
-  onView = () => {},
-  onEdit = () => {},
-  onDuplicate = () => {},
-  onDelete = () => {},
-  onNewForClient = () => {},
-}) => {
-  const [clientFilter, setClientFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('');
+const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onReject, userRoles, currentUserId }) => {
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [budgetToReject, setBudgetToReject] = useState(null);
+  const [rejectionReasonInput, setRejectionReasonInput] = useState('');
 
-  const clientsById = useMemo(() => {
-    const map = new Map();
-    (mockClients || []).forEach((c) => map.set(String(c.id), c));
-    return map;
-  }, []);
+  const canEditOrDeleteBudget = (budget) => {
+    // Admin can always edit/delete
+    if (userRoles.includes('Administrador')) {
+      return true;
+    }
 
-  const safeDate = (val) => {
-    if (!val) return '';
-    try {
-      const d = new Date(val);
-      if (!isNaN(d)) return d.toISOString().slice(0, 10);
-    } catch (e) {}
-    return '';
+    // Contable can edit/delete APPROVED or PENDING budgets
+    if (userRoles.includes('Contable') && (budget.status === 'APPROVED' || budget.status === 'PENDING')) {
+      return true;
+    }
+    
+    // Comercial can edit/delete PENDING budgets they own
+    if (userRoles.includes('Comercial') && budget.status === 'PENDING' && budget.creatorId === currentUserId) {
+      return true;
+    }
+
+    return false;
   };
 
-  const normalizedBudgets = useMemo(() => {
-    return (budgets || []).map((b) => {
-      const c = b.clientId ? clientsById.get(String(b.clientId)) : null;
-      return {
-        ...b,
-        clientId: b.clientId || c?.id || null,
-        clientName: b.clientName || c?.name || 'Cliente desconocido',
-        clientRif: b.clientRif || c?.rif || '-',
-        clientAddress: b.clientAddress || c?.address || '',
-        createdDateStr: safeDate(b.fechaColado || b.createdAt || b.date),
-      };
-    });
-  }, [budgets, clientsById]);
-
-  const matchesFilter = (b) => {
-    if (clientFilter !== 'all') {
-      const bid = b.clientId ? String(b.clientId) : '';
-      if (bid !== clientFilter) return false;
-    }
-    if (statusFilter !== 'all') {
-      if ((b.status || '').toLowerCase() !== statusFilter.toLowerCase()) return false;
-    }
-    if (dateFilter) {
-      if (b.createdDateStr !== dateFilter) return false;
-    }
-    return true;
+  const canApproveOrRejectBudget = (budget) => {
+    // Only Admin can approve/reject and only if budget is PENDING
+    return userRoles.includes('Administrador') && budget.status === 'PENDING';
   };
 
-  const filteredBudgets = useMemo(() => normalizedBudgets.filter(matchesFilter), [normalizedBudgets, clientFilter, statusFilter, dateFilter]);
+  const handleOpenRejectionModal = (budget) => {
+    setBudgetToReject(budget);
+    setShowRejectionModal(true);
+  };
 
-  const groups = useMemo(() => {
-    const map = new Map();
-    filteredBudgets.forEach((b) => {
-      const key = b.clientId || b.clientName || 'unknown';
-      if (!map.has(key)) {
-        map.set(key, {
-          clientId: b.clientId || null,
-          clientName: b.clientName || 'Cliente desconocido',
-          clientRif: b.clientRif || '-',
-          clientAddress: b.clientAddress || '',
-          items: [],
-        });
-      }
-      map.get(key).items.push(b);
-    });
-    return Array.from(map.values());
-  }, [filteredBudgets]);
+  const handleConfirmRejection = () => {
+    if (budgetToReject && rejectionReasonInput.trim()) {
+      onReject(budgetToReject.id, rejectionReasonInput.trim());
+      setShowRejectionModal(false);
+      setBudgetToReject(null);
+      setRejectionReasonInput('');
+    } else {
+      alert('La razón de rechazo no puede estar vacía.');
+    }
+  };
 
-  const clientOptions = useMemo(() => {
-    const ids = new Set();
-    normalizedBudgets.forEach((b) => {
-      if (b.clientId) ids.add(String(b.clientId));
-    });
-    const opts = [{ value: 'all', label: 'Todos los clientes' }];
-    (mockClients || []).forEach((c) => {
-      if (ids.size === 0 || ids.has(String(c.id))) {
-        opts.push({ value: String(c.id), label: c.name });
+  // Group by client for canvas view
+  const groupedByClient = useMemo(() => {
+    if (viewMode !== 'canvas') return [];
+    const groups = new Map();
+    budgets.forEach(b => {
+      const clientName = b.client?.name || 'Cliente no asignado';
+      if (!groups.has(clientName)) {
+        groups.set(clientName, []);
       }
+      groups.get(clientName).push(b);
     });
-    return opts;
-  }, [normalizedBudgets]);
+    return Array.from(groups.entries());
+  }, [budgets, viewMode]);
+
+  if (budgets.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-500 dark:text-gray-400">No hay presupuestos que coincidan con la búsqueda.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="border border-gray-200 dark:border-dark-surface rounded-xl p-3 flex flex-col sm:flex-row gap-3">
-        <select
-          value={clientFilter}
-          onChange={(e) => setClientFilter(e.target.value)}
-          className="px-3 py-2 bg-white dark:bg-dark-surface dark:text-gray-200 border border-gray-200 dark:border-gray-600 rounded-lg text-sm flex-1"
-        >
-          {clientOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 bg-white dark:bg-dark-surface dark:text-gray-200 border border-gray-200 dark:border-gray-600 rounded-lg text-sm flex-1 sm:flex-none"
-        >
-          <option value="all">Todos los estados</option>
-          <option value="pending">Pendiente</option>
-          <option value="approved">Aprobado</option>
-          <option value="pagado">Pagado</option>
-        </select>
-
-        <input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-          className="px-3 py-2 bg-white dark:bg-dark-surface dark:text-gray-200 border border-gray-200 dark:border-gray-600 rounded-lg text-sm flex-1 sm:flex-none"
-          placeholder="dd/mm/aaaa"
-        />
-      </div>
-
       {viewMode === 'canvas' ? (
-        groups.map((group) => (
-          <React.Fragment key={`${group.clientId || group.clientName}`}>
-            <div className="bg-white dark:bg-dark-primary rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-dark-surface">
-            <div className="flex justify-between items-start">
-              <div className="mb-3">
-                <h4 className="text-emerald-800 dark:text-green-300 font-semibold">{group.clientName}</h4>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  RIF: {group.clientRif} {group.clientAddress ? `• ${group.clientAddress}` : ''}
-                </p>
-              </div>
-
-              <button
-                onClick={() => onNewForClient && onNewForClient({ id: group.clientId || null, name: group.clientName })}
-                className="px-4 py-2 bg-green-800 text-white rounded-lg shadow-sm hover:bg-green-900"
-              >
-                Nuevo Presupuesto para este Cliente
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {group.items.map((b) => (
-                <div key={b.id} className="rounded-xl p-4 border border-gray-100 dark:border-dark-surface/50 bg-white dark:bg-dark-surface/30">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="text-sm font-medium text-emerald-800 dark:text-green-300">{b.title || 'Presupuesto'}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">{b.createdDateStr || ''}</div>
+        <div className="space-y-6">
+            {groupedByClient.map(([clientName, clientBudgets]) => (
+                <div key={clientName}>
+                    <h3 className="text-xl font-semibold text-brand-primary dark:text-white mb-3">{clientName}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {clientBudgets.map((budget, index) => (
+                        <motion.div
+                            key={budget.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="bg-white dark:bg-dark-surface rounded-lg shadow-md border dark:border-gray-700 flex flex-col justify-between p-5"
+                        >
+                            <div>
+                                <div className="flex justify-between items-start">
+                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 pr-2">{budget.title}</h4>
+                                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
+                                      budget.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900' :
+                                      budget.status === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900' :
+                                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900'
+                                    }`}>{budget.status}</span>
+                                </div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{format(new Date(budget.createdAt), 'dd/MM/yyyy')}</p>
+                                {budget.processedBy && (
+                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                    Procesado por: {budget.processedBy.name} el {format(new Date(budget.processedAt), 'dd/MM/yyyy')}
+                                  </p>
+                                )}
+                                {budget.rejectionReason && (
+                                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                                    Motivo de rechazo: {budget.rejectionReason}
+                                  </p>
+                                )}
+                            </div>
+                            <div className="mt-4 pt-4 border-t dark:border-gray-600">
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-sm text-gray-600 dark:text-gray-300">{budget.products.length} items</span>
+                                    <span className="text-xl font-bold text-gray-800 dark:text-white">{formatCurrency(budget.total)}</span>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    {canApproveOrRejectBudget(budget) && (
+                                        <>
+                                            <button onClick={() => onApprove(budget.id)} title="Aprobar" className="p-2 rounded-lg text-green-600 hover:bg-green-100 dark:hover:bg-green-900">
+                                                <CheckCircle className="w-5 h-5" />
+                                            </button>
+                                            <button onClick={() => handleOpenRejectionModal(budget)} title="Rechazar" className="p-2 rounded-lg text-red-600 hover:bg-red-100 dark:hover:bg-red-900">
+                                                <XCircle className="w-5 h-5" />
+                                            </button>
+                                        </>
+                                    )}
+                                    {canEditOrDeleteBudget(budget) && (
+                                        <>
+                                            <button onClick={() => onEdit(budget)} title="Editar"><Edit className="w-5 h-5 text-blue-500 hover:text-blue-700" /></button>
+                                            <button onClick={() => onDelete(budget.id)} title="Eliminar"><Trash2 className="w-5 h-5 text-red-500 hover:text-red-700" /></button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
                     </div>
-
-                    <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">{formatCurrency(b.total ?? b.amount ?? 0)}</div>
-                    {b.status && (
-                      <span className="inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                        {String(b.status)}
-                      </span>
-                    )}
-                  </div>
-
-                        <div className="mt-3 grid grid-cols-3 gap-0 md:max-w-md">
-                          <button
-                            onClick={() => onView && onView(b)}
-                            className="px-3 py-2 bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-sm rounded-l-lg hover:bg-gray-50 dark:hover:bg-gray-600"
-                          >
-                            Ver
-                          </button>
-                          <button
-                            onClick={() => onEdit && onEdit(b)}
-                            className="px-3 py-2 bg-emerald-600 text-white text-sm hover:bg-emerald-700"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => onDelete && onDelete(b)}
-                            className="px-3 py-2 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-sm rounded-r-lg hover:bg-red-200 dark:hover:bg-red-900"
-                          >
-                            Eliminar
-                          </button>
-                        </div>
                 </div>
-              ))}
-            </div>
-            </div>
-          </React.Fragment>
-        ))
+            ))}
+        </div>
       ) : (
-        <BudgetTable budgets={filteredBudgets} onView={onView} onEdit={onEdit} onDuplicate={onDuplicate} onDelete={onDelete} />
+        <BudgetTable
+          budgets={budgets}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onApprove={onApprove}
+          onReject={handleOpenRejectionModal} // Pass function to open rejection modal
+          userRoles={userRoles}
+          currentUserId={currentUserId}
+          canEditOrDeleteBudget={canEditOrDeleteBudget}
+          canApproveOrRejectBudget={canApproveOrRejectBudget}
+        />
+      )}
+
+      {showRejectionModal && (
+        <Modal onClose={() => setShowRejectionModal(false)} title="Rechazar Presupuesto">
+          <p className="mb-4 text-brand-text dark:text-gray-300">
+            Estás a punto de rechazar el presupuesto: <span className="font-bold">{budgetToReject?.title}</span>.
+            Por favor, introduce una razón para el rechazo.
+          </p>
+          <textarea
+            value={rejectionReasonInput}
+            onChange={(e) => setRejectionReasonInput(e.target.value)}
+            className="w-full p-2 border rounded-lg dark:bg-dark-surface dark:text-gray-200"
+            rows="4"
+            placeholder="Razón de rechazo..."
+          ></textarea>
+          <div className="flex justify-end gap-3 mt-4">
+            <button
+              onClick={() => setShowRejectionModal(false)}
+              className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-dark-surface text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleConfirmRejection}
+              className="px-5 py-2 rounded-lg bg-red-700 text-white hover:bg-red-600"
+            >
+              Confirmar Rechazo
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );

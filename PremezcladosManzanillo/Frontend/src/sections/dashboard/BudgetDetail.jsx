@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom'; // Importar Link
+import { DollarSign } from 'lucide-react'; // Importar icono
 import BudgetPDF from './BudgetPDF.jsx';
 
 const formatDate = (value) => {
@@ -22,7 +24,7 @@ const formatDate = (value) => {
   return '';
 };
 
-const BudgetDetail = ({ budget, onClose = () => {} }) => {
+const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove }) => {
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose();
@@ -48,6 +50,10 @@ const BudgetDetail = ({ budget, onClose = () => {} }) => {
 
   const fechaColado = project.fechaColado || formatDate(budget.createdAt);
 
+  // Lógica para mostrar/ocultar botón de aprobación
+  const canApprove = userRoles.includes('Administrador') || userRoles.includes('Comercial');
+  const showApproveButton = canApprove && budget.status === 'PENDING';
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
@@ -67,6 +73,7 @@ const BudgetDetail = ({ budget, onClose = () => {} }) => {
             <div>
               <h3 className="text-lg font-semibold text-green-900 dark:text-green-300">{budget.title || project.nombreProyecto || 'Presupuesto'}</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">Folio: {budget.folio || budget.id}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Estado: {budget.status}</p> {/* Mostrar el estado */}
             </div>
 
             <div className="flex gap-2">
@@ -103,7 +110,23 @@ const BudgetDetail = ({ budget, onClose = () => {} }) => {
           </div>
 
           <div className="flex justify-end mt-5 gap-2 items-center">
-            {/* Duplicar/Convertir buttons removed by user request */}
+            {showApproveButton && (
+              <button
+                onClick={() => onApprove(budget.id)}
+                className="px-4 py-2 rounded-md bg-green-600 text-white border border-green-700 text-sm hover:bg-green-700 transition duration-150"
+              >
+                Aprobar Presupuesto
+              </button>
+            )}
+            {budget.status === 'APPROVED' && (
+              <Link
+                to={`/payments?budgetId=${budget.id}`}
+                onClick={onClose} // Cerrar el modal al navegar
+                className="px-4 py-2 rounded-md bg-blue-600 text-white border border-blue-700 text-sm hover:bg-blue-700 transition duration-150 flex items-center gap-1"
+              >
+                <DollarSign size={16} /> Ver/Registrar Pagos
+              </Link>
+            )}
             <BudgetPDF budget={budget} className="ml-1" />
             <button onClick={onClose} className="px-4 py-2 rounded-md bg-gray-100 dark:bg-dark-surface text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-sm">
               Cerrar

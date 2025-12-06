@@ -1,47 +1,62 @@
 import express from 'express';
 import * as dotenv from 'dotenv';
-import { auth } from 'express-oauth2-jwt-bearer';
-
-// Load environment variables from .env file
-dotenv.config();
+dotenv.config(); // Load environment variables
 
 const app = express();
 const port = 3001;
 
-// Authorization middleware. Attaches the user payload to the request object.
-// All routes defined after this will be protected.
-const jwtCheck = auth({
-  audience: 'https://premezclados-api.com',
-  issuerBaseURL: 'https://dev-bellooswaldo.us.auth0.com/',
-  tokenSigningAlg: 'RS256'
+// Global error handlers for uncaught exceptions and unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1); // Exit with a failure code
 });
 
-// Enforce on all endpoints
-// app.use(jwtCheck); // Uncomment this to protect all routes by default
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception thrown:', error);
+  process.exit(1); // Exit with a failure code
+});
 
-// Other middleware like express.json() should be mounted AFTER the auth handler.
+import cors from 'cors';
+
+// Configuración de CORS con el paquete `cors`
+const corsOptions = {
+  origin: 'http://localhost:3000', // El origen de tu frontend
+  credentials: true, // Permitir cookies y cabeceras de autorización
+};
+
+console.log('Backend: Applying CORS middleware');
+app.use(cors(corsOptions));
+
+import { jwtCheck } from './middleware/jwtCheck';
+import { userProvisioningMiddleware } from './middleware/userProvisioningMiddleware';
+
+// Routers
+import budgetsRouter from './routes/budgets';
+import clientsRouter from './routes/clients';
+import productsRouter from './routes/products';
+import paymentsRouter from './routes/payments';
+
+console.log('Backend: Applying express.json middleware');
 app.use(express.json());
 
-// A public endpoint that doesn't require authentication
+console.log('Backend: Serving static files from /uploads');
+app.use('/uploads', express.static('uploads'));
+
+console.log('Backend: Applying Auth middleware to /api/budgets');
+app.use('/api/budgets', jwtCheck, userProvisioningMiddleware, budgetsRouter);
+console.log('Backend: Applying Auth middleware to /api/clients');
+app.use('/api/clients', jwtCheck, userProvisioningMiddleware, clientsRouter);
+console.log('Backend: Applying Auth middleware to /api/products');
+app.use('/api/products', jwtCheck, userProvisioningMiddleware, productsRouter);
+console.log('Backend: Applying Auth middleware to /api/payments');
+app.use('/api/payments', jwtCheck, userProvisioningMiddleware, paymentsRouter);
+
+console.log('Backend: Registering public endpoint /');
 app.get('/', (req, res) => {
   res.send('Backend is running!');
 });
 
-// A protected endpoint that requires authentication
-// Example: app.get('/api/protected', jwtCheck, (req, res) => { ... });
-
-// Minimal CORS for local development
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-  next();
-});
-
-// AI Chat proxy (Groq - OpenAI compatible) - This remains public as per original logic
+console.log('Backend: Registering chat proxy endpoint /api/chat');
 app.post('/api/chat', async (req, res) => {
   try {
     const apiKey = process.env.GROQ_API_KEY;
@@ -49,7 +64,6 @@ app.post('/api/chat', async (req, res) => {
       console.error('[CHAT] Falta GROQ_API_KEY en el backend');
       return res.status(500).json({ error: 'GROQ_API_KEY no configurada en el backend.' });
     }
-    // Log para verificar que la clave se está cargando
     console.log(`[CHAT] Usando API Key que empieza con: ${apiKey.substring(0, 4)}...`);
 
     const { messages, model = 'llama-3.1-8b-instant', temperature = 0.3, max_tokens = 512 } = req.body || {};
@@ -77,7 +91,6 @@ app.post('/api/chat', async (req, res) => {
       messages: [systemPrompt, ...messages],
     };
 
-    // Log del cuerpo de la petición que se enviará a Groq
     console.log('[CHAT] Enviando a Groq:', JSON.stringify(requestBody, null, 2));
 
     const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -112,6 +125,11 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+console.log('Backend: Attempting to start server...');
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
+  console.log('Backend: Server started successfully and listening for requests.');
+}).on('error', (err) => {
+  console.error('Backend: Server failed to start or encountered an error:', err);
+  process.exit(1); // Exit with a failure code if server fails
 });

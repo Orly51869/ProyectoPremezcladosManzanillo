@@ -174,8 +174,8 @@ const Settings = () => {
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center gap-4 mb-8"
       >
-        <SettingsIcon className="w-10 h-10 text-brand-mid dark:text-green-400 transform hover:scale-110 transition-transform" />
-        <h1 className="text-4xl font-bold text-brand-primary dark:text-dark-primary">Configuración</h1>
+        <SettingsIcon className="w-10 h-10 text-black dark:text-green-400 transform hover:scale-110 transition-transform" />
+        <h1 className="text-4xl font-bold text-brand-primary dark:text-white">Configuración</h1>
       </motion.div>
 
       <motion.div

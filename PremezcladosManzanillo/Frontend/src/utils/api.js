@@ -5,6 +5,26 @@ const api = axios.create({
   withCredentials: true, // Important for sending cookies with requests
 });
 
+export let getAuthToken;
+
+export const setGetAuthToken = fn => {
+  getAuthToken = fn;
+};
+
+api.interceptors.request.use(async config => {
+  if (getAuthToken) {
+    try {
+      const token = await getAuthToken();
+      config.headers.Authorization = `Bearer ${token}`;
+    } catch (error) {
+      console.error('Error getting token for API request', error);
+      return Promise.reject(error);
+    }
+  }
+  return config;
+});
+
+
 /**
  * Checks the current user's session status.
  * @returns {Promise<object>} A promise that resolves with the user session data.

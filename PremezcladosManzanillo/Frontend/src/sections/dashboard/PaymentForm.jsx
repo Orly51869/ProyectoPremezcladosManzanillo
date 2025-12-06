@@ -1,45 +1,49 @@
-import React, { useState } from "react";
-import { mockBudgets } from '../../mock/data';
+import React, { useState, useEffect } from "react";
+// import { mockBudgets } from '../../mock/data'; // No longer needed
 
-const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {} }) => {
-  const [idPresupuesto, setIdPresupuesto] = useState("");
-  const [fechaPago, setFechaPago] = useState("");
-  const [monto, setMonto] = useState("");
-  const [metodo, setMetodo] = useState("transferencia");
-  const [referencia, setReferencia] = useState("");
-  const [bancoEmisor, setBancoEmisor] = useState("");
-  const [bancoReceptor, setBancoReceptor] = useState("");
-  const [archivo, setArchivo] = useState(null);
+const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets = [] }) => {
+  const [budgetId, setBudgetId] = useState("");
+  const [paymentDate, setPaymentDate] = useState("");
+  const [paidAmount, setPaidAmount] = useState("");
+  const [method, setMethod] = useState("Transferencia"); // Changed default to "Transferencia" (matching backend enum-like strings)
+  const [reference, setReference] = useState("");
+  const [bankFrom, setBankFrom] = useState("");
+  const [bankTo, setBankTo] = useState("");
+  const [receiptFile, setReceiptFile] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
+
+  useEffect(() => {
+    if (approvedBudgets.length > 0 && !budgetId) {
+      setBudgetId(approvedBudgets[0].id); // Select first approved budget by default
+    }
+  }, [approvedBudgets, budgetId]);
+
+  const validateForm = () => {
+    const errors = {};
+    if (!budgetId) errors.budgetId = "Debe seleccionar un presupuesto.";
+    if (!paidAmount || parseFloat(paidAmount) <= 0) errors.paidAmount = "El monto pagado debe ser mayor a 0.";
+    if (!method) errors.method = "Debe seleccionar un método de pago.";
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!idPresupuesto || !monto) {
-      alert("ID de presupuesto y monto son obligatorios.");
+    if (!validateForm()) {
       return;
     }
 
-    const budget = mockBudgets.find((b) => b.id === idPresupuesto);
-    if (!budget) {
-      alert("Presupuesto no encontrado.");
-      return;
-    }
-    if (budget.status !== "approved") {
-      alert("Solo se permiten pagos para presupuestos aprobados.");
-      return;
-    }
+    const formData = new FormData();
+    formData.append('budgetId', budgetId);
+    formData.append('paidAmount', paidAmount); // Correctly sending paidAmount
+    formData.append('date', paymentDate || new Date().toISOString());
+    formData.append('method', method);
+    if (reference) formData.append('reference', reference);
+    if (bankFrom) formData.append('bankFrom', bankFrom);
+    if (bankTo) formData.append('bankTo', bankTo);
+    if (receiptFile) formData.append('receipt', receiptFile); // 'receipt' is the field name for multer.single('receipt')
 
-    const payload = {
-      id_presupuesto: idPresupuesto,
-      fecha_pago: fechaPago || new Date().toISOString(),
-      monto_pago: parseFloat(monto),
-      metodo_pago: metodo,
-      referencia,
-      banco_emisor: bancoEmisor,
-      banco_receptor: bancoReceptor,
-      comprobante_archivo: archivo ? archivo.name : null,
-    };
-
-    onSubmit(payload);
+    onSubmit(formData); // Send FormData to parent component
   };
 
   return (
@@ -50,13 +54,24 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {} }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">
-            ID del presupuesto
+            Presupuesto Asociado
           </label>
-          <input
-            value={idPresupuesto}
-            onChange={(e) => setIdPresupuesto(e.target.value)}
+          <select
+            value={budgetId}
+            onChange={(e) => setBudgetId(e.target.value)}
             className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg"
-          />
+          >
+            {approvedBudgets.length === 0 ? (
+              <option value="">No hay presupuestos aprobados</option>
+            ) : (
+              approvedBudgets.map((budget) => (
+                <option key={budget.id} value={budget.id}>
+                  {budget.title} (Total: ${budget.total.toFixed(2)})
+                </option>
+              ))
+            )}
+          </select>
+          {formErrors.budgetId && <p className="text-red-500 text-xs mt-1">{formErrors.budgetId}</p>}
         </div>
         <div>
           <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">
@@ -64,84 +79,87 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {} }) => {
           </label>
           <input
             type="date"
-            value={fechaPago}
-            onChange={(e) => setFechaPago(e.target.value)}
+            value={paymentDate}
+            onChange={(e) => setPaymentDate(e.target.value)}
             className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">Monto</label>
+          <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">Monto Pagado</label>
           <input
             type="number"
             step="0.01"
-            value={monto}
-            onChange={(e) => setMonto(e.target.value)}
+            value={paidAmount}
+            onChange={(e) => setPaidAmount(e.target.value)}
             className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg"
           />
+          {formErrors.paidAmount && <p className="text-red-500 text-xs mt-1">{formErrors.paidAmount}</p>}
         </div>
 
         <div>
           <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">Método</label>
           <select
-            value={metodo}
-            onChange={(e) => setMetodo(e.target.value)}
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
             className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg"
           >
-            <option value="transferencia">Transferencia</option>
-            <option value="deposito">Depósito</option>
-            <option value="cheque">Cheque</option>
-            <option value="efectivo">Efectivo</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Depósito">Depósito</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Punto de Venta">Punto de Venta</option>
           </select>
+          {formErrors.method && <p className="text-red-500 text-xs mt-1">{formErrors.method}</p>}
         </div>
 
         <div>
           <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">
-            Referencia
+            Referencia (Opcional)
           </label>
           <input
-            value={referencia}
-            onChange={(e) => setReferencia(e.target.value)}
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
             className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg"
           />
         </div>
 
         <div>
           <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">
-            Banco emisor
+            Banco emisor (Opcional)
           </label>
           <input
-            value={bancoEmisor}
-            onChange={(e) => setBancoEmisor(e.target.value)}
+            value={bankFrom}
+            onChange={(e) => setBankFrom(e.target.value)}
             className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg"
           />
         </div>
 
         <div>
           <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">
-            Banco receptor
+            Banco receptor (Opcional)
           </label>
           <input
-            value={bancoReceptor}
-            onChange={(e) => setBancoReceptor(e.target.value)}
+            value={bankTo}
+            onChange={(e) => setBankTo(e.target.value)}
             className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg"
           />
         </div>
 
         <div className="md:col-span-2">
           <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">
-            Comprobante (PDF/Imagen)
+            Comprobante (PDF/Imagen) (Opcional)
           </label>
           <input
             type="file"
             accept="application/pdf,image/*"
-            onChange={(e) => setArchivo(e.target.files[0])}
-            className="w-full dark:text-gray-300"
+            onChange={(e) => setReceiptFile(e.target.files[0])}
+            className="w-full dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-primary file:text-white hover:file:bg-brand-mid"
           />
         </div>
       </div>
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex gap-2 justify-end">
         <button
           type="button"
           onClick={onCancel}

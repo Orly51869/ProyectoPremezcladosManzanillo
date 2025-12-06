@@ -1,49 +1,48 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { formatCurrency } from "../../utils/helpers";
 import PaymentCard from "./PaymentCard.jsx";
+import PaymentValidationModal from "./PaymentValidationModal.jsx"; // Import the new modal
+import { Download } from "lucide-react"; // For document downloads
 
 const PaymentsList = ({
   payments = [],
   viewMode = 'list',
   onValidate = () => {},
   onResend = () => {},
+  onDownloadReceipt = () => {}, // New prop for downloading receipt
+  userRoles = [],
+  currentUserId = null,
 }) => {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [clientFilter, setClientFilter] = useState("");
-  const [search, setSearch] = useState("");
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [paymentToValidate, setPaymentToValidate] = useState(null);
 
-  const filtered = useMemo(
-    () =>
-      payments.filter((p) => {
-        if (statusFilter !== "all" && p.status !== statusFilter) return false;
-        if (clientFilter && p.clientId !== clientFilter) return false;
-        if (
-          search &&
-          !(p.reference || "").toLowerCase().includes(search.toLowerCase())
-        )
-          return false;
-        return true;
-      }),
-    [payments, statusFilter, clientFilter, search]
-  );
+  const canValidatePayment = (payment) => {
+    // Only Admin or Contable can validate, and only if payment is PENDING
+    return (userRoles.includes('Administrador') || userRoles.includes('Contable')) && payment.status === 'PENDING';
+  };
 
-  const handleValidateClick = (p) => {
-    const approve = confirm("¿Marcar pago como VALIDADO?");
-    if (approve) {
-      onValidate(p.id, { approve: true });
-    } else {
-      const motive = prompt("Ingrese motivo de rechazo:");
-      if (motive) onValidate(p.id, { approve: false, observations: motive });
-    }
+  const handleOpenValidationModal = (payment) => {
+    setPaymentToValidate(payment);
+    setShowValidationModal(true);
+  };
+
+  const handleCloseValidationModal = () => {
+    setShowValidationModal(false);
+    setPaymentToValidate(null);
+  };
+
+  // Helper to call onValidate from parent, with FormData for file uploads
+  const submitValidation = (paymentId, formData) => {
+    onValidate(paymentId, formData);
   };
 
   const downloadCSV = () => {
-    if (!Array.isArray(filtered) || filtered.length === 0) {
+    if (!Array.isArray(payments) || payments.length === 0) {
       alert('No hay pagos para exportar');
       return;
     }
 
-    const rows = filtered.map((p) => ({
+    const rows = payments.map((p) => ({
       ID: p.id,
       Presupuesto: p.budgetId || '',
       Fecha: p.date ? new Date(p.date).toLocaleDateString() : '',
@@ -51,14 +50,15 @@ const PaymentsList = ({
       Metodo: p.method || p.metodo || '',
       Estado: p.status || '',
       Referencia: p.reference || '',
-      Cliente: p.clientName || '',
+      Cliente: p.budget?.client?.name || '', // Access client name through budget
+      ProcesadoPor: p.validator?.name || '',
+      FechaValidacion: p.validatedAt ? new Date(p.validatedAt).toLocaleDateString() : '',
     }));
 
     const headers = Object.keys(rows[0]);
     const escapeCell = (value) => {
       if (value === null || value === undefined) return '';
       const str = String(value);
-      // Escape double quotes
       return `"${str.replace(/"/g, '""')}"`;
     };
 
@@ -86,25 +86,7 @@ const PaymentsList = ({
 
   return (
     <div className="bg-white dark:bg-dark-primary rounded-2xl p-4 shadow-lg border border-brand-light dark:border-dark-surface">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-surface dark:text-gray-200"
-          >
-            <option value="all">Todos los estados</option>
-            <option value="Pendiente">Pendiente</option>
-            <option value="Validado">Validado</option>
-            <option value="Rechazado">Rechazado</option>
-          </select>
-          <input
-            placeholder="Buscar referencia"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-surface dark:text-gray-200"
-          />
-        </div>
+      <div className="flex items-center justify-end mb-4"> {/* Removed internal filters */}
         <div>
           <button
             onClick={downloadCSV}
@@ -122,50 +104,67 @@ const PaymentsList = ({
               <tr className="text-sm text-brand-text dark:text-gray-400">
                 <th className="p-2 font-semibold">ID</th>
                 <th className="p-2 font-semibold">Presupuesto</th>
-                <th className="p-2 font-semibold">Fecha</th>
-                <th className="p-2 font-semibold">Monto</th>
+                <th className="p-2 font-semibold">Cliente</th>
+                <th className="p-2 font-semibold">Monto Pagado</th>
+                <th className="p-2 font-semibold">Monto Pendiente</th>
+                <th className="p-2 font-semibold">Fecha Pago</th>
                 <th className="p-2 font-semibold">Método</th>
                 <th className="p-2 font-semibold">Estado</th>
+                <th className="p-2 font-semibold">Procesado Por</th>
+                <th className="p-2 font-semibold">Fecha Procesado</th>
+                <th className="p-2 font-semibold">Archivos</th>
                 <th className="p-2 font-semibold">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
+              {payments.map((p) => (
                 <tr key={p.id} className="border-t dark:border-dark-surface">
                   <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.id}</td>
-                  <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.budgetId || p.budgetId}</td>
+                  <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.budget?.title || p.budgetId}</td>
+                  <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.budget?.client?.name || 'N/A'}</td>
+                  <td className="p-2 text-sm text-gray-700 dark:text-gray-100 font-medium">{formatCurrency(p.paidAmount)}</td>
+                  <td className="p-2 text-sm text-gray-700 dark:text-gray-100 font-medium">{formatCurrency(p.pending)}</td>
                   <td className="p-2 text-sm text-gray-700 dark:text-gray-300">
-                    {new Date(p.date).toLocaleDateString()}
+                    {p.date ? new Date(p.date).toLocaleDateString() : 'N/A'}
                   </td>
-                  <td className="p-2 text-sm text-gray-700 dark:text-gray-100 font-medium">
-                    {formatCurrency(p.amount || p.paidAmount || 0)}
-                  </td>
-                  <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.method || p.metodo || "-"}</td>
+                  <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.method || "-"}</td>
                   <td className="p-2 text-sm">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        p.status === "Pendiente"
+                        p.status === "PENDING"
                           ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
-                          : p.status === "Validado"
+                          : p.status === "VALIDATED"
                           ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
-                          : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                          : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
                       }`}
                     >
-                      {p.status || "Sin estado"}
+                      {p.status || "PENDING"}
                     </span>
+                  </td>
+                  <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.validator?.name || 'N/A'}</td>
+                  <td className="p-2 text-sm text-gray-700 dark:text-gray-300">
+                    {p.validatedAt ? new Date(p.validatedAt).toLocaleDateString() : 'N/A'}
+                  </td>
+                  <td className="p-2 text-sm">
+                    <div className="flex flex-col gap-1">
+                      {p.receiptUrl && <a href={p.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-1"><Download size={14} /> Recibo</a>}
+                      {p.proFormaInvoiceUrl && <a href={p.proFormaInvoiceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-1"><Download size={14} /> Proforma</a>}
+                      {p.fiscalInvoiceUrl && <a href={p.fiscalInvoiceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-1"><Download size={14} /> Factura Fiscal</a>}
+                      {p.deliveryOrderUrl && <a href={p.deliveryOrderUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-1"><Download size={14} /> Orden Entrega</a>}
+                    </div>
                   </td>
                   <td className="p-2 text-sm">
                     <div className="flex gap-2">
-                      {(p.status === "Pendiente" || !p.status) && (
+                      {canValidatePayment(p) && (
                         <button
-                          onClick={() => handleValidateClick(p)}
+                          onClick={() => handleOpenValidationModal(p)}
                           title="Validar pago"
                           className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
                         >
-                          ✅ Validar
+                          Validar
                         </button>
                       )}
-                      {p.status === "Rechazado" && (
+                      {p.status === "REJECTED" && (
                         <button
                           onClick={() => onResend(p.id)}
                           className="px-2 py-1 bg-brand-primary text-white rounded-lg"
@@ -173,12 +172,6 @@ const PaymentsList = ({
                           Reenviar
                         </button>
                       )}
-                      <button
-                        onClick={() => alert("Ver detalles (simulado)")}
-                        className="px-2 py-1 bg-white dark:bg-dark-surface dark:text-gray-200 border border-brand-light dark:border-gray-600 rounded-lg"
-                      >
-                        Ver
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -188,10 +181,25 @@ const PaymentsList = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((p) => (
-            <PaymentCard key={p.id} payment={p} onValidate={onValidate} onResend={onResend} />
+          {payments.map((p) => (
+            <PaymentCard
+              key={p.id}
+              payment={p}
+              onOpenValidationModal={handleOpenValidationModal} // Pass function to open validation modal
+              onResend={onResend}
+              onDownloadReceipt={onDownloadReceipt} // Pass download receipt handler
+              canValidatePayment={canValidatePayment}
+            />
           ))}
         </div>
+      )}
+
+      {showValidationModal && (
+        <PaymentValidationModal
+          onClose={handleCloseValidationModal}
+          onSubmit={submitValidation}
+          payment={paymentToValidate}
+        />
       )}
     </div>
   );
