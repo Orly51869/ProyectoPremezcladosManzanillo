@@ -204,6 +204,7 @@ const ClientsPage = () => {
           onSave={handleSaveClient}
           onCancel={handleCloseClientFormModal}
           isEditing={!!editingClient}
+          serverError={serverError}
         />
       )}
 

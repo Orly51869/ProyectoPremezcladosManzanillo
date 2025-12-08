@@ -12,10 +12,10 @@ const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  
+
   const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -84,15 +84,16 @@ const ProductsPage = () => {
       console.error("Error saving product:", err);
     }
   };
-  
+
   const handleDeleteProduct = async (productId) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar este producto?")) {
-        try {
-            await api.delete(`/api/products/${productId}`);
-            fetchProducts();
-        } catch (err) {
-            console.error("Error deleting product:", err);
-        }
+      try {
+        await api.delete(`/api/products/${productId}`);
+        fetchProducts();
+      } catch (err) {
+        console.error("Error deleting product:", err);
+        alert("Error al eliminar el producto. Inténtalo de nuevo.");
+      }
     }
   };
 
@@ -164,7 +165,7 @@ const ProductsPage = () => {
         onDeleteProduct={handleDeleteProduct}
         canManageProduct={canManageProduct}
       />
-      
+
       {showModal && (
         <ProductFormModal
           isOpen={showModal}

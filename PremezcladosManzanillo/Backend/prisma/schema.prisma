@@ -113,7 +113,7 @@ model BudgetProduct {
   budgetId String
 
   // Relation to Product
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
 }
 
