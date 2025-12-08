@@ -167,9 +167,7 @@ export const updatePayment = async (req: Request, res: Response) => {
         validator: { connect: { id: authUserId } },
         validatedAt: new Date(),
         // Update URLs only if new files were uploaded
-        proFormaInvoiceUrl: proFormaInvoicePath || existingPayment.proFormaInvoiceUrl,
-        fiscalInvoiceUrl: fiscalInvoicePath || existingPayment.fiscalInvoiceUrl,
-        deliveryOrderUrl: deliveryOrderPath || existingPayment.deliveryOrderUrl,
+        // These fields are now on the Invoice model
       },
       include: {
         budget: {
@@ -181,6 +179,26 @@ export const updatePayment = async (req: Request, res: Response) => {
         validator: true,
       },
     });
+
+    if (updatedPayment.status === 'VALIDATED') {
+        // 1. Create a notification for the budget creator
+        await prisma.notification.create({
+            data: {
+                userId: updatedPayment.budget.creatorId,
+                message: `El pago de tu presupuesto "${updatedPayment.budget.title}" ha sido VALIDADO.`,
+            },
+        });
+
+        // 2. Create a Proforma Invoice
+        const invoiceNumber = `INV-${Date.now()}`; // Simple unique number for now
+        await prisma.invoice.create({
+            data: {
+                invoiceNumber: invoiceNumber,
+                status: 'PROFORMA',
+                paymentId: updatedPayment.id,
+            },
+        });
+    }
 
     res.status(200).json(updatedPayment);
   } catch (error) {

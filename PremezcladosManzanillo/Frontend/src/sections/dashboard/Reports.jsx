@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, Download } from 'lucide-react';
 import { Pie } from 'react-chartjs-2';
@@ -8,17 +8,42 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { getDashboardStats } from '../../utils/api';
+import { useAuth0 } from '@auth0/auth0-react'; // Import useAuth0 if user details are needed for roles
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-import { mockPayments } from '../../mock/data';
 import { formatCurrency } from '../../utils/helpers';
 
 const Reports = () => {
-  const totalIncome = mockPayments.reduce((sum, p) => sum + p.paidAmount, 0);
-  const totalPending = mockPayments.reduce((sum, p) => sum + p.pending, 0);
+  const { isAuthenticated, user } = useAuth0(); // Use Auth0 to check for admin role if needed
+  const [reportStats, setReportStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const pieData = {
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const stats = await getDashboardStats();
+        setReportStats(stats);
+      } catch (err) {
+        setError("Error al cargar los datos del reporte.");
+        console.error("Report data fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const totalIncome = reportStats?.totalIncome || 0;
+  const totalPending = reportStats?.pendingAmount || 0;
+  const totalPaymentsMade = reportStats?.totalPayments || 0;
+
+
+  const pieData = useMemo(() => ({
     labels: ['Pagado', 'Pendiente'],
     datasets: [
       {
@@ -28,19 +53,29 @@ const Reports = () => {
         borderWidth: 2,
       },
     ],
-  };
+  }), [totalIncome, totalPending]);
 
-  const pieOptions = {
+  const pieOptions = useMemo(() => ({
     responsive: true,
     plugins: {
       legend: { position: 'top', labels: { color: document.body.classList.contains('dark') ? '#F9FAFB' : '#333' } },
       title: { display: true, text: 'Distribución de Pagos', color: document.body.classList.contains('dark') ? '#F9FAFB' : '#333' },
     },
-  };
+  }), []);
 
   const handleExport = (format) => {
     alert(`Exportando reportes en ${format.toUpperCase()}... (simulado)`);
+    // Aquí se implementaría la lógica real para exportar datos,
+    // posiblemente llamando a un endpoint del backend que genere el reporte.
   };
+
+  if (loading) {
+    return <div className="text-center py-8 dark:text-gray-200">Cargando datos del reporte...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-600 dark:text-red-400">Error: {error}</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -62,8 +97,8 @@ const Reports = () => {
               <span className="font-bold text-orange-600 dark:text-orange-400">{formatCurrency(totalPending)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-brand-text dark:text-gray-300">Comprobantes Generados:</span>
-              <span className="font-bold dark:text-gray-100">{mockPayments.length}</span>
+              <span className="text-brand-text dark:text-gray-300">Pagos Realizados:</span>
+              <span className="font-bold dark:text-gray-100">{totalPaymentsMade}</span>
             </div>
           </div>
         </motion.div>

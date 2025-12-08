@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { motion } from "framer-motion";
 import { Home, Users, FileText, BarChart3, Settings, Menu, X, Sun, Moon, LogOut, Package } from "lucide-react";
+import NotificationBell from "./NotificationBell"; // Import NotificationBell
 import { Link, useLocation } from "react-router-dom";
 
 const DashboardNavbar = () => {
@@ -49,6 +50,7 @@ const DashboardNavbar = () => {
     { path: "/budgets", icon: FileText, label: "Presupuestos", requiredRoles: ["Administrador", "Comercial", "Usuario"] },
     { path: "/products-management", icon: Package, label: "Productos", requiredRoles: ["Administrador", "Contable"] },
     { path: "/payments", icon: FileText, label: "Comprobantes", requiredRoles: ["Administrador", "Contable"] },
+    { path: "/invoices", icon: FileText, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Usuario"] }, // New Invoices Link
     { path: "/reports", icon: BarChart3, label: "Reportes", requiredRoles: ["Administrador", "Contable"] },
     { path: "/settings", icon: Settings, label: "Configuración", requiredRoles: ["Administrador"] },
   ];
@@ -145,6 +147,7 @@ const DashboardNavbar = () => {
                 </div>
               </div>
             )}
+            <NotificationBell />
             <button
               onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
               aria-label="Cerrar sesión"

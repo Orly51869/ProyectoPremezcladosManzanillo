@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -21,6 +21,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { useAuth0 } from "@auth0/auth0-react";
+import { getDashboardStats, getRecentActivity } from "../utils/api"; // Importar nuevas funciones API
 
 ChartJS.register(
   CategoryScale,
@@ -32,23 +34,49 @@ ChartJS.register(
   Legend
 );
 
-import { mockClients, mockBudgets, mockPayments } from "../mock/data";
 import { formatDate, formatCurrency } from "../utils/helpers";
 
 const Dashboard = () => {
-  const totalClients = mockClients.length;
-  const totalBudgets = mockBudgets.length;
-  const totalIncome = mockPayments.reduce((sum, p) => sum + p.paidAmount, 0);
-  const pending = mockPayments.reduce((sum, p) => sum + p.pending, 0);
-
+  const { user } = useAuth0();
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [recentActivityList, setRecentActivityList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [period, setPeriod] = useState("30d");
 
-  const labels = useMemo(() => ["Ene", "Feb", "Mar", "Abr", "May", "Jun"], []);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const stats = await getDashboardStats();
+        setDashboardStats(stats);
+        const activity = await getRecentActivity();
+        setRecentActivityList(activity);
+      } catch (err) {
+        setError("Error al cargar los datos del dashboard.");
+        console.error("Dashboard data fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const totalClients = dashboardStats?.totalClients || 0;
+  const totalBudgets = dashboardStats?.totalBudgets || 0;
+  const totalIncome = dashboardStats?.totalIncome || 0;
+  const pending = dashboardStats?.pendingAmount || 0;
+  const approvedBudgetsCount = dashboardStats?.approvedBudgets || 0;
+  const totalPaymentsCount = dashboardStats?.totalPayments || 0;
+  const pendingPaymentsCount = dashboardStats?.pendingPaymentsCount || 0;
+
+  const labels = useMemo(() => dashboardStats?.chartData?.labels || ["Ene", "Feb", "Mar", "Abr", "May", "Jun"], [dashboardStats]);
   const ingresosSeries = useMemo(
-    () => [1200, 1900, 3000, 5000, 2000, 3000],
-    []
+    () => dashboardStats?.chartData?.ingresosSeries || [0, 0, 0, 0, 0, 0],
+    [dashboardStats]
   );
-  const pendientesSeries = useMemo(() => [400, 500, 600, 700, 550, 800], []);
+  const pendientesSeries = useMemo(() => dashboardStats?.chartData?.pendientesSeries || [0, 0, 0, 0, 0, 0], [dashboardStats]);
 
   const chartData = useMemo(
     () => ({
@@ -92,44 +120,17 @@ const Dashboard = () => {
     []
   );
 
-  const growthPercent = useMemo(() => {
-    const arr = ingresosSeries;
-    if (arr.length < 2) return 0;
-    const last = arr[arr.length - 1];
-    const prev = arr[arr.length - 2] || 1;
-    return Math.round(((last - prev) / Math.max(prev, 1)) * 100);
-  }, [ingresosSeries]);
+  // Considerar que el cálculo del crecimiento porcentual es más complejo y podría requerir datos históricos.
+  // Por ahora, se mantendrá estático o se removerá si no hay una fuente clara de datos.
+  const growthPercent = 0; // Mantener estático o remover si no hay datos.
 
-  const recentActivity = useMemo(() => {
-    const acts = [];
-    if (mockBudgets[0])
-      acts.push(
-        `${
-          mockClients.find((c) => c.id === mockBudgets[0].clientId)?.name ||
-          "Cliente"
-        } creó el presupuesto "${mockBudgets[0].title}"`
-      );
-    if (mockPayments[0])
-      acts.push(
-        `${
-          mockClients.find((c) =>
-            c.id === mockPayments[0].budgetId
-              ? mockBudgets.find((b) => b.id === mockPayments[0].budgetId)
-                  ?.clientId
-              : mockClients[0].id
-          )
-            ? mockClients[0].name
-            : "Usuario"
-        } registró un pago de ${formatCurrency(mockPayments[0].paidAmount)}`
-      );
-    acts.push(
-      `Nuevo presupuesto #P-${String(mockBudgets.length + 1).padStart(
-        3,
-        "0"
-      )} creado`
-    );
-    return acts;
-  }, []);
+  if (loading) {
+    return <div className="text-center py-8 dark:text-gray-200">Cargando datos del dashboard...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-600 dark:text-red-400">Error: {error}</div>;
+  }
 
   return (
     <div className="min-h-screen">
@@ -139,7 +140,7 @@ const Dashboard = () => {
             <div>
               <p className="text-sm text-brand-text dark:text-gray-300">
                 {formatDate(new Date())} • Bienvenido,{" "}
-                <span className="font-medium">Usuario</span>
+                <span className="font-medium">{user?.name || "Usuario"}</span>
               </p>
             </div>
             <div className="text-left sm:text-right">
@@ -169,13 +170,8 @@ const Dashboard = () => {
               </div>
               <div className="text-right">
                 <div
-                  className={`inline-flex items-center gap-1 text-sm ${growthPercent >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                  {growthPercent >= 0 ? (
-                    <ArrowUp className="w-4 h-4" />
-                  ) : (
-                    <ArrowDown className="w-4 h-4" />
-                  )}
-                  <span>{Math.abs(growthPercent)}%</span>
+                  className={`inline-flex items-center gap-1 text-sm text-gray-500`}>
+                  <span>{growthPercent}%</span>
                 </div>
                 <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
               </div>
@@ -201,8 +197,8 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="text-right">
-                <div className="inline-flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-                  <ArrowUp className="w-4 h-4" /> <span>+8%</span>
+                <div className="inline-flex items-center gap-1 text-sm text-gray-500">
+                   <span>+0%</span>
                 </div>
                 <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
               </div>
@@ -228,8 +224,8 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="text-right">
-                <div className="inline-flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-                  <ArrowUp className="w-4 h-4" /> <span>+12%</span>
+                <div className="inline-flex items-center gap-1 text-sm text-gray-500">
+                   <span>+0%</span>
                 </div>
                 <p className="text-xs text-brand-text dark:text-gray-400">crecimiento mensual</p>
               </div>
@@ -255,8 +251,8 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="text-right">
-                <div className="inline-flex items-center gap-1 text-sm text-red-600 dark:text-red-400">
-                  <ArrowDown className="w-4 h-4" /> <span>-4%</span>
+                <div className="inline-flex items-center gap-1 text-sm text-gray-500">
+                   <span>-0%</span>
                 </div>
                 <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
               </div>
@@ -300,19 +296,19 @@ const Dashboard = () => {
                     Presupuestos aprobados
                   </p>
                   <p className="font-bold text-brand-dark dark:text-gray-100">
-                    {mockBudgets.filter((b) => b.status === "approved").length}
+                    {approvedBudgetsCount}
                   </p>
                 </div>
                 <div className="p-3 bg-white dark:bg-dark-primary rounded-lg shadow-sm">
                   <p className="text-xs text-brand-text dark:text-gray-400">Pagos recibidos</p>
                   <p className="font-bold text-brand-dark dark:text-gray-100">
-                    {mockPayments.length}
+                    {totalPaymentsCount}
                   </p>
                 </div>
                 <div className="p-3 bg-white dark:bg-dark-primary rounded-lg shadow-sm">
                   <p className="text-xs text-brand-text dark:text-gray-400">Pendientes</p>
                   <p className="font-bold text-brand-dark dark:text-gray-100">
-                    {mockPayments.filter((p) => p.pending > 0).length}
+                    {pendingPaymentsCount}
                   </p>
                 </div>
               </div>
@@ -330,7 +326,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium dark:text-gray-200">
-                    2 presupuestos aprobados
+                    {approvedBudgetsCount} presupuestos aprobados
                   </p>
                   <button className="text-xs text-brand-mid dark:text-green-400 mt-1">
                     Ver detalle
@@ -343,7 +339,9 @@ const Dashboard = () => {
                   <Clock className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium dark:text-gray-200">1 pago próximo a vencer</p>
+                  <p className="text-sm font-medium dark:text-gray-200">
+                    {pendingPaymentsCount} pago(s) próximo(s) a vencer
+                  </p>
                   <button className="text-xs text-brand-mid dark:text-green-400 mt-1">
                     Ver detalle
                   </button>
@@ -355,7 +353,9 @@ const Dashboard = () => {
                   <AlertTriangle className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium dark:text-gray-200">Pago vencido</p>
+                  <p className="text-sm font-medium dark:text-gray-200">
+                    {pendingPaymentsCount} Pago(s) vencido(s)
+                  </p>
                   <button className="text-xs text-brand-mid dark:text-green-400 mt-1">
                     Ver detalle
                   </button>
@@ -367,11 +367,15 @@ const Dashboard = () => {
               Actividad reciente
             </h4>
             <ul className="space-y-2 text-sm text-brand-text dark:text-gray-400">
-              {recentActivity.map((a, i) => (
-                <li key={i} className="py-2 border-b border-brand-light/50 dark:border-dark-surface/50">
-                  {a}
-                </li>
-              ))}
+              {recentActivityList.length > 0 ? (
+                recentActivityList.map((activity, i) => (
+                  <li key={i} className="py-2 border-b border-brand-light/50 dark:border-dark-surface/50">
+                    {activity.text}
+                  </li>
+                ))
+              ) : (
+                <li className="py-2">No hay actividad reciente.</li>
+              )}
             </ul>
           </div>
         </div>

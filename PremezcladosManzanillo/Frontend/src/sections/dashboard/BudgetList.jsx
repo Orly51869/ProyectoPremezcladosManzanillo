@@ -9,7 +9,7 @@ const formatCurrency = (value) => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
 };
 
-const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onReject, userRoles, currentUserId }) => {
+const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onReject, onViewDetail, userRoles, currentUserId }) => {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [budgetToReject, setBudgetToReject] = useState(null);
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
@@ -87,52 +87,73 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
                     {clientBudgets.map((budget, index) => (
                         <motion.div
                             key={budget.id}
+                            onClick={() => onViewDetail(budget)}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="bg-white dark:bg-dark-surface rounded-lg shadow-md border dark:border-gray-700 flex flex-col justify-between p-5"
+                            className="bg-white dark:bg-dark-primary rounded-2xl shadow-lg border border-brand-light dark:border-dark-surface flex flex-col justify-between p-5 cursor-pointer"
                         >
                             <div>
                                 <div className="flex justify-between items-start">
-                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 pr-2">{budget.title}</h4>
+                                    <h4 className="text-lg font-semibold text-brand-primary dark:text-gray-100 mb-1 pr-2">{budget.title}</h4>
                                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
                                       budget.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900' :
                                       budget.status === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900' :
                                       'bg-yellow-100 text-yellow-800 dark:bg-yellow-900'
                                     }`}>{budget.status}</span>
                                 </div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{format(new Date(budget.createdAt), 'dd/MM/yyyy')}</p>
+                                <p className="text-sm text-brand-text dark:text-gray-400">{format(new Date(budget.createdAt), 'dd/MM/yyyy')}</p>
                                 {budget.processedBy && (
-                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                  <p className="text-xs text-brand-text dark:text-gray-500 mt-1">
                                     Procesado por: {budget.processedBy.name} el {format(new Date(budget.processedAt), 'dd/MM/yyyy')}
                                   </p>
                                 )}
                                 {budget.rejectionReason && (
-                                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                                     Motivo de rechazo: {budget.rejectionReason}
                                   </p>
                                 )}
                             </div>
-                            <div className="mt-4 pt-4 border-t dark:border-gray-600">
+                            <div className="mt-4 pt-4 border-t border-brand-light dark:border-dark-surface">
                                 <div className="flex justify-between items-center mb-3">
-                                    <span className="text-sm text-gray-600 dark:text-gray-300">{budget.products.length} items</span>
-                                    <span className="text-xl font-bold text-gray-800 dark:text-white">{formatCurrency(budget.total)}</span>
+                                    <span className="text-sm text-brand-text dark:text-gray-300">{budget.products.length} items</span>
+                                    <span className="text-xl font-bold text-brand-primary dark:text-gray-100">{formatCurrency(budget.total)}</span>
                                 </div>
                                 <div className="flex justify-end gap-2">
                                     {canApproveOrRejectBudget(budget) && (
                                         <>
-                                            <button onClick={() => onApprove(budget.id)} title="Aprobar" className="p-2 rounded-lg text-green-600 hover:bg-green-100 dark:hover:bg-green-900">
+                                            <button 
+                                              onClick={(e) => { e.stopPropagation(); onApprove(budget.id); }} 
+                                              title="Aprobar" 
+                                              className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                                            >
                                                 <CheckCircle className="w-5 h-5" />
                                             </button>
-                                            <button onClick={() => handleOpenRejectionModal(budget)} title="Rechazar" className="p-2 rounded-lg text-red-600 hover:bg-red-100 dark:hover:bg-red-900">
+                                            <button 
+                                              onClick={(e) => { e.stopPropagation(); handleOpenRejectionModal(budget); }} 
+                                              title="Rechazar" 
+                                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                            >
                                                 <XCircle className="w-5 h-5" />
                                             </button>
                                         </>
                                     )}
                                     {canEditOrDeleteBudget(budget) && (
                                         <>
-                                            <button onClick={() => onEdit(budget)} title="Editar"><Edit className="w-5 h-5 text-blue-500 hover:text-blue-700" /></button>
-                                            <button onClick={() => onDelete(budget.id)} title="Eliminar"><Trash2 className="w-5 h-5 text-red-500 hover:text-red-700" /></button>
+                                            <button 
+                                              onClick={(e) => { e.stopPropagation(); onEdit(budget); }} 
+                                              title="Editar"
+                                              className="text-brand-mid hover:text-brand-primary dark:text-green-400 dark:hover:text-green-300"
+                                            >
+                                                <Edit className="w-5 h-5" />
+                                            </button>
+                                            <button 
+                                              onClick={(e) => { e.stopPropagation(); onDelete(budget.id); }} 
+                                              title="Eliminar"
+                                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
                                         </>
                                     )}
                                 </div>
@@ -150,6 +171,7 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
           onDelete={onDelete}
           onApprove={onApprove}
           onReject={handleOpenRejectionModal} // Pass function to open rejection modal
+          onViewDetail={onViewDetail}
           userRoles={userRoles}
           currentUserId={currentUserId}
           canEditOrDeleteBudget={canEditOrDeleteBudget}

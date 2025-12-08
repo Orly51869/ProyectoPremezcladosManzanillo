@@ -103,13 +103,23 @@ const ClientsPage = () => {
       return;
     }
     setSuccessMessage(null);
+    setError(null);
     try {
       await api.delete(`/api/clients/${clientId}`);
       setSuccessMessage('Cliente eliminado con éxito.');
       fetchClients();
     } catch (err) {
       console.error('Error deleting client:', err);
-      setError('Error al eliminar el cliente. Por favor, inténtalo de nuevo.');
+      // Show specific error message from server if available
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error);
+      } else if (err.response && err.response.status === 403) {
+        setError('No tienes permiso para eliminar este cliente.');
+      } else if (err.response && err.response.status === 404) {
+        setError('El cliente no fue encontrado.');
+      } else {
+        setError('Error al eliminar el cliente. Por favor, inténtalo de nuevo.');
+      }
     }
   };
 

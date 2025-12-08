@@ -4,15 +4,13 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export const userProvisioningMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  console.log('req.auth in userProvisioningMiddleware:', req.auth);
   const authId = req.auth?.payload.sub;
   const authEmail = req.auth?.payload.email as string | undefined;
   const authName = req.auth?.payload.name as string | undefined;
+  const authRoles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] | undefined;
 
   if (!authId) {
-    // If there's no Auth0 ID, we cannot proceed.
     console.error('CRITICAL: Auth0 user ID (sub) missing in token payload.');
-    // This is a server error because jwtCheck should have already validated the token.
     return res.status(500).json({ error: 'User ID not found in authentication token.' });
   }
 
@@ -21,25 +19,30 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
       where: { id: authId },
     });
 
+    const determinedRole = authRoles && authRoles.length > 0 ? authRoles[0] : 'Usuario';
+
     if (!user) {
-      // User does not exist, create them.
-      // Use a placeholder email if the real one is not in the token.
       const userEmail = authEmail || `${authId}@placeholder.email`;
       
       user = await prisma.user.create({
         data: {
           id: authId,
           email: userEmail,
-          name: authName || 'Unnamed User', // Fallback if name is not present
-          role: 'Usuario', // Default role
+          name: authName || 'Unnamed User',
+          role: determinedRole, // Use determined role
         },
       });
-      console.log(`New user provisioned: ${user.email} with ID: ${user.id}`);
+      console.log(`New user provisioned: ${user.email} with ID: ${user.id}, Role: ${user.role}`);
+    } else if (user.role !== determinedRole) {
+      // Update user's role if it has changed in Auth0
+      user = await prisma.user.update({
+        where: { id: authId },
+        data: { role: determinedRole },
+      });
+      console.log(`User role updated for ${user.email} to: ${user.role}`);
     }
 
-    // Attach user to request
     (req as any).dbUser = user;
-
     next();
   } catch (error) {
     console.error('Error in user provisioning middleware:', error);

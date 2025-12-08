@@ -9,22 +9,56 @@ import App from "./App.jsx";
 
 const root = createRoot(document.getElementById("root"));
 
-// Log para verificar las variables de entorno de Auth0
-console.log("Auth0 Domain:", import.meta.env.VITE_REACT_APP_AUTH0_DOMAIN);
-console.log("Auth0 Client ID:", import.meta.env.VITE_REACT_APP_AUTH0_CLIENT_ID);
+// Variables de entorno de Auth0
+const auth0Domain = import.meta.env.VITE_REACT_APP_AUTH0_DOMAIN;
+const auth0ClientId = import.meta.env.VITE_REACT_APP_AUTH0_CLIENT_ID;
 
-root.render(
-  <StrictMode>
-    <Auth0Provider
-      domain={import.meta.env.VITE_REACT_APP_AUTH0_DOMAIN}
-      clientId={import.meta.env.VITE_REACT_APP_AUTH0_CLIENT_ID}
-      authorizationParams={{
-        redirect_uri: window.location.origin,
-        audience: "https://premezclados-api.com",
-        scope: "openid profile email read:permissions"
-      }}
-    >
-      <App />
-    </Auth0Provider>
-  </StrictMode>
-);
+// Log para verificar las variables de entorno de Auth0
+console.log("Auth0 Domain:", auth0Domain);
+console.log("Auth0 Client ID:", auth0ClientId);
+
+// Validar que las variables de entorno estén definidas
+if (!auth0Domain || !auth0ClientId) {
+  const errorMessage = `
+    ⚠️ ERROR: Variables de entorno de Auth0 no configuradas
+    
+    Por favor, crea un archivo .env en la carpeta Frontend/ con:
+    
+    VITE_REACT_APP_AUTH0_DOMAIN=tu-dominio.auth0.com
+    VITE_REACT_APP_AUTH0_CLIENT_ID=tu-client-id
+    VITE_REACT_APP_API_URL=http://localhost:3001
+    
+    Luego reinicia el servidor de desarrollo.
+  `;
+  
+  root.render(
+    <div style={{
+      padding: '2rem',
+      fontFamily: 'monospace',
+      backgroundColor: '#1a1a1a',
+      color: '#ff6b6b',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <pre style={{ whiteSpace: 'pre-wrap' }}>{errorMessage}</pre>
+    </div>
+  );
+} else {
+  root.render(
+    <StrictMode>
+      <Auth0Provider
+        domain={auth0Domain}
+        clientId={auth0ClientId}
+        authorizationParams={{
+          redirect_uri: window.location.origin,
+          audience: "https://premezclados-api.com",
+          scope: "openid profile email read:permissions"
+        }}
+      >
+        <App />
+      </Auth0Provider>
+    </StrictMode>
+  );
+}

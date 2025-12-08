@@ -45,3 +45,27 @@ export const uploadReceipt = multer({
   fileFilter: fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
 }).single('receipt');
+
+// Configure multer for invoice documents (fiscal invoice and delivery order)
+const invoiceStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../../uploads/invoices');
+    // Ensure the upload directory exists
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    // Generate a unique filename: fieldname-timestamp-originalename.ext
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  },
+});
+
+export const uploadInvoiceDocuments = multer({
+  storage: invoiceStorage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
+}).fields([
+  { name: 'fiscalInvoice', maxCount: 1 },
+  { name: 'deliveryOrder', maxCount: 1 },
+]);

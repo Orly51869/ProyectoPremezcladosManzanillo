@@ -51,8 +51,10 @@ const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove })
   const fechaColado = project.fechaColado || formatDate(budget.createdAt);
 
   // Lógica para mostrar/ocultar botón de aprobación
-  const canApprove = userRoles.includes('Administrador') || userRoles.includes('Comercial');
+  const canApprove = userRoles.includes('Administrador') || userRoles.includes('Contable');
   const showApproveButton = canApprove && budget.status === 'PENDING';
+
+  console.log('Inspeccionando presupuesto en BudgetDetail:', budget);
 
   return (
     <div

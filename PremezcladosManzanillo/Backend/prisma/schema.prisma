@@ -19,7 +19,8 @@ model User {
   createdBudgets Budget[] @relation("CreatedBudgets")
   clients        Client[]
   processedBudgets Budget[] @relation("ProcessedBudgets") // Added directly to User model
-  payments Payment[] @relation("ValidatedPayments") // Added reverse relation for payments
+  validatedPayments Payment[] @relation("ValidatedPayments") // Renamed for clarity
+  notifications     Notification[] // Relation to notifications
 }
 
 // Client model associated with a User
@@ -67,10 +68,6 @@ model Budget {
   products BudgetProduct[]
   payments Payment[] // Added reverse relation for payments from budget
 
-  paymentReceiptUrl String?
-  proFormaInvoice   String?
-  deliveryOrder     String?
-
   // Nuevos campos para el proceso de aprobación
   processedBy   User?   @relation("ProcessedBudgets", fields: [processedById], references: [id])
   processedById String?
@@ -97,9 +94,8 @@ model Payment {
   validatorId       String?
   validator         User?     @relation("ValidatedPayments", fields: [validatorId], references: [id])
   validatedAt       DateTime?
-  proFormaInvoiceUrl String?
-  fiscalInvoiceUrl  String?
-  deliveryOrderUrl  String?
+
+  invoice           Invoice? // Relation to the invoice
 
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -136,3 +132,30 @@ model Product {
 
   budgets BudgetProduct[]
 }
+
+// Notification model for user alerts
+model Notification {
+  id        String   @id @default(cuid())
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relation to the User who receives the notification
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+}
+
+// Invoice model linked to a payment
+model Invoice {
+  id                  String   @id @default(cuid())
+  invoiceNumber       String   @unique
+  status              String   // PROFORMA, FISCAL_ISSUED
+  proformaGeneratedAt DateTime @default(now())
+  fiscalInvoiceUrl    String?
+  deliveryOrderUrl    String?
+
+  // One-to-one relation with Payment
+  payment   Payment @relation(fields: [paymentId], references: [id])
+  paymentId String  @unique
+}
+

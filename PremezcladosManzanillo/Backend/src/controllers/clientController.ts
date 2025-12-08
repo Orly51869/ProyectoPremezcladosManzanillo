@@ -98,7 +98,7 @@ export const updateClient = async (req: Request, res: Response) => {
     });
 
     if (!existingClient) {
-      return res.status(404).json({ error: 'Client not found.' });
+      return res.status(404).json({ error: 'Cliente no encontrado.' });
     }
 
     // Authorization check
@@ -146,6 +146,16 @@ export const deleteClient = async (req: Request, res: Response) => {
     const existingClient = await prisma.client.findUnique({
       where: { id: id },
       include: {
+        budgets: {
+          include: {
+            payments: {
+              include: {
+                invoice: true,
+              },
+            },
+            products: true,
+          },
+        },
         _count: {
           select: { budgets: true },
         },
@@ -153,7 +163,7 @@ export const deleteClient = async (req: Request, res: Response) => {
     });
 
     if (!existingClient) {
-      return res.status(404).json({ error: 'Client not found.' });
+      return res.status(404).json({ error: 'Cliente no encontrado.' });
     }
 
     // Authorization check
@@ -162,21 +172,75 @@ export const deleteClient = async (req: Request, res: Response) => {
     if (hasBudgets) {
       // If client has associated budgets, only Admin or Contable can delete
       if (!roles.includes('Administrador') && !roles.includes('Contable')) {
-        return res.status(403).json({ error: 'Forbidden: Client has associated budgets and you do not have permission to delete it.' });
+        return res.status(403).json({ 
+          error: `No puedes eliminar este cliente porque tiene ${existingClient._count.budgets} presupuesto(s) asociado(s). Solo los Administradores y Contables pueden eliminar clientes con presupuestos.` 
+        });
       }
     } else {
       // If client has no associated budgets, existing logic applies (Admin or Commercial as owner)
       if (!roles.includes('Administrador') && !(roles.includes('Comercial') && existingClient.ownerId === authUserId)) {
-        return res.status(403).json({ error: 'Forbidden: You do not have permission to delete this client.' });
+        return res.status(403).json({ 
+          error: 'No tienes permiso para eliminar este cliente. Solo los Administradores pueden eliminar cualquier cliente, o los Comerciales pueden eliminar sus propios clientes.' 
+        });
       }
     }
 
-    await prisma.client.delete({
-      where: { id: id },
+    // Use a transaction to ensure all related records are deleted in the correct order
+    await prisma.$transaction(async (tx) => {
+      // Delete all invoices related to payments of this client's budgets
+      for (const budget of existingClient.budgets) {
+        for (const payment of budget.payments) {
+          if (payment.invoice) {
+            await tx.invoice.delete({
+              where: { id: payment.invoice.id },
+            });
+          }
+        }
+      }
+
+      // Delete all payments related to this client's budgets
+      for (const budget of existingClient.budgets) {
+        await tx.payment.deleteMany({
+          where: { budgetId: budget.id },
+        });
+      }
+
+      // Delete all budget products related to this client's budgets
+      for (const budget of existingClient.budgets) {
+        await tx.budgetProduct.deleteMany({
+          where: { budgetId: budget.id },
+        });
+      }
+
+      // Delete all budgets related to this client
+      await tx.budget.deleteMany({
+        where: { clientId: id },
+      });
+
+      // Finally, delete the client
+      await tx.client.delete({
+        where: { id: id },
+      });
     });
+
     res.status(204).send(); // No content for successful deletion
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error deleting client with ID ${id}:`, error);
-    res.status(500).json({ error: 'Internal server error' });
+    
+    // Handle Prisma foreign key constraint errors
+    if (error.code === 'P2003') {
+      return res.status(400).json({ 
+        error: 'No se puede eliminar el cliente porque tiene registros relacionados (presupuestos, pagos, etc.). Por favor, contacta a un administrador.' 
+      });
+    }
+    
+    // Handle other Prisma errors
+    if (error.code && error.code.startsWith('P')) {
+      return res.status(400).json({ 
+        error: `Error al eliminar el cliente: ${error.message || 'Error de base de datos'}` 
+      });
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor al eliminar el cliente.' });
   }
 };

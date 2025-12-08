@@ -18,6 +18,7 @@ import ClientsPage from "./pages/ClientsPage.jsx";
 import BudgetsPage from "./pages/BudgetsPage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx"; // Import the new page
 import PaymentsPage from "./pages/PaymentsPage.jsx";
+import InvoicesPage from "./pages/InvoicesPage.jsx"; // Import the new InvoicesPage
 import Reports from "./sections/dashboard/Reports.jsx";
 import Settings from "./sections/dashboard/Settings.jsx";
 import HomePage from "./pages/HomePage.jsx";
@@ -120,6 +121,7 @@ const App = () => {
               <Route path="/budgets/*" element={<BudgetsPage />} />
               <Route path="/products-management" element={<ProductsPage />} />
               <Route path="/payments" element={<PaymentsPage />} />
+              <Route path="/invoices" element={<InvoicesPage />} /> {/* New Invoices Page Route */}
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
             </Route>

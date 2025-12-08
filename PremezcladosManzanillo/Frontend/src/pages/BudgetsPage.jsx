@@ -4,6 +4,7 @@ import api from '../utils/api';
 import { FileText, PlusCircle, List, LayoutGrid, Search } from 'lucide-react';
 import BudgetForm from '../sections/dashboard/BudgetForm.jsx';
 import BudgetList from '../sections/dashboard/BudgetList.jsx';
+import BudgetDetail from '../sections/dashboard/BudgetDetail.jsx';
 import { format } from 'date-fns';
 
 const BudgetsPage = () => {
@@ -16,6 +17,7 @@ const BudgetsPage = () => {
   
   const [showForm, setShowForm] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
+  const [viewingBudget, setViewingBudget] = useState(null);
 
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'canvas'
   const [search, setSearch] = useState('');
@@ -79,6 +81,14 @@ const BudgetsPage = () => {
   const handleEdit = (budget) => {
     setEditingBudget(budget);
     setShowForm(true);
+  };
+
+  const handleViewDetail = (budget) => {
+    setViewingBudget(budget);
+  };
+
+  const handleCloseDetail = () => {
+    setViewingBudget(null);
   };
 
   const handleDelete = async (budgetId) => {
@@ -216,8 +226,18 @@ const BudgetsPage = () => {
           onDelete={handleDelete}
           onApprove={handleApproveBudget}
           onReject={handleRejectBudget}
+          onViewDetail={handleViewDetail}
           userRoles={userRoles}
           currentUserId={user?.sub}
+        />
+      )}
+
+      {viewingBudget && (
+        <BudgetDetail
+          budget={viewingBudget}
+          onClose={handleCloseDetail}
+          onApprove={handleApproveBudget}
+          userRoles={userRoles}
         />
       )}
     </div>

@@ -51,8 +51,8 @@ export const approveBudget = async (req: Request, res: Response) => {
   if (!authUserId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
-  if (!roles.includes('Administrador')) {
-    return res.status(403).json({ error: 'Forbidden: Only administrators can approve budgets.' });
+  if (!roles.some(role => ['Administrador', 'Contable'].includes(role))) {
+    return res.status(403).json({ error: 'Forbidden: Only administrators or accountants can approve budgets.' });
   }
 
   try {
@@ -76,8 +76,18 @@ export const approveBudget = async (req: Request, res: Response) => {
         products: { include: { product: true } },
         client: true,
         processedBy: true, // Include processor details
+        creator: true, // Include creator to get creatorId for notification
       },
     });
+
+    // Create notification for the budget creator
+    await prisma.notification.create({
+      data: {
+        userId: approvedBudget.creatorId,
+        message: `Tu presupuesto "${approvedBudget.title}" ha sido APROBADO.`,
+      },
+    });
+
     res.status(200).json(approvedBudget);
   } catch (error) {
     console.error(`Error approving budget with ID ${id}:`, error);
@@ -123,8 +133,18 @@ export const rejectBudget = async (req: Request, res: Response) => {
         products: { include: { product: true } },
         client: true,
         processedBy: true, // Include processor details
+        creator: true, // Include creator to get creatorId for notification
       },
     });
+
+    // Create notification for the budget creator
+    await prisma.notification.create({
+      data: {
+        userId: rejectedBudget.creatorId,
+        message: `Tu presupuesto "${rejectedBudget.title}" ha sido RECHAZADO. Motivo: ${rejectionReason.trim()}`,
+      },
+    });
+
     res.status(200).json(rejectedBudget);
   } catch (error) {
     console.error(`Error rejecting budget with ID ${id}:`, error);

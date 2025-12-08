@@ -39,4 +39,24 @@ export const checkSession = async () => {
   }
 };
 
+export const getDashboardStats = async () => {
+  try {
+    const response = await api.get('/api/dashboard/stats');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    throw error;
+  }
+};
+
+export const getRecentActivity = async () => {
+  try {
+    const response = await api.get('/api/dashboard/recent-activity');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching recent activity:', error);
+    throw error;
+  }
+};
+
 export default api;

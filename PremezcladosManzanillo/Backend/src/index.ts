@@ -35,6 +35,9 @@ import budgetsRouter from './routes/budgets';
 import clientsRouter from './routes/clients';
 import productsRouter from './routes/products';
 import paymentsRouter from './routes/payments';
+import notificationsRouter from './routes/notifications';
+import invoicesRouter from './routes/invoices'; // Import the new invoices router
+import dashboardRouter from './routes/dashboard';
 
 console.log('Backend: Applying express.json middleware');
 app.use(express.json());
@@ -50,6 +53,12 @@ console.log('Backend: Applying Auth middleware to /api/products');
 app.use('/api/products', jwtCheck, userProvisioningMiddleware, productsRouter);
 console.log('Backend: Applying Auth middleware to /api/payments');
 app.use('/api/payments', jwtCheck, userProvisioningMiddleware, paymentsRouter);
+console.log('Backend: Applying Auth middleware to /api/notifications');
+app.use('/api/notifications', jwtCheck, userProvisioningMiddleware, notificationsRouter);
+console.log('Backend: Applying Auth middleware to /api/invoices');
+app.use('/api/invoices', jwtCheck, userProvisioningMiddleware, invoicesRouter);
+console.log('Backend: Applying Auth middleware to /api/dashboard');
+app.use('/api/dashboard', jwtCheck, userProvisioningMiddleware, dashboardRouter);
 
 console.log('Backend: Registering public endpoint /');
 app.get('/', (req, res) => {
