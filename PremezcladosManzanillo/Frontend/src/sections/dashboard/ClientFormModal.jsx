@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serverError }) => {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' });
+  const [form, setForm] = useState({ name: '', email: '', address: '' });
   const [rifPrefix, setRifPrefix] = useState('V'); // Por defecto 'V'
   const [rifNumber, setRifNumber] = useState('');
+  const [phonePrefix, setPhonePrefix] = useState('+58'); // Prefijo país por defecto
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
 
@@ -44,9 +46,30 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
     setForm({
       name: initialValues.name || '',
       email: initialValues.email || '',
-      phone: initialValues.phone || '',
       address: initialValues.address || '',
     });
+
+    // Parse phone with optional prefix like +58-4121234567 or +58 4121234567
+    if (initialValues.phone) {
+      const p = String(initialValues.phone).trim();
+      const match = p.match(/^(\+\d+)[\s-]?(\d+)$/);
+      if (match) {
+        setPhonePrefix(match[1]);
+        setPhoneNumber(match[2]);
+      } else if (p.startsWith('+')) {
+        // fallback: prefix only
+        const parts = p.split(/\s|-/);
+        setPhonePrefix(parts[0]);
+        setPhoneNumber(parts.slice(1).join('') || '');
+      } else {
+        // no prefix, assume local number
+        setPhonePrefix('+58');
+        setPhoneNumber(p.replace(/[^0-9]/g, ''));
+      }
+    } else {
+      setPhonePrefix('+58');
+      setPhoneNumber('');
+    }
   }, [initialValues]);
 
   const handleChange = (e) => {
@@ -62,11 +85,21 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
     setRifNumber(value);
   };
 
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value.replace(/[^0-9]/g, ''); // solo dígitos
+    setPhoneNumber(value);
+    if (errors.phone) setErrors(prev => ({ ...prev, phone: undefined }));
+  };
+
   const validate = () => {
     const err = {};
     if (!form.name || form.name.trim().length < 3) err.name = 'El nombre del cliente es requerido.';
     if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) err.email = 'El correo electrónico es requerido y debe ser válido.';
     if (!rifNumber.trim()) err.rif = 'El número de RIF/Cédula es requerido.';
+    // Validar teléfono si fue ingresado
+    if (phoneNumber && phoneNumber.length < 7) {
+      err.phone = 'Número de teléfono demasiado corto.';
+    }
     return err;
   };
 
@@ -77,8 +110,9 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
     if (Object.keys(err).length > 0) return;
 
     const fullRif = rifNumber.trim() ? `${rifPrefix}-${rifNumber}` : '';
+    const fullPhone = phoneNumber ? `${phonePrefix} ${phoneNumber}` : '';
 
-    onSave({ ...form, rif: fullRif });
+    onSave({ ...form, rif: fullRif, phone: fullPhone });
   };
 
   return (
@@ -99,30 +133,7 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
             </div>
           )}
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre del Cliente</label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              className={`mt-1 block w-full rounded-lg border ${errors.name ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'} bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200`}
-              placeholder="Ej. Constructora ABC"
-            />
-            {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Correo Electrónico</label>
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              className={`mt-1 block w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'} bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200`}
-              placeholder="ejemplo@constructora.com"
-            />
-            {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
-          </div>
-
+          {/* RIF primero */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">RIF / Cédula</label>
             <div className="mt-1 flex rounded-lg shadow-sm">
@@ -149,13 +160,54 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono (Opcional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre del Cliente</label>
             <input
-              name="phone"
-              value={form.phone}
+              name="name"
+              value={form.name}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
+              className={`mt-1 block w-full rounded-lg border ${errors.name ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'} bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200`}
+              placeholder="Ej. Constructora ABC"
             />
+            {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Correo Electrónico</label>
+            <input
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              className={`mt-1 block w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'} bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200`}
+              placeholder="ejemplo@constructora.com"
+            />
+            {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
+          </div>
+
+          {/* Teléfono con prefijo */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono (Opcional)</label>
+            <div className="mt-1 flex rounded-lg shadow-sm">
+              <select
+                value={phonePrefix}
+                onChange={(e) => setPhonePrefix(e.target.value)}
+                className="block rounded-l-lg border border-r-0 border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-green-200"
+              >
+                <option value="+58">+58 (VE)</option>
+                <option value="+1">+1 (US/CAN)</option>
+                <option value="+52">+52 (MX)</option>
+                <option value="+34">+34 (ES)</option>
+                <option value="+55">+55 (BR)</option>
+              </select>
+              <input
+                name="phone"
+                value={phoneNumber}
+                onChange={handlePhoneNumberChange}
+                className="block w-full rounded-r-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-green-200"
+                placeholder="Ej. 4121234567"
+              />
+            </div>
+            {errors.phone && <p className="text-sm text-red-500 mt-1">{errors.phone}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Dirección (Opcional)</label>
