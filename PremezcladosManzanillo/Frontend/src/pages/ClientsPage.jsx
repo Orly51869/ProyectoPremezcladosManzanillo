@@ -16,7 +16,7 @@ const ClientsPage = () => {
   const [editingClient, setEditingClient] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [serverError, setServerError] = useState(null);
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'canvas'
+  const [viewMode, setViewMode] = useState('list'); // 'list' o 'canvas'
   const [search, setSearch] = useState('');
   const [ownerFilter, setOwnerFilter] = useState('all');
 
@@ -64,18 +64,18 @@ const ClientsPage = () => {
   const handleOpenClientFormModal = (client = null) => {
     setEditingClient(client);
     setShowClientFormModal(true);
-    setServerError(null); // Clear server errors when opening the modal
+    setServerError(null); // Limpiar errores del servidor al abrir el modal
   };
 
   const handleCloseClientFormModal = () => {
     setEditingClient(null);
     setShowClientFormModal(false);
-    setServerError(null); // Clear server errors when closing the modal
+    setServerError(null); // Limpiar errores del servidor al cerrar el modal
   };
 
   const handleSaveClient = async (formData) => {
     setSuccessMessage(null);
-    setServerError(null); // Clear previous server error
+    setServerError(null); // Limpiar error previo del servidor
     try {
       if (editingClient) {
         await api.put(`/api/clients/${editingClient.id}`, formData);
@@ -84,17 +84,17 @@ const ClientsPage = () => {
         await api.post('/api/clients', formData);
         setSuccessMessage(`Cliente "${formData.name}" creado con éxito.`);
       }
-      handleCloseClientFormModal(); // Close modal on success
-      fetchClients(); // Refetch clients on success
+      handleCloseClientFormModal(); // Cerrar modal al guardarse correctamente
+      fetchClients(); // Volver a obtener clientes al tener éxito
     } catch (err) {
       console.error('Error saving client:', err);
       if (err.response && err.response.status === 409) {
-        setServerError(err.response.data.error); // Set specific server error
-        console.log("Server error set:", err.response.data.error); // Add console log for debugging
+        setServerError(err.response.data.error); // Establecer error específico del servidor
+        console.log("Server error set:", err.response.data.error); // Añadir log en consola para depuración
       } else {
         setError('Error al guardar el cliente. Por favor, inténtalo de nuevo.');
       }
-      // Do not close modal or refetch clients on error
+      // No cerrar modal ni volver a obtener clientes en caso de error
     }
   };
 
@@ -110,7 +110,7 @@ const ClientsPage = () => {
       fetchClients();
     } catch (err) {
       console.error('Error deleting client:', err);
-      // Show specific error message from server if available
+      // Mostrar mensaje de error específico del servidor si está disponible
       if (err.response && err.response.data && err.response.data.error) {
         setError(err.response.data.error);
       } else if (err.response && err.response.status === 403) {

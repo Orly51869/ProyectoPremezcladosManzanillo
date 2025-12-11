@@ -1,0 +1,31 @@
+## Actualización de la Sesión (10 de diciembre de 2025)
+
+**Resumen del Estado Actual:** El proyecto fue restaurado a la última versión disponible (`b91c6fa`). Se han realizado varias modificaciones en el frontend para reemplazar el uso de datos mock con llamadas a la API y se ha intentado resolver un problema de compilación en el backend.
+
+**Acciones Realizadas:**
+
+*   **Restauración del Repositorio:** El repositorio fue restaurado al commit `b91c6fa - eliminacion de presupuesto y comprobantes` para recuperar la carpeta `mock` y los cambios recientes.
+*   **Frontend - Modificación del Flujo de Creación de Presupuestos:**
+    *   Se modificó `PremezcladosManzanillo/Frontend/src/sections/dashboard/BudgetForm.jsx` para integrar `ClientFormModal`.
+    *   Se reemplazó el enlace "Crea uno" por un botón que abre el formulario de creación de clientes directamente en un modal.
+    *   Se añadió lógica para refrescar la lista de clientes y pre-seleccionar el cliente recién creado.
+*   **Frontend - Reemplazo de Datos Mock por Llamadas a la API:**
+    *   Se actualizó `PremezcladosManzanillo/Frontend/src/pages/StructuralConcretesPage.jsx` para obtener los productos estructurales desde la API.
+    *   Se actualizó `PremezcladosManzanillo/Frontend/src/pages/SpecialConcretesPage.jsx` para obtener los productos especiales desde la API y se añadió un placeholder para los aditivos.
+    *   Se actualizó `PremezcladosManzanillo/Frontend/src/pages/PavementConcretesPage.jsx` para obtener los productos de pavimentos desde la API.
+*   **Backend - Intentos de Corrección de userController.ts:** Se realizaron múltiples intentos para corregir los errores de compilación en `PremezcladosManzanillo/Backend/src/controllers/userController.ts` relacionados con la API de Auth0 Management (SDK v5). Estos intentos no han sido exitosos hasta el momento.
+
+**Problemas Pendientes:**
+
+*   **Backend - userController.ts:** Los errores de compilación en `PremezcladosManzanillo/Backend/src/controllers/userController.ts` persisten debido a una incorrecta integración o uso de los métodos del SDK de Auth0 Management API v5. Se requiere una revisión a fondo de la documentación oficial y una implementación cuidadosa para resolverlo.
+*   **Frontend - Errores de `mock/data` y `api.js` (Resueltos por la restauración, pero no verificados):** Tras la restauración del repositorio y la verificación de la existencia de `mock/data.js`, así como la aparente corrección del import `api` en `AdminRolesPage.jsx`, estos errores deberían estar resueltos. Es necesario arrancar el servidor del frontend para confirmar.
+*   **Frontend - Errores de sintaxis JSX:** Los errores de `Unexpected token` en `StructuralConcretesPage.jsx` y `SpecialConcretesPage.jsx` deberían estar resueltos tras sobrescribir los archivos con `write_file`. Es necesario arrancar el servidor del frontend para confirmar.
+
+**Próximas Tareas (Pendientes):**
+
+1.  **Resolver el problema de `userController.ts` en el Backend:** Reimplementar la lógica de gestión de roles de usuario con la Auth0 Management API v5, asegurándose de usar los métodos y la estructura de parámetros correctos.
+2.  **Verificar el arranque del Frontend:** Instalar las dependencias del frontend (`pnpm install`) y luego iniciar el servidor (`pnpm run start`) para asegurar que todos los cambios implementados y las correcciones de errores funcionen correctamente.
+3.  **Implementar la Funcionalidad de Subida de Productos:** Una vez que el frontend esté estable y el backend funcione, implementar la capacidad de un rol de usuario para cargar productos desde el dashboard, incluyendo la creación de un endpoint en el backend para manejar la carga y el parseo de archivos (ej. CSV) y la actualización de la base de datos.
+4.  **Elaboración de Documentación:**
+    *   Crear `docs/User_Guide.md`: Guía de usuario general de la aplicación.
+    *   Crear `docs/Developer_Guide.md`: Guía técnica para desarrolladores.

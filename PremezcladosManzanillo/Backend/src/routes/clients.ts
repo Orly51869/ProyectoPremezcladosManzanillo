@@ -3,10 +3,10 @@ import { getClientsByOwner, createClient, updateClient, deleteClient } from '../
 
 const router = Router();
 
-// The base path /api/clients is handled in index.ts
+// La ruta base /api/clients se maneja en index.ts
 router.get('/', getClientsByOwner);
 router.post('/', createClient);
-router.put('/:id', updateClient); // Add PUT route for updating a client
-router.delete('/:id', deleteClient); // Add DELETE route for deleting a client
+router.put('/:id', updateClient); // Añadir ruta PUT para actualizar un cliente
+router.delete('/:id', deleteClient); // Añadir ruta DELETE para eliminar un cliente
 
 export default router;

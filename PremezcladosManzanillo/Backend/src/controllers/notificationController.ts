@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Get all notifications for the authenticated user
+// Obtener todas las notificaciones para el usuario autenticado
 export const getNotifications = async (req: Request, res: Response) => {
   const authUserId = req.auth?.payload.sub;
 
@@ -23,7 +23,7 @@ export const getNotifications = async (req: Request, res: Response) => {
   }
 };
 
-// Mark a notification as read
+// Marcar una notificación como leída
 export const markNotificationAsRead = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub;
@@ -50,7 +50,7 @@ export const markNotificationAsRead = async (req: Request, res: Response) => {
   }
 };
 
-// Mark all notifications as read for the authenticated user
+// Marcar todas las notificaciones como leídas para el usuario autenticado
 export const markAllNotificationsAsRead = async (req: Request, res: Response) => {
   const authUserId = req.auth?.payload.sub;
 
@@ -70,7 +70,7 @@ export const markAllNotificationsAsRead = async (req: Request, res: Response) =>
   }
 };
 
-// Delete a notification
+// Eliminar una notificación
 export const deleteNotification = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub;

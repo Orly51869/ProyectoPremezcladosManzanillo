@@ -32,12 +32,12 @@ export const calculateTotal = (items = []) => {
  * @returns {string} - Fecha formateada.
  */
 export const formatDate = (date) => {
-  // Check if date is valid before formatting
+  // Verificar si la fecha es válida antes de formatear
   try {
     const parsedDate = typeof date === 'string' ? parseISO(date) : date;
     return format(parsedDate, "dd/MM/yyyy", { locale: es });
   } catch (error) {
-    // Forgivingly return a simple format for non-standard date strings
+    // Devolver de forma tolerante un formato simple para cadenas de fecha no estándar
     try {
         return new Date(date).toLocaleDateString('es-ES');
     } catch (e) {

@@ -1,14 +1,14 @@
 import { Router } from "express";
 import * as productController from "../controllers/productController";
 import { jwtCheck } from "../middleware/jwtCheck";
-// import { checkRole } from "../middleware/roleCheck"; // This middleware will be created later
+// import { checkRole } from "../middleware/roleCheck"; // Este middleware se creará más adelante
 
 const router = Router();
 
-// Get all products
+// Obtener todos los productos
 router.get("/", jwtCheck, productController.getProducts);
 
-// Create a new product (Admin and Contable only)
+// Crear un nuevo producto (solo Administrador y Contable)
 router.post(
   "/",
   jwtCheck,
@@ -16,7 +16,7 @@ router.post(
   productController.createProduct
 );
 
-// Update a product (Admin and Contable only)
+// Actualizar un producto (solo Administrador y Contable)
 router.put(
   "/:id",
   jwtCheck,
@@ -24,7 +24,7 @@ router.put(
   productController.updateProduct
 );
 
-// Delete a product (Admin and Contable only)
+// Eliminar un producto (solo Administrador y Contable)
 router.delete(
   "/:id",
   jwtCheck,

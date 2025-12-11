@@ -5,23 +5,23 @@ import {
   markAllNotificationsAsRead,
   deleteNotification,
 } from '../controllers/notificationController';
-import { jwtCheck } from '../middleware/jwtCheck'; // Assuming jwtCheck is used for auth
+import { jwtCheck } from '../middleware/jwtCheck'; // Asumimos que jwtCheck se usa para autenticación
 
 const router = Router();
 
-// All notification routes require authentication
+// Todas las rutas de notificaciones requieren autenticación
 router.use(jwtCheck);
 
-// GET /api/notifications - Get all notifications for the authenticated user
+// GET /api/notifications - Obtener todas las notificaciones para el usuario autenticado
 router.get('/', getNotifications);
 
-// PATCH /api/notifications/:id/read - Mark a specific notification as read
+// PATCH /api/notifications/:id/read - Marcar una notificación específica como leída
 router.patch('/:id/read', markNotificationAsRead);
 
-// PATCH /api/notifications/read-all - Mark all notifications for the user as read
+// PATCH /api/notifications/read-all - Marcar todas las notificaciones del usuario como leídas
 router.patch('/read-all', markAllNotificationsAsRead);
 
-// DELETE /api/notifications/:id - Delete a specific notification
+// DELETE /api/notifications/:id - Eliminar una notificación específica
 router.delete('/:id', deleteNotification);
 
 export default router;

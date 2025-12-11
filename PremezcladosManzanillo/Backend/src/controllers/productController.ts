@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Get all products
+// Obtener todos los productos
 export const getProducts = async (req: Request, res: Response) => {
   try {
     const products = await prisma.product.findMany({
@@ -18,7 +18,7 @@ export const getProducts = async (req: Request, res: Response) => {
   }
 };
 
-// Create a new product
+// Crear un nuevo producto
 export const createProduct = async (req: Request, res: Response) => {
   try {
     const { name, description, price, type, category } = req.body;
@@ -43,7 +43,7 @@ export const createProduct = async (req: Request, res: Response) => {
   }
 };
 
-// Update a product
+// Actualizar un producto
 export const updateProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
@@ -66,7 +66,7 @@ export const updateProduct = async (req: Request, res: Response) => {
   }
 };
 
-// Delete a product
+// Eliminar un producto
 export const deleteProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {

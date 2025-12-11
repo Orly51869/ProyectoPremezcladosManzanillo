@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Extending the Request type to include dbUser
+// Extensión del tipo Request para incluir dbUser
 interface AuthenticatedRequest extends Request {
   dbUser?: {
     id: string;
@@ -34,7 +34,7 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
     let paymentWhereClause: any = {};
 
     if (!isAdminOrManager) {
-      // For 'Usuario' role, filter by clients owned by the user
+      // Para el rol 'Usuario', filtrar por clientes propiedad del usuario
       clientWhereClause = { ownerId: userId };
       budgetWhereClause = { client: { ownerId: userId } };
       paymentWhereClause = { budget: { client: { ownerId: userId } } };
@@ -54,7 +54,7 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
 
     const pendingPaymentsAggregate = await prisma.payment.aggregate({
       _sum: {
-        pending: true, // Corrected from pendingAmount to pending
+        pending: true, // Corregido de pendingAmount a pending
       },
       where: {
         ...paymentWhereClause,
@@ -63,14 +63,14 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
         },
       },
     });
-    const pendingAmount = pendingPaymentsAggregate._sum.pending ?? 0; // Corrected from pendingAmount to pending
+    const pendingAmount = pendingPaymentsAggregate._sum.pending ?? 0; // Corregido de pendingAmount a pending
 
     console.log(`[DashboardStats] totalClients: ${totalClients}, totalBudgets: ${totalBudgets}, totalIncome: ${totalIncome}, pendingAmount: ${pendingAmount}`);
 
     // 2. Resumen del gráfico
     const approvedBudgets = await prisma.budget.count({ where: { ...budgetWhereClause, status: 'APPROVED' } });
     const totalPayments = await prisma.payment.count({ where: paymentWhereClause });
-    const pendingPaymentsCount = await prisma.payment.count({ where: { ...paymentWhereClause, pending: { gt: 0 } } }); // Corrected from pendingAmount to pending
+    const pendingPaymentsCount = await prisma.payment.count({ where: { ...paymentWhereClause, pending: { gt: 0 } } }); // Corregido de pendingAmount a pending
 
     console.log(`[DashboardStats] approvedBudgets: ${approvedBudgets}, totalPayments: ${totalPayments}, pendingPaymentsCount: ${pendingPaymentsCount}`);
 
@@ -101,7 +101,7 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
         });
 
         const pendingResult = await prisma.payment.aggregate({
-            _sum: { pending: true }, // Corrected from pendingAmount to pending
+            _sum: { pending: true }, // Corregido de pendingAmount a pending
             where: {
                 ...paymentWhereClause,
                 createdAt: {
@@ -117,7 +117,7 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
         return {
           month: monthDate.toLocaleString('es-ES', { month: 'short' }),
           income: incomeResult._sum.paidAmount ?? 0,
-          pending: pendingResult._sum.pending ?? 0, // Corrected from pendingAmount to pending
+          pending: pendingResult._sum.pending ?? 0, // Corregido de pendingAmount a pending
         };
       })
     );

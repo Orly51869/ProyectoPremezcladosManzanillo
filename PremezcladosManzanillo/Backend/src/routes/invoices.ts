@@ -10,17 +10,17 @@ import { uploadInvoiceDocuments } from '../middleware/uploadMiddleware'; // Assu
 
 const router = Router();
 
-// All invoice routes require authentication
+// Todas las rutas de facturas requieren autenticación
 router.use(jwtCheck, userProvisioningMiddleware);
 
-// GET /api/invoices - Get all invoices for the authenticated user (or all if admin/accountant)
+// GET /api/invoices - Obtener todas las facturas para el usuario autenticado (o todas si es admin/contable)
 router.get('/', getInvoices);
 
-// GET /api/invoices/:id - Get a single invoice by ID
+// GET /api/invoices/:id - Obtener una factura por su ID
 router.get('/:id', getInvoiceById);
 
-// PATCH /api/invoices/:id - Update an invoice (e.g., upload fiscal invoice or delivery order)
-// This route will use a specific multer middleware for file uploads
+// PATCH /api/invoices/:id - Actualizar una factura (p. ej., subir factura fiscal u orden de entrega)
+// Esta ruta usará un middleware multer específico para la carga de archivos
 router.patch('/:id', uploadInvoiceDocuments, updateInvoice);
 
 export default router;

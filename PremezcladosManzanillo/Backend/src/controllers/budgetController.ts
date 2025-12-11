@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Get all budgets, filtered by user role
+// Obtener todos los presupuestos, filtrados por rol de usuario
 export const getBudgets = async (req: Request, res: Response) => {
   try {
     const auth = req.auth;
@@ -13,11 +13,11 @@ export const getBudgets = async (req: Request, res: Response) => {
     const includeProducts = {
       products: {
         include: {
-          product: true, // Include the full product details
+              product: true, // Incluir los detalles completos del producto
         },
       },
-      client: true, // Also include client details
-      processedBy: true, // Include processor details
+      client: true, // También incluir detalles del cliente
+      processedBy: true, // Incluir detalles del procesador
     };
 
     let budgets;
@@ -42,7 +42,7 @@ export const getBudgets = async (req: Request, res: Response) => {
   }
 };
 
-// Approve a budget
+// Aprobar un presupuesto
 export const approveBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub;
@@ -70,17 +70,17 @@ export const approveBudget = async (req: Request, res: Response) => {
         status: 'APPROVED',
         processedBy: { connect: { id: authUserId } },
         processedAt: new Date(),
-        rejectionReason: null, // Clear any previous rejection reason
+        rejectionReason: null, // Limpiar cualquier razón de rechazo previa
       },
       include: {
         products: { include: { product: true } },
         client: true,
-        processedBy: true, // Include processor details
-        creator: true, // Include creator to get creatorId for notification
+        processedBy: true, // Incluir detalles del procesador
+        creator: true, // Incluir creador para obtener creatorId para notificación
       },
     });
 
-    // Create notification for the budget creator
+    // Crear notificación para el creador del presupuesto
     await prisma.notification.create({
       data: {
         userId: approvedBudget.creatorId,
@@ -95,7 +95,7 @@ export const approveBudget = async (req: Request, res: Response) => {
   }
 };
 
-// Reject a budget
+// Rechazar un presupuesto
 export const rejectBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { rejectionReason } = req.body;
@@ -132,12 +132,12 @@ export const rejectBudget = async (req: Request, res: Response) => {
       include: {
         products: { include: { product: true } },
         client: true,
-        processedBy: true, // Include processor details
-        creator: true, // Include creator to get creatorId for notification
+        processedBy: true, // Incluir detalles del procesador
+        creator: true, // Incluir creador para obtener creatorId para notificación
       },
     });
 
-    // Create notification for the budget creator
+    // Crear notificación para el creador del presupuesto
     await prisma.notification.create({
       data: {
         userId: rejectedBudget.creatorId,
@@ -152,7 +152,7 @@ export const rejectBudget = async (req: Request, res: Response) => {
   }
 };
 
-// Get a single budget by ID
+// Obtener un presupuesto por su ID
 export const getBudgetById = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
@@ -165,7 +165,7 @@ export const getBudgetById = async (req: Request, res: Response) => {
           },
         },
         client: true,
-        processedBy: true, // Include processor details
+        processedBy: true, // Incluir detalles del procesador
       },
     });
 
@@ -180,7 +180,7 @@ export const getBudgetById = async (req: Request, res: Response) => {
   }
 };
 
-// Helper function for deliveryDate validation
+// Función auxiliar para validar la deliveryDate
 const validateDeliveryDate = (deliveryDate: string | undefined) => {
   if (deliveryDate) {
     const today = new Date();
@@ -193,7 +193,7 @@ const validateDeliveryDate = (deliveryDate: string | undefined) => {
   }
 };
 
-// Create a new budget
+// Crear un nuevo presupuesto
 export const createBudget = async (req: Request, res: Response) => {
   const { title, clientId, status, products, address, deliveryDate, workType, resistance, concreteType, element, observations, volume } = req.body;
   const creatorId = req.auth?.payload.sub;
@@ -234,7 +234,7 @@ export const createBudget = async (req: Request, res: Response) => {
               if (!product) throw new Error(`Product with ID ${p.productId} not found.`);
               return {
                 quantity: p.quantity,
-                unitPrice: product.price, // Historical price
+                unitPrice: product.price, // Precio histórico
                 totalPrice: p.quantity * product.price,
                 product: { connect: { id: p.productId } },
               };
@@ -255,7 +255,7 @@ export const createBudget = async (req: Request, res: Response) => {
   }
 };
 
-// Update an existing budget
+// Actualizar un presupuesto existente
 export const updateBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, clientId, status, products, address, deliveryDate, workType, resistance, concreteType, element, observations, volume } = req.body;
@@ -269,10 +269,10 @@ export const updateBudget = async (req: Request, res: Response) => {
     const total = await calculateTotal(products);
 
     const updatedBudget = await prisma.$transaction(async (tx) => {
-      // 1. Delete existing budget products
+      // 1. Eliminar productos de presupuesto existentes
       await tx.budgetProduct.deleteMany({ where: { budgetId: id } });
 
-      // 2. Update budget and create new budget products
+      // 2. Actualizar el presupuesto y crear nuevos productos de presupuesto
       const budget = await tx.budget.update({
         where: { id: id },
         data: {
@@ -318,11 +318,11 @@ export const updateBudget = async (req: Request, res: Response) => {
   }
 };
 
-// Delete a budget
+// Eliminar un presupuesto
 export const deleteBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    // Prisma cascading delete will handle BudgetProduct entries
+    // El borrado en cascada de Prisma manejará las entradas de BudgetProduct
     await prisma.budget.delete({
       where: { id: id },
     });
@@ -333,7 +333,7 @@ export const deleteBudget = async (req: Request, res: Response) => {
   }
 };
 
-// Helper to calculate total price
+// Auxiliar para calcular el precio total
 const calculateTotal = async (products: { productId: string; quantity: number }[]): Promise<number> => {
   let total = 0;
   for (const p of products) {

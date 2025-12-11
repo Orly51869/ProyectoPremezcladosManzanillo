@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Papa = require('papaparse');
 
-// Reuse logic similar to Settings.jsx parsing, not importing React code to keep node-friendly
+// Reutilizar lógica similar al parseo en Settings.jsx; no importar código React para mantener compatibilidad con Node
 const normalizeHeader = (h) => String(h || '')
   .toLowerCase()
   .trim()
@@ -34,7 +34,7 @@ function processRows(rows) {
   let updatedCount = 0;
   let skippedCount = 0;
   const errors = [];
-  const existingIds = new Set(); // We don't import mockProducts in this test, just print what would be added
+  const existingIds = new Set(); // No importamos mockProducts en esta prueba; solo imprimir lo que se añadiría
   const addedIds = [];
 
   rows.forEach((r, idx) => {
@@ -66,7 +66,7 @@ function processRows(rows) {
       price: findField(r, ['precios', 'precio', 'price', 'Price']) || ''
     };
 
-    // Simulate add
+    // Simular adición
     if (!existingIds.has(id)) {
       existingIds.add(id);
       addedCount += 1;
@@ -82,7 +82,7 @@ function processRows(rows) {
 let parsed = Papa.parse(fileData, { header: true, skipEmptyLines: true });
 let rows = parsed.data || [];
 
-// If parsed into a single column with semicolons, reparse using delimiter ';'
+// Si se parseó en una sola columna con punto y coma, volver a parsear usando el delimitador ';'
 if (rows.length > 0 && Object.keys(rows[0]).length === 1 && Object.values(rows[0])[0] && String(Object.values(rows[0])[0]).includes(';')) {
   parsed = Papa.parse(fileData, { header: true, skipEmptyLines: true, delimiter: ';' });
   rows = parsed.data || [];

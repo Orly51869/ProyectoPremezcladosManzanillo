@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Get all invoices for the authenticated user (or all if admin)
+// Obtener todas las facturas para el usuario autenticado (o todas si es admin)
 export const getInvoices = async (req: Request, res: Response) => {
   const authUserId = req.auth?.payload.sub;
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
@@ -22,7 +22,7 @@ export const getInvoices = async (req: Request, res: Response) => {
             include: {
               budget: {
                 include: {
-                  creator: true, // Include budget creator for filtering
+                  creator: true, // Incluir el creador del presupuesto para filtrado
                   client: true,
                 },
               },
@@ -32,7 +32,7 @@ export const getInvoices = async (req: Request, res: Response) => {
         orderBy: { proformaGeneratedAt: 'desc' },
       });
     } else {
-      // Regular users only see invoices related to their budgets
+      // Los usuarios regulares solo ven facturas relacionadas con sus presupuestos
       invoices = await prisma.invoice.findMany({
         where: {
           payment: {
@@ -63,7 +63,7 @@ export const getInvoices = async (req: Request, res: Response) => {
   }
 };
 
-// Get a single invoice by ID
+// Obtener una factura por su ID
 export const getInvoiceById = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub;
@@ -94,7 +94,7 @@ export const getInvoiceById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Invoice not found.' });
     }
 
-    // Authorization check
+    // Comprobación de autorización
     const isOwner = invoice.payment.budget.creatorId === authUserId;
     const isAdminOrAccountant = roles.includes('Administrador') || roles.includes('Contable');
 
@@ -109,17 +109,17 @@ export const getInvoiceById = async (req: Request, res: Response) => {
   }
 };
 
-// Update an invoice (e.g., upload fiscal invoice or delivery order)
+// Actualizar una factura (p. ej., subir factura fiscal u orden de entrega)
 export const updateInvoice = async (req: Request, res: Response) => {
   const { id } = req.params;
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
-  // Only Admin or Accountant can update invoices (upload documents)
+  // Solo Admin o Contable pueden actualizar facturas (subir documentos)
   if (!roles.includes('Administrador') && !roles.includes('Contable')) {
     return res.status(403).json({ error: 'Forbidden: Solo los administradores y contables pueden actualizar facturas.' });
   }
 
-  // Type assertion to access files from multer
+  // Aserción de tipos para acceder a archivos desde multer
   const files = req.files as { 
     fiscalInvoice?: Express.Multer.File[], 
     deliveryOrder?: Express.Multer.File[] 
@@ -128,10 +128,10 @@ export const updateInvoice = async (req: Request, res: Response) => {
   const fiscalInvoiceFile = files?.fiscalInvoice?.[0];
   const deliveryOrderFile = files?.deliveryOrder?.[0];
 
-  // Base URL for serving static files
+  // URL base para servir archivos estáticos
   const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-  // Extract relative path from absolute path (e.g., "uploads/invoices/filename.pdf")
+  // Extraer ruta relativa desde la ruta absoluta (p. ej., "uploads/invoices/archivo.pdf")
   const getRelativePath = (filePath: string): string => {
     const normalizedPath = filePath.replace(/\\/g, '/');
     const uploadsIndex = normalizedPath.indexOf('uploads/');
@@ -150,10 +150,10 @@ export const updateInvoice = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Factura no encontrada.' });
     }
 
-    // Validation: For Contable role, both documents are required
+    // Validación: para el rol Contable, ambos documentos son requeridos
     const isContable = roles.includes('Contable');
     
-    // Check if we're uploading new files or if existing ones are already present
+    // Verificar si estamos subiendo nuevos archivos o si ya existen en la factura
     const willHaveFiscalInvoice = fullFiscalInvoiceUrl || existingInvoice.fiscalInvoiceUrl;
     const willHaveDeliveryOrder = fullDeliveryOrderUrl || existingInvoice.deliveryOrderUrl;
     
@@ -163,7 +163,7 @@ export const updateInvoice = async (req: Request, res: Response) => {
       });
     }
 
-    // If both documents are uploaded, automatically change status to FISCAL_ISSUED
+    // Si ambos documentos están subidos, cambiar automáticamente el estado a FISCAL_ISSUED
     const hasBothDocuments = (fullFiscalInvoiceUrl || existingInvoice.fiscalInvoiceUrl) && 
                              (fullDeliveryOrderUrl || existingInvoice.deliveryOrderUrl);
     
@@ -190,7 +190,7 @@ export const updateInvoice = async (req: Request, res: Response) => {
       },
     });
 
-    // Create notification when documents are uploaded
+    // Crear notificación cuando se suben documentos
     if (fullFiscalInvoiceUrl || fullDeliveryOrderUrl) {
       const documentsUploaded = [];
       if (fullFiscalInvoiceUrl) documentsUploaded.push('Factura Fiscal');

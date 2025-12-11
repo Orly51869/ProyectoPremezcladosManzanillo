@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serverError }) => {
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' });
-  const [rifPrefix, setRifPrefix] = useState('V'); // Default to 'V'
+  const [rifPrefix, setRifPrefix] = useState('V'); // Por defecto 'V'
   const [rifNumber, setRifNumber] = useState('');
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
@@ -11,7 +11,7 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
   useEffect(() => {
     if (serverError) {
       setApiError(serverError);
-      // If the error is about the email, also set it in the form errors
+      // Si el error es sobre el correo, también establecerlo en los errores del formulario
       if (serverError.toLowerCase().includes('email')) {
         setErrors(prev => ({ ...prev, email: serverError }));
       }
@@ -21,18 +21,18 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
   }, [serverError]);
 
   useEffect(() => {
-    // Reset apiError and form errors when initialValues change (modal is reopened)
+    // Reiniciar apiError y errores del formulario cuando cambian initialValues (modal se reabre)
     setApiError('');
     setErrors({});
 
-    // Parse RIF for editing
+    // Parsear RIF para edición
     if (initialValues.rif) {
       const parts = initialValues.rif.split('-');
       if (parts.length === 2) {
         setRifPrefix(parts[0]);
         setRifNumber(parts[1]);
       } else {
-        // Fallback if RIF is not in expected format
+        // Recurso alternativo si el RIF no está en el formato esperado
         setRifPrefix('V');
         setRifNumber(initialValues.rif);
       }
@@ -52,13 +52,13 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
-    // Clear API error and validation error on change
+    // Limpiar error de API y error de validación al cambiar
     if (apiError) setApiError('');
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
   };
 
   const handleRifNumberChange = (e) => {
-    const value = e.target.value.replace(/[^0-9]/g, ''); // Only allow digits
+    const value = e.target.value.replace(/[^0-9]/g, ''); // Permitir solo dígitos
     setRifNumber(value);
   };
 

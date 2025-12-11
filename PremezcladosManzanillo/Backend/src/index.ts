@@ -1,19 +1,19 @@
 import express from 'express';
 import * as dotenv from 'dotenv';
-dotenv.config(); // Load environment variables
+dotenv.config(); // Cargar variables de entorno
 
 const app = express();
 const port = 3001;
 
-// Global error handlers for uncaught exceptions and unhandled promise rejections
+// Manejadores globales de errores para excepciones no capturadas y promesas rechazadas sin manejo
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1); // Exit with a failure code
+  process.exit(1); // Salir con un código de error
 });
 
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception thrown:', error);
-  process.exit(1); // Exit with a failure code
+  process.exit(1); // Salir con un código de error
 });
 
 import cors from 'cors';
@@ -30,13 +30,13 @@ app.use(cors(corsOptions));
 import { jwtCheck } from './middleware/jwtCheck';
 import { userProvisioningMiddleware } from './middleware/userProvisioningMiddleware';
 
-// Routers
+// Enrutadores
 import budgetsRouter from './routes/budgets';
 import clientsRouter from './routes/clients';
 import productsRouter from './routes/products';
 import paymentsRouter from './routes/payments';
 import notificationsRouter from './routes/notifications';
-import invoicesRouter from './routes/invoices'; // Import the new invoices router
+import invoicesRouter from './routes/invoices'; // Importar el nuevo router de facturas
 import dashboardRouter from './routes/dashboard';
 
 console.log('Backend: Applying express.json middleware');

@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Create a new payment
+// Crear un nuevo pago
 export const createPayment = async (req: Request, res: Response) => {
   // `req.body` contendrá los campos de texto del formulario
   // `req.file` contendrá la información del archivo subido por uploadReceipt
@@ -39,9 +39,9 @@ export const createPayment = async (req: Request, res: Response) => {
         return res.status(400).json({ error: `Payment amount exceeds remaining pending amount. Pending: ${totalPending}` });
     }
 
-    // Convert local file path to accessible URL
+    // Convertir la ruta local del archivo a una URL accesible
     const receiptPath = receiptFile ? receiptFile.path : undefined;
-    // Base URL for serving static files, replacing backslashes for URL compatibility
+    // URL base para servir archivos estáticos, reemplazando backslashes para compatibilidad con URLs
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const fullReceiptUrl = receiptPath ? `${baseUrl}/${receiptPath.replace(/\\/g, '/')}` : undefined;
     
@@ -69,7 +69,7 @@ export const createPayment = async (req: Request, res: Response) => {
   }
 };
 
-// Get payments (possibly filtered by budgetId, status, etc.)
+// Obtener pagos (posiblemente filtrados por budgetId, status, etc.)
 export const getPayments = async (req: Request, res: Response) => {
     const { budgetId, status } = req.query;
 
@@ -82,11 +82,11 @@ export const getPayments = async (req: Request, res: Response) => {
             include: {
                 budget: {
                     include: {
-                        client: true, // Include client details with budget
-                        creator: true, // Include budget creator
+                        client: true, // Incluir detalles del cliente con el presupuesto
+                        creator: true, // Incluir el creador del presupuesto
                     },
                 },
-                validator: true, // Include validator user details
+                validator: true, // Incluir detalles del usuario validador
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -97,7 +97,7 @@ export const getPayments = async (req: Request, res: Response) => {
     }
 };
 
-// Get a single payment by ID
+// Obtener un pago por su ID
 export const getPaymentById = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
@@ -124,7 +124,7 @@ export const getPaymentById = async (req: Request, res: Response) => {
     }
 };
 
-// Update a payment (e.g., for validation)
+// Actualizar un pago (p. ej., para validación)
 export const updatePayment = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status, observations } = req.body; // Document URLs will come from req.files
@@ -138,7 +138,7 @@ export const updatePayment = async (req: Request, res: Response) => {
     return res.status(403).json({ error: 'Forbidden: Only administrators and accountants can validate payments.' });
   }
 
-  // Type assertion to access files from multer
+  // Aserción de tipos para acceder a archivos desde multer
   const files = req.files as { 
     proFormaInvoice?: Express.Multer.File[], 
     fiscalInvoice?: Express.Multer.File[], 
@@ -154,7 +154,7 @@ export const updatePayment = async (req: Request, res: Response) => {
     if (!existingPayment) {
       return res.status(404).json({ error: 'Payment not found.' });
     }
-    // Only allow status change from PENDING
+    // Solo permitir cambiar el estado desde PENDING
     if (existingPayment.status !== 'PENDING') {
         return res.status(400).json({ error: 'Only PENDING payments can be updated.' });
     }
@@ -181,7 +181,7 @@ export const updatePayment = async (req: Request, res: Response) => {
     });
 
     if (updatedPayment.status === 'VALIDATED') {
-        // 1. Create a notification for the budget creator
+        // 1. Crear una notificación para el creador del presupuesto
         await prisma.notification.create({
             data: {
                 userId: updatedPayment.budget.creatorId,
@@ -189,8 +189,8 @@ export const updatePayment = async (req: Request, res: Response) => {
             },
         });
 
-        // 2. Create a Proforma Invoice
-        const invoiceNumber = `INV-${Date.now()}`; // Simple unique number for now
+        // 2. Crear una Factura Proforma
+        const invoiceNumber = `INV-${Date.now()}`; // Número único simple por ahora
         await prisma.invoice.create({
             data: {
                 invoiceNumber: invoiceNumber,
@@ -207,7 +207,7 @@ export const updatePayment = async (req: Request, res: Response) => {
   }
 };
 
-// Delete a payment
+// Eliminar un pago
 export const deletePayment = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub;

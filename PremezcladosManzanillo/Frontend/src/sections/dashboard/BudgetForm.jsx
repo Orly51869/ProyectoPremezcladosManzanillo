@@ -4,11 +4,14 @@ import { Link } from 'react-router-dom';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import api from '../../utils/api';
 import { format } from 'date-fns';
+import ClientFormModal from "./ClientFormModal"; // Import the ClientFormModal
 
 const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
   // State for data fetched from API
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
+  const [showClientFormModal, setShowClientFormModal] = useState(false); // State for modal visibility
+  const [serverError, setServerError] = useState(null); // State for server errors from client form
 
   // Form state
   const [clientId, setClientId] = useState(initialValues.clientId || '');
@@ -30,21 +33,22 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
   })) || []);
   const [errors, setErrors] = useState({});
 
+  const fetchData = async () => {
+    try {
+      const [clientsRes, productsRes] = await Promise.all([
+        api.get('/api/clients'),
+        api.get('/api/products'),
+      ]);
+      setClients(clientsRes.data);
+      setProducts(productsRes.data);
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+      setErrors(prev => ({ ...prev, data: "Failed to load clients or products." }));
+    }
+  };
+
   // Fetch initial data (clients and products)
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [clientsRes, productsRes] = await Promise.all([
-          api.get('/api/clients'),
-          api.get('/api/products'),
-        ]);
-        setClients(clientsRes.data);
-        setProducts(productsRes.data);
-      } catch (error) {
-        console.error("Failed to fetch data", error);
-        setErrors(prev => ({ ...prev, data: "Failed to load clients or products." }));
-      }
-    };
     fetchData();
   }, []);
 
@@ -128,6 +132,33 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
     onSave(budgetData);
   };
 
+  const handleOpenClientFormModal = () => {
+    setShowClientFormModal(true);
+    setServerError(null);
+  };
+
+  const handleCloseClientFormModal = () => {
+    setShowClientFormModal(false);
+    setServerError(null);
+  };
+
+  const handleSaveClientFromModal = async (formData) => {
+    setServerError(null);
+    try {
+      const response = await api.post('/api/clients', formData);
+      handleCloseClientFormModal();
+      await fetchData(); // Refresh clients list
+      setClientId(response.data.id); // Pre-select new client
+    } catch (err) {
+      console.error('Error saving client from modal:', err);
+      if (err.response && err.response.status === 409) {
+        setServerError(err.response.data.error);
+      } else {
+        setServerError('Error al crear el cliente. Por favor, inténtalo de nuevo.');
+      }
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -148,7 +179,7 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             ) : (
-              <p className="mt-1 text-sm text-gray-500">No hay clientes. <Link to="/clients" className="text-brand-primary hover:underline">Crea uno</Link>.</p>
+              <p className="mt-1 text-sm text-gray-500">No hay clientes. <button type="button" onClick={handleOpenClientFormModal} className="text-brand-primary hover:underline">Crea uno</button>.</p>
             )}
             {errors.clientId && <p className="text-sm text-red-500 mt-1">{errors.clientId}</p>}
           </div>
@@ -266,11 +297,20 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
           <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300">
             Cancelar
           </button>
-          <button type="submit" className="px-6 py-2 rounded-lg bg-brand-primary text-white hover:bg-brand-dark">
+          <button type="submit" className="px-6 py-2 rounded-lg bg-brand-primary text-white hover:bg-brand-mid">
             Guardar
           </button>
         </div>
       </form>
+
+      {showClientFormModal && (
+        <ClientFormModal
+          onSave={handleSaveClientFromModal}
+          onCancel={handleCloseClientFormModal}
+          isEditing={false}
+          serverError={serverError}
+        />
+      )}
     </motion.div>
   );
 };

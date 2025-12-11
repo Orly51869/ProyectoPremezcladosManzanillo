@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Get clients based on user role
+// Obtener clientes según el rol del usuario
 export const getClientsByOwner = async (req: Request, res: Response) => {
   const ownerId = req.auth?.payload.sub;
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
@@ -15,17 +15,17 @@ export const getClientsByOwner = async (req: Request, res: Response) => {
   try {
     let clients;
     const includeArgs = {
-      owner: true, // Include owner details
+      owner: true, // Incluir detalles del propietario
       _count: {
         select: { budgets: true },
       },
     };
 
     if (roles.includes('Administrador') || roles.includes('Comercial')) {
-      // Admins and Commercials can see all clients
+      // Los Administradores y Comerciales pueden ver todos los clientes
       clients = await prisma.client.findMany({ include: includeArgs });
     } else {
-      // Other roles (e.g., 'Usuario') can only see their own clients
+      // Otros roles (p. ej., 'Usuario') solo pueden ver sus propios clientes
       clients = await prisma.client.findMany({
         where: { ownerId: ownerId },
         include: includeArgs,
@@ -38,7 +38,7 @@ export const getClientsByOwner = async (req: Request, res: Response) => {
   }
 };
 
-// Create a new client
+// Crear un nuevo cliente
 export const createClient = async (req: Request, res: Response) => {
   const ownerId = req.auth?.payload.sub;
   if (!ownerId) {
@@ -72,7 +72,7 @@ export const createClient = async (req: Request, res: Response) => {
   }
 };
 
-// Update an existing client
+// Actualizar un cliente existente
 export const updateClient = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name, email, phone, address } = req.body;
@@ -101,16 +101,16 @@ export const updateClient = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Cliente no encontrado.' });
     }
 
-    // Authorization check
+    // Comprobación de autorización
     const hasBudgets = existingClient._count.budgets > 0;
 
     if (hasBudgets) {
-      // If client has associated budgets, only Admin or Contable can update
+      // Si el cliente tiene presupuestos asociados, solo Admin o Contable puede actualizar
       if (!roles.includes('Administrador') && !roles.includes('Contable')) {
         return res.status(403).json({ error: 'Forbidden: Client has associated budgets and you do not have permission to update it.' });
       }
     } else {
-      // If client has no associated budgets, existing logic applies (Admin or Commercial as owner)
+      // Si el cliente no tiene presupuestos asociados, aplica la lógica existente (Admin o Comercial como propietario)
       if (!roles.includes('Administrador') && !(roles.includes('Comercial') && existingClient.ownerId === authUserId)) {
         return res.status(403).json({ error: 'Forbidden: You do not have permission to update this client.' });
       }
@@ -132,7 +132,7 @@ export const updateClient = async (req: Request, res: Response) => {
   }
 };
 
-// Delete a client
+// Eliminar un cliente
 export const deleteClient = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub;
@@ -166,18 +166,18 @@ export const deleteClient = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Cliente no encontrado.' });
     }
 
-    // Authorization check
+    // Comprobación de autorización
     const hasBudgets = existingClient._count.budgets > 0;
 
     if (hasBudgets) {
-      // If client has associated budgets, only Admin or Contable can delete
+      // Si el cliente tiene presupuestos asociados, solo Admin o Contable puede eliminar
       if (!roles.includes('Administrador') && !roles.includes('Contable')) {
         return res.status(403).json({ 
           error: `No puedes eliminar este cliente porque tiene ${existingClient._count.budgets} presupuesto(s) asociado(s). Solo los Administradores y Contables pueden eliminar clientes con presupuestos.` 
         });
       }
     } else {
-      // If client has no associated budgets, existing logic applies (Admin or Commercial as owner)
+      // Si el cliente no tiene presupuestos asociados, aplica la lógica existente (Admin o Comercial como propietario)
       if (!roles.includes('Administrador') && !(roles.includes('Comercial') && existingClient.ownerId === authUserId)) {
         return res.status(403).json({ 
           error: 'No tienes permiso para eliminar este cliente. Solo los Administradores pueden eliminar cualquier cliente, o los Comerciales pueden eliminar sus propios clientes.' 
@@ -185,9 +185,9 @@ export const deleteClient = async (req: Request, res: Response) => {
       }
     }
 
-    // Use a transaction to ensure all related records are deleted in the correct order
+    // Usar una transacción para asegurar que todos los registros relacionados se eliminen en el orden correcto
     await prisma.$transaction(async (tx) => {
-      // Delete all invoices related to payments of this client's budgets
+      // Eliminar todas las facturas relacionadas con los pagos de los presupuestos de este cliente
       for (const budget of existingClient.budgets) {
         for (const payment of budget.payments) {
           if (payment.invoice) {
@@ -198,26 +198,26 @@ export const deleteClient = async (req: Request, res: Response) => {
         }
       }
 
-      // Delete all payments related to this client's budgets
+      // Eliminar todos los pagos relacionados con los presupuestos de este cliente
       for (const budget of existingClient.budgets) {
         await tx.payment.deleteMany({
           where: { budgetId: budget.id },
         });
       }
 
-      // Delete all budget products related to this client's budgets
+      // Eliminar todos los productos de presupuesto relacionados con los presupuestos de este cliente
       for (const budget of existingClient.budgets) {
         await tx.budgetProduct.deleteMany({
           where: { budgetId: budget.id },
         });
       }
 
-      // Delete all budgets related to this client
+      // Eliminar todos los presupuestos relacionados con este cliente
       await tx.budget.deleteMany({
         where: { clientId: id },
       });
 
-      // Finally, delete the client
+      // Finalmente, eliminar el cliente
       await tx.client.delete({
         where: { id: id },
       });
