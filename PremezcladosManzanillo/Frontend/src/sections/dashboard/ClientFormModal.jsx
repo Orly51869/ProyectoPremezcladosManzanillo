@@ -2,11 +2,45 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serverError }) => {
-  const [form, setForm] = useState({ name: '', email: '', address: '' });
-  const [rifPrefix, setRifPrefix] = useState('V'); // Por defecto 'V'
-  const [rifNumber, setRifNumber] = useState('');
-  const [phonePrefix, setPhonePrefix] = useState('+58'); // Prefijo país por defecto
-  const [phoneNumber, setPhoneNumber] = useState('');
+  // Inicializar estados a partir de initialValues al montar el componente
+  const [form, setForm] = useState(() => ({
+    name: (initialValues && initialValues.name) || '',
+    email: (initialValues && initialValues.email) || '',
+    address: (initialValues && initialValues.address) || '',
+  }));
+  const [rifPrefix, setRifPrefix] = useState(() => {
+    if (initialValues && initialValues.rif) {
+      const parts = String(initialValues.rif).split('-');
+      return parts.length === 2 ? parts[0] : 'V';
+    }
+    return 'V';
+  });
+  const [rifNumber, setRifNumber] = useState(() => {
+    if (initialValues && initialValues.rif) {
+      const parts = String(initialValues.rif).split('-');
+      return parts.length === 2 ? parts[1] : initialValues.rif || '';
+    }
+    return '';
+  });
+  const [phonePrefix, setPhonePrefix] = useState(() => {
+    if (initialValues && initialValues.phone) {
+      const p = String(initialValues.phone).trim();
+      const m = p.match(/^(\+\d+)[\s-]?(\d+)$/);
+      if (m) return m[1];
+      if (p.startsWith('+')) return p.split(/\s|-/)[0];
+    }
+    return '+58';
+  });
+  const [phoneNumber, setPhoneNumber] = useState(() => {
+    if (initialValues && initialValues.phone) {
+      const p = String(initialValues.phone).trim();
+      const m = p.match(/^(\+\d+)[\s-]?(\d+)$/);
+      if (m) return m[2];
+      if (p.startsWith('+')) return p.split(/\s|-/).slice(1).join('') || '';
+      return p.replace(/[^0-9]/g, '');
+    }
+    return '';
+  });
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
 
@@ -22,55 +56,10 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
     }
   }, [serverError]);
 
-  useEffect(() => {
-    // Reiniciar apiError y errores del formulario cuando cambian initialValues (modal se reabre)
-    setApiError('');
-    setErrors({});
-
-    // Parsear RIF para edición
-    if (initialValues.rif) {
-      const parts = initialValues.rif.split('-');
-      if (parts.length === 2) {
-        setRifPrefix(parts[0]);
-        setRifNumber(parts[1]);
-      } else {
-        // Recurso alternativo si el RIF no está en el formato esperado
-        setRifPrefix('V');
-        setRifNumber(initialValues.rif);
-      }
-    } else {
-      setRifPrefix('V');
-      setRifNumber('');
-    }
-
-    setForm({
-      name: initialValues.name || '',
-      email: initialValues.email || '',
-      address: initialValues.address || '',
-    });
-
-    // Parse phone with optional prefix like +58-4121234567 or +58 4121234567
-    if (initialValues.phone) {
-      const p = String(initialValues.phone).trim();
-      const match = p.match(/^(\+\d+)[\s-]?(\d+)$/);
-      if (match) {
-        setPhonePrefix(match[1]);
-        setPhoneNumber(match[2]);
-      } else if (p.startsWith('+')) {
-        // fallback: prefix only
-        const parts = p.split(/\s|-/);
-        setPhonePrefix(parts[0]);
-        setPhoneNumber(parts.slice(1).join('') || '');
-      } else {
-        // no prefix, assume local number
-        setPhonePrefix('+58');
-        setPhoneNumber(p.replace(/[^0-9]/g, ''));
-      }
-    } else {
-      setPhonePrefix('+58');
-      setPhoneNumber('');
-    }
-  }, [initialValues]);
+  // Nota: ya inicializamos el estado desde `initialValues` al montar.
+  // Evitamos hacer setState en un useEffect dependiente de `initialValues`
+  // porque algunos padres recrean el objeto en cada render y eso causaba
+  // un bucle de actualizaciones (Maximum update depth exceeded).
 
   const handleChange = (e) => {
     const { name, value } = e.target;

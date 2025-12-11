@@ -6,7 +6,7 @@ import api from '../../utils/api';
 import { format } from 'date-fns';
 import ClientFormModal from "./ClientFormModal"; // Import the ClientFormModal
 
-const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
+const BudgetForm = ({ initialValues = {}, onSave, onCancel, userRoles = [] }) => {
   // State for data fetched from API
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
@@ -32,6 +32,12 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
     name: item.product.name,
   })) || []);
   const [errors, setErrors] = useState({});
+
+  // Role / status based helpers
+  const status = initialValues.status || '';
+  const isApproved = status === 'APPROVED';
+  const isPrivilegedEditor = userRoles.includes('Contable') || userRoles.includes('Administrador');
+  const canViewPrices = isApproved || userRoles.includes('Contable') || userRoles.includes('Comercial') || userRoles.includes('Administrador');
 
   const fetchData = async () => {
     try {
@@ -127,7 +133,13 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
       element,
       observations,
       volume: volume ? parseFloat(volume) : undefined,
-      products: productItems.map(({ productId, quantity }) => ({ productId, quantity: Number(quantity) })),
+      products: productItems.map(({ productId, quantity, unitPrice }) => {
+        const base = { productId, quantity: Number(quantity) };
+        if (isPrivilegedEditor) {
+          base.unitPrice = Number(unitPrice || 0);
+        }
+        return base;
+      }),
     };
     onSave(budgetData);
   };
@@ -174,7 +186,7 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Cliente</label>
             {clients.length > 0 ? (
-              <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary">
+              <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" disabled={isApproved && !isPrivilegedEditor}>
                 <option value="">Seleccionar Cliente</option>
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
@@ -185,7 +197,7 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Título del Presupuesto</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" disabled={isApproved && !isPrivilegedEditor} />
             {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
           </div>
           <div>
@@ -194,7 +206,7 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha estimada de entrega</label>
-            <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" />
+            <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" disabled={isApproved && !isPrivilegedEditor} />
             {errors.deliveryDate && <p className="text-sm text-red-500 mt-1">{errors.deliveryDate}</p>}
           </div>
         </div>
@@ -205,7 +217,7 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de obra</label>
-            <select value={workType} onChange={(e) => setWorkType(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary">
+            <select value={workType} onChange={(e) => setWorkType(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" disabled={isApproved && !isPrivilegedEditor}>
               <option value="vivienda">Vivienda</option>
               <option value="edificio">Edificio</option>
               <option value="pavimento">Pavimento</option>
@@ -216,7 +228,7 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Resistencia requerida (f’c)</label>
-            <select value={resistance} onChange={(e) => setResistance(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary">
+            <select value={resistance} onChange={(e) => setResistance(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" disabled={isApproved && !isPrivilegedEditor}>
               <option value="150">150 kg/cm²</option>
               <option value="200">200 kg/cm²</option>
               <option value="250">250 kg/cm²</option>
@@ -226,7 +238,7 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de concreto</label>
-            <select value={concreteType} onChange={(e) => setConcreteType(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary">
+            <select value={concreteType} onChange={(e) => setConcreteType(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" disabled={isApproved && !isPrivilegedEditor}>
               <option value="convencional">Convencional</option>
               <option value="bombeable">Bombeable</option>
               <option value="con_fibra">Con fibra</option>
@@ -235,7 +247,7 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Elemento a colar</label>
-            <select value={element} onChange={(e) => setElement(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary">
+            <select value={element} onChange={(e) => setElement(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" disabled={isApproved && !isPrivilegedEditor}>
               <option value="losa">Losa</option>
               <option value="columna">Columna</option>
               <option value="zapata">Zapata</option>
@@ -245,13 +257,13 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Volumen total estimado (m³)</label>
-            <input type="number" step="0.01" min="0" value={volume} onChange={(e) => setVolume(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" placeholder="Ej. 12.5" />
+            <input type="number" step="0.01" min="0" value={volume} onChange={(e) => setVolume(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" placeholder="Ej. 12.5" disabled={isApproved && !isPrivilegedEditor} />
           </div>
         </div>
         
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Observaciones técnicas</label>
-          <textarea value={observations} onChange={(e) => setObservations(e.target.value)} rows="4" className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" placeholder="Notas técnicas, referencias, restricciones de acceso, etc."></textarea>
+          <textarea value={observations} onChange={(e) => setObservations(e.target.value)} rows="4" className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 focus:border-brand-primary focus:ring-brand-primary" placeholder="Notas técnicas, referencias, restricciones de acceso, etc." disabled={isApproved && !isPrivilegedEditor}></textarea>
         </div>
 
         <hr className="my-2 border-gray-200 dark:border-gray-700" />
@@ -262,25 +274,52 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
           {productItems.map((item, index) => (
             <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-dark-surface rounded-lg">
               <div className="flex-grow">
-                <select value={item.productId} onChange={(e) => handleItemChange(index, 'productId', e.target.value)} className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600">
+                <select
+                  value={item.productId}
+                  onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
+                  className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600"
+                  disabled={isApproved && !isPrivilegedEditor}
+                >
                   <option value="">Seleccionar Producto</option>
                   {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
                 {errors[`item_${index}`] && <p className="text-sm text-red-500 mt-1">{errors[`item_${index}`]}</p>}
               </div>
               <div className="w-24">
-                <input type="number" min="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600" />
+                <input type="number" min="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600" disabled={isApproved && !isPrivilegedEditor} />
                 {errors[`item_q_${index}`] && <p className="text-sm text-red-500 mt-1">{errors[`item_q_${index}`]}</p>}
               </div>
-              <div className="w-28 text-right dark:text-gray-300">
-                ${(item.quantity * item.unitPrice).toFixed(2)}
+
+              {/* Price / per-item total: visible only to privileged roles or when approved */}
+              <div className="w-36 text-right dark:text-gray-300">
+                {canViewPrices ? (
+                  isPrivilegedEditor ? (
+                    <div className="flex items-center justify-end gap-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={item.unitPrice}
+                        onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                        className="w-28 rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-right"
+                        disabled={isApproved && !isPrivilegedEditor}
+                      />
+                      <div className="text-sm">${(item.quantity * item.unitPrice).toFixed(2)}</div>
+                    </div>
+                  ) : (
+                    <div>${(item.quantity * item.unitPrice).toFixed(2)}</div>
+                  )
+                ) : (
+                  <div className="text-sm text-gray-500">Precio oculto hasta aprobación</div>
+                )}
               </div>
-              <button type="button" onClick={() => handleRemoveItem(index)}>
-                <Trash2 className="text-red-500 hover:text-red-700 h-5 w-5" />
+
+              <button type="button" onClick={() => handleRemoveItem(index)} disabled={isApproved && !isPrivilegedEditor}>
+                <Trash2 className={`h-5 w-5 ${isApproved && !isPrivilegedEditor ? 'text-gray-400' : 'text-red-500 hover:text-red-700'}`} />
               </button>
             </div>
           ))}
-          <button type="button" onClick={handleAddItem} className="flex items-center gap-2 text-brand-primary hover:text-brand-dark font-medium">
+          <button type="button" onClick={handleAddItem} className={`flex items-center gap-2 font-medium ${isApproved && !isPrivilegedEditor ? 'text-gray-400' : 'text-brand-primary hover:text-brand-dark'}`} disabled={isApproved && !isPrivilegedEditor}>
             <PlusCircle size={20} />
             Añadir Item
           </button>
@@ -288,16 +327,18 @@ const BudgetForm = ({ initialValues = {}, onSave, onCancel }) => {
         </div>
 
         {/* Total */}
-        <div className="text-right text-2xl font-bold text-gray-800 dark:text-white">
-          Total: ${calculateTotal().toFixed(2)}
-        </div>
+        {canViewPrices && (
+          <div className="text-right text-2xl font-bold text-gray-800 dark:text-white">
+            Total: ${calculateTotal().toFixed(2)}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex justify-end gap-4">
           <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300">
             Cancelar
           </button>
-          <button type="submit" className="px-6 py-2 rounded-lg bg-brand-primary text-white hover:bg-brand-mid">
+          <button type="submit" className={`px-6 py-2 rounded-lg text-white ${isApproved && !isPrivilegedEditor ? 'bg-gray-400' : 'bg-brand-primary hover:bg-brand-mid'}`} disabled={isApproved && !isPrivilegedEditor}>
             Guardar
           </button>
         </div>

@@ -217,6 +217,7 @@ const BudgetsPage = () => {
           initialValues={editingBudget || {}}
           onSave={handleSave}
           onCancel={handleCancel}
+          userRoles={userRoles}
         />
       ) : (
         <BudgetList

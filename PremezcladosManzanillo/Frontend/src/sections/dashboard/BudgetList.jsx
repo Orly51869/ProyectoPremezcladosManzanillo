@@ -117,7 +117,7 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
                             <div className="mt-4 pt-4 border-t border-brand-light dark:border-dark-surface">
                                 <div className="flex justify-between items-center mb-3">
                                     <span className="text-sm text-brand-text dark:text-gray-300">{budget.products.length} items</span>
-                                    <span className="text-xl font-bold text-brand-primary dark:text-gray-100">{formatCurrency(budget.total)}</span>
+                                    <span className="text-xl font-bold text-brand-primary dark:text-gray-100">{(budget.status === 'APPROVED' || userRoles.includes('Contable') || userRoles.includes('Comercial') || userRoles.includes('Administrador')) ? formatCurrency(budget.total) : '—'}</span>
                                 </div>
                                 <div className="flex justify-end gap-2">
                                     {canApproveOrRejectBudget(budget) && (

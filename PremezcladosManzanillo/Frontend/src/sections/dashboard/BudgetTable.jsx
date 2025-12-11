@@ -9,7 +9,7 @@ const formatCurrency = (value) => {
     }).format(value || 0);
 };
 
-const BudgetTable = ({ budgets, onEdit, onDelete, onApprove, onReject, onViewDetail, canEditOrDeleteBudget, canApproveOrRejectBudget }) => (
+const BudgetTable = ({ budgets, onEdit, onDelete, onApprove, onReject, onViewDetail, canEditOrDeleteBudget, canApproveOrRejectBudget, userRoles = [] }) => (
   <div className="overflow-x-auto bg-white dark:bg-dark-primary rounded-2xl shadow-lg border border-brand-light dark:border-dark-surface">
     <table className="min-w-full divide-y divide-brand-light dark:divide-dark-surface">
       <thead className="dark:bg-dark-surface">
@@ -42,7 +42,9 @@ const BudgetTable = ({ budgets, onEdit, onDelete, onApprove, onReject, onViewDet
             <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
                 {budget.volume ? `${budget.volume} m³` : 'N/A'}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-brand-primary dark:text-gray-100">{formatCurrency(budget.total)}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-brand-primary dark:text-gray-100">
+              { (budget.status === 'APPROVED' || userRoles.includes('Contable') || userRoles.includes('Comercial') || userRoles.includes('Administrador')) ? formatCurrency(budget.total) : '—' }
+            </td>
             <td className="px-6 py-4 whitespace-nowrap">
               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                 budget.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900' :
