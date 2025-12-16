@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as productController from "../controllers/productController";
+import * as productPriceController from "../controllers/productPriceController";
 import { jwtCheck } from "../middleware/jwtCheck";
 // import { checkRole } from "../middleware/roleCheck"; // Este middleware se creará más adelante
 
@@ -30,6 +31,19 @@ router.delete(
   jwtCheck,
   // checkRole(["Administrador", "Contable"]),
   productController.deleteProduct
+);
+
+// Price management
+router.post(
+  "/:id/prices",
+  jwtCheck,
+  productPriceController.createProductPrice
+);
+
+router.get(
+  "/:id/prices",
+  jwtCheck,
+  productPriceController.getProductPrice
 );
 
 export default router;

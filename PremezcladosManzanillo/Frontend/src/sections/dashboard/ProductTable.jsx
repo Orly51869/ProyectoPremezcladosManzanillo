@@ -19,7 +19,7 @@ const ProductTable = ({ products, onEditProduct, onDeleteProduct, canManageProdu
             {products.map((product) => (
               <tr key={product.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-primary dark:text-gray-100">{product.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">{product.category}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">{product.category?.name || product.category || 'N/A'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">{product.type}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">${product.price.toFixed(2)}</td>
                 {canManageProduct && (

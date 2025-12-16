@@ -29,3 +29,121 @@
 4.  **Elaboración de Documentación:**
     *   Crear `docs/User_Guide.md`: Guía de usuario general de la aplicación.
     *   Crear `docs/Developer_Guide.md`: Guía técnica para desarrolladores.
+
+---
+
+## Resumen de la sesión actual (11 de diciembre de 2025)
+
+Hoy se trabajó principalmente en dos frentes: (A) depuración y corrección de un bucle de render en el modal de clientes y (B) añadir control de visibilidad/edición de precios según roles en la UI de presupuestos.
+
+- Cambios principales realizados:
+    - Se corrigió el bucle de render infinito en `Frontend/src/sections/dashboard/ClientFormModal.jsx` inicializando el estado desde `initialValues` en el montaje en lugar de reasignar estado dentro de un `useEffect` que provocaba múltiples `setState`.
+    - Se implementó lógica en `Frontend/src/sections/dashboard/BudgetForm.jsx` para:
+        - Ocultar la columna de precios por ítem y la fila `Total` a usuarios ordinarios (`Usuario`) mientras el presupuesto no esté `APPROVED`.
+        - Permitir edición de `unitPrice` y visualización de precios a roles `Contable` y `Administrador` (privilegiados).
+        - Permitir visualización de precios a `Comercial` aunque no edite.
+        - No incluir `unitPrice` en el payload enviado por usuarios no-privilegiados.
+    - Se extendió la misma visibilidad en las vistas de lista/tabla (`BudgetTable.jsx`, `BudgetList.jsx`).
+    - Añadí y luego revertí cambios temporales de depuración en `BudgetsPage.jsx` y `BudgetForm.jsx` cuando el diagnóstico mostró problemas de Auth0; los reverts están aplicados y el código quedó limpio.
+
+- Problema detectado y acciones inmediatas:
+    - El backend no podía obtener la metadata del issuer de Auth0 (error `InvalidTokenError: Failed to fetch authorization server metadata`) — esto bloqueó la autenticación local y evitó que ciertas peticiones autenticadas funcionaran. Para diagnóstico añadí (temporalmente) un bypass en `Backend/src/middleware/jwtCheck.ts`, pero lo revertí cuando confirmaste que la app funcionaba; la causa probable es conectividad o bloqueo hacia `https://dev-bellooswaldo.us.auth0.com/.well-known/openid-configuration`.
+
+- Resultado funcional:
+    - Tras revertir los parches de depuración y restaurar la lógica original de autenticación, el guardado de presupuestos volvió a funcionar en tu entorno.
+
+## Estructura relevante del proyecto (rápida)
+
+- `PremezcladosManzanillo/Frontend/` — React + Vite
+    - `src/pages/` — páginas (ej. `BudgetsPage.jsx`)
+    - `src/sections/dashboard/` — componentes de dashboard (ej. `BudgetForm.jsx`, `ClientFormModal.jsx`, `BudgetTable.jsx`, `BudgetList.jsx`)
+    - `src/utils/` — utilidades (ej. `api.js`, `AuthenticatedApiProvider.jsx`)
+
+- `PremezcladosManzanillo/Backend/` — Node + Express + Prisma
+    - `src/controllers/` — controladores REST (ej. `budgetController.ts`, `clientController.ts`)
+    - `src/routes/` — rutas registradas (ej. `routes/budgets.ts`)
+    - `src/middleware/` — middlewares (ej. `jwtCheck.ts`, `userProvisioningMiddleware.ts`)
+    - `prisma/` — esquema y migraciones
+
+## Recomendaciones y Acciones pendientes (prioritarias)
+
+1. Persistir precios por fecha y moneda (backend):
+     - Añadir tabla `ProductPrice` o campo histórico que almacene `productId`, `date`, `currency`, `price` y `sourceRole`.
+     - Endpoint `POST /api/products/:id/prices` para que `Contable`/`Administrador` publiquen el precio vigente del día.
+     - `calculateTotal` en `budgetController` debe usar `unitPrice` enviado por usuarios privilegiados o, en su defecto, consultar el `ProductPrice` vigente para la fecha del presupuesto.
+
+2. Cambios en la UI y roles:
+     - Quitar la sección de edición de productos (o la posibilidad de introducir precios) para el rol `Usuario` en `BudgetForm.jsx`.
+     - Implementar categorías y subcategorías en la página de Productos para que la selección del producto en el formulario sea guiada por categoría (mejor experiencia y datos más consistentes).
+     - Añadir en `Frontend` una página/gestor de precios donde `Contable`/`Administrador` puedan fijar precios por producto, fecha y moneda.
+
+3. Migraciones y pruebas:
+     - Crear migración Prisma para `ProductPrice` y para los campos nuevos de `Product` (categoryId, subcategoryId si aplica).
+     - Tests unitarios y de integración para endpoints de precios y para la creación/actualización de presupuestos con/ sin `unitPrice` en payload.
+
+4. Documentación (útil para Gemini CLI):
+     - `gemini.txt` ahora incluye esta información y paths clave para que, en caso de que se agoten tokens, puedas volver a proveer a Gemini CLI con instrucciones explícitas sobre archivos y pasos.
+
+## Instrucciones rápidas para cuando uses Gemini CLI
+
+- Archivos clave que puedes indicarle a Gemini para continuar el trabajo:
+    - `PremezcladosManzanillo/Frontend/src/sections/dashboard/BudgetForm.jsx`
+    - `PremezcladosManzanillo/Frontend/src/sections/dashboard/ClientFormModal.jsx`
+    - `PremezcladosManzanillo/Backend/src/controllers/budgetController.ts`
+    - `PremezcladosManzanillo/Backend/src/middleware/jwtCheck.ts`
+    - `PremezcladosManzanillo/Backend/prisma/schema.prisma`
+    - `PremezcladosManzanillo/implementationPlan.md`
+
+- Tip de continuidad: pide a Gemini que genere primero la migración Prisma y los endpoints para `ProductPrice`, luego que ajuste `createBudget`/`updateBudget` para usar `unitPrice` condicional y pruebas automatizadas.
+
+---
+
+Fin del resumen de hoy.
+---
+Fecha: 15 de diciembre de 2025
+Resumen de Cambios:
+- Se modificó la lógica de eliminación de clientes para implementar reglas basadas en roles, según lo solicitado.
+- Backend: Actualizado `PremezcladosManzanillo/Backend/src/controllers/clientController.ts` para permitir que los roles "Administrador" y "Contable" eliminen clientes sin restricciones. Los roles "Usuario" y "Comercial" ahora solo pueden eliminar sus propios clientes si estos no tienen presupuestos asociados.
+- Frontend: Actualizado `PremezcladosManzanillo/Frontend/src/sections/dashboard/ClientList.jsx` para que la visibilidad del botón de eliminar coincida con las nuevas reglas del backend.
+- Se tradujeron los comentarios recién añadidos en los archivos modificados al español para mantener la consistencia del proyecto.
+---
+Fecha: 15 de diciembre de 2025
+Resumen de Cambios:
+- Se refactorizó la interfaz de creación y edición de presupuestos para unificar el estilo con otras secciones (ej. Clientes), utilizando un modal.
+- Se implementó un "Constructor de Presupuestos" de dos columnas dentro de un modal amplio para una experiencia de usuario mejorada:
+  - Columna izquierda: Campos de detalle del presupuesto y lista de productos seleccionados (carrito).
+  - Columna derecha: Catálogo de productos interactivo para añadir ítems.
+- **Backend:**
+  - El campo `observaciones` ahora es obligatorio para la creación y actualización de presupuestos en `PremezcladosManzanillo/Backend/src/controllers/budgetController.ts`.
+  - Se eliminaron el endpoint `/api/budgets/init` y la función `createBudgetShell` al consolidar el flujo de creación en un único modal.
+- **Frontend:**
+  - `PremezcladosManzanillo/Frontend/src/components/Modal.jsx` se hizo más flexible, permitiendo personalizar su ancho.
+  - `PremezcladosManzanillo/Frontend/src/sections/dashboard/BudgetFormModal.jsx` fue actualizado para usar el modal ancho.
+  - `PremezcladosManzanillo/Frontend/src/sections/dashboard/BudgetForm.jsx` (ahora el constructor) fue completamente refactorizado para el diseño de dos columnas, incluyendo el catálogo de productos y el "carrito" interactivo.
+  - La validación del campo `observaciones` se añadió en `PremezcladosManzanillo/Frontend/src/sections/dashboard/BudgetForm.jsx`.
+  - `PremezcladosManzanillo/Frontend/src/pages/BudgetsPage.jsx` fue ajustado para abrir el modal del constructor.
+  - Se actualizó `PremezcladosManzanillo/Frontend/src/sections/dashboard/BudgetList.jsx` (vista de tarjetas) para mostrar una versión truncada de las `observaciones`.
+  - Se actualizó `PremezcladosManzanillo/Frontend/src/sections/dashboard/BudgetTable.jsx` (vista de tabla) para incluir una columna de `observaciones` con tooltip.
+  - Se confirmó que `PremezcladosManzanillo/Frontend/src/sections/dashboard/BudgetDetail.jsx` ya muestra correctamente el campo `observaciones`.
+- Se eliminaron archivos y rutas intermedias (`InitialBudgetModal.jsx`, `BudgetBuilderPage.jsx`, `CurrentBudgetSidebar.jsx`, y la ruta `/dashboard/budgets/build/:id`) tras consolidar el flujo.
+---
+Fecha: 15 de diciembre de 2025 (Continuación)
+Resumen de Cambios:
+- **Correcciones y Mejoras Técnicas:**
+  - Se solucionó el error 404 en la inicialización de presupuestos, creando el endpoint `/api/budgets/init` y restaurando la ruta en `Backend/src/routes/budgets.ts`.
+  - Se reparó la estructura HTML corrupta (`<thead>` sin cerrar) en `BudgetTable.jsx` que impedía la correcta visualización de la lista de presupuestos.
+- **Nueva Funcionalidad: Gestión de Roles de Administrador:**
+  - Se implementó una interfaz completa para la gestión de roles de usuario desde la aplicación, eliminando la necesidad de acceder al dashboard de Auth0.
+  - **Backend:**
+    - Creado middleware `requireAdmin` para proteger rutas sensibles.
+    - Creado endpoint `PUT /api/users/:id/roles` en `userController.ts` que interactúa con la Management API de Auth0.
+  - **Frontend:**
+    - Implementada página `AdminRolesPage.jsx` con tabla de usuarios y selector de roles, accesible solo para administradores.
+    - Actualizado `DashboardNavbar.jsx` para incluir el enlace "Roles" visible solo para admin.
+- **Documentación:**
+  - Se generaron `docs/User_Guide.md` y `docs/Developer_Guide.md` con instrucciones detalladas de uso y desarrollo.
+
+Próximos Pasos (Feedback Usuario):
+- Mejorar el diseño del "Constructor de Presupuestos" (`BudgetBuilderPage`/Modal) para que sea más consistente con el estilo de otros modales.
+- Asegurar que los campos "Observaciones" y "Descripción" no aparezcan en blanco y sean obligatorios.
+- Revisar "modal informativo" mencionado por el usuario.

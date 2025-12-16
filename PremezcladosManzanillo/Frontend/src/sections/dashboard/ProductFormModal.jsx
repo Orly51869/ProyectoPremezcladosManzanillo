@@ -17,7 +17,7 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
         description: product.description || "",
         price: product.price || "",
         type: product.type || "CONCRETE",
-        category: product.category || "",
+        category: product.category?.name || product.category || "",
       });
     } else {
       setFormData({ name: "", description: "", price: "", type: "CONCRETE", category: "" });

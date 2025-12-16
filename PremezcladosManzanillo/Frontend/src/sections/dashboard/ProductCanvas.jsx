@@ -15,7 +15,7 @@ const ProductCanvas = ({ products = [], onEditProduct, onDeleteProduct, canManag
         >
           <div>
             <h3 className="text-lg font-bold text-brand-primary dark:text-gray-100 mb-2">{product.name}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Categoría: {product.category}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Categoría: {product.category?.name || product.category || 'N/A'}</p>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Tipo: {product.type}</p>
             <p className="text-lg font-semibold text-gray-800 dark:text-white mt-3">${product.price.toFixed(2)}</p>
           </div>

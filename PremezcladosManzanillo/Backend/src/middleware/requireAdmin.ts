@@ -1,9 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
-  // Asumimos que req.dbUser es poblado por userProvisioningMiddleware
-  if (!(req as any).dbUser || (req as any).dbUser.role !== 'Administrador') {
-    return res.status(403).json({ message: 'Access denied. Administrator privileges required.' });
+  const user = (req as any).auth?.payload;
+  const roles = user?.['https://premezcladomanzanillo.com/roles'] as string[] || [];
+
+  if (roles.includes('Administrador')) {
+    next();
+  } else {
+    res.status(403).json({ message: 'Acceso denegado. Se requiere rol de Administrador.' });
   }
-  next();
 };

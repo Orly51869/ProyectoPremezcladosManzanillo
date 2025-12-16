@@ -2,7 +2,7 @@ import React from 'react';
 import { formatCurrency } from "../../utils/helpers";
 import { Download } from 'lucide-react';
 
-const PaymentCard = ({ payment, onOpenValidationModal, onResend, onDownloadReceipt, canValidatePayment }) => {
+const PaymentCard = ({ payment, onOpenValidationModal, onResend, onDownloadReceipt, canValidatePayment, onPayPending = () => {}, budgetRemainingDebt = 0 }) => {
   return (
     <div className="bg-white dark:bg-dark-surface rounded-lg shadow-md p-4 border border-brand-light dark:border-gray-700">
       <div className="flex justify-between items-start">
@@ -85,6 +85,14 @@ const PaymentCard = ({ payment, onOpenValidationModal, onResend, onDownloadRecei
             className="flex-1 px-2 py-1 bg-brand-primary text-white rounded-lg text-sm"
           >
             Reenviar
+          </button>
+        )}
+        {budgetRemainingDebt > 0.01 && (
+          <button
+             onClick={() => onPayPending(payment)}
+             className="flex-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+          >
+            Abonar
           </button>
         )}
       </div>

@@ -5,36 +5,18 @@ import ClientTable from './ClientTable.jsx';
 
 const ClientList = ({ clients = [], viewMode, onEdit, onDelete, userRoles, currentUserId }) => {
   const canEditOrDeleteClient = (client) => {
-    // Check if the client has associated budgets
     const hasBudgets = client._count.budgets > 0;
+    const isOwner = client.ownerId === currentUserId;
 
-    // Admin can always edit/delete
-    if (userRoles.includes('Administrador')) {
+    // Admin y Contable siempre pueden editar/eliminar
+    if (userRoles.includes('Administrador') || userRoles.includes('Contable')) {
       return true;
     }
 
-    // Contable can edit/delete if client has budgets
-    if (hasBudgets && userRoles.includes('Contable')) {
+    // Usuario y Comercial pueden editar/eliminar si son los propietarios y no hay presupuestos
+    if ((userRoles.includes('Usuario') || userRoles.includes('Comercial')) && isOwner && !hasBudgets) {
       return true;
     }
-    
-    // Comercial can edit/delete if client does not have budgets AND is the owner
-    if (!hasBudgets && userRoles.includes('Comercial') && client.ownerId === currentUserId) {
-      return true;
-    }
-
-    // If "Usuario" and client has no budgets and is owner
-    // Assuming 'Usuario' role doesn't have an explicit permission check here,
-    // as it's implied by the absence of other roles or specific client ownership logic.
-    // However, the previous frontend code in ClientsPage.jsx for 'canEditOrDeleteClient'
-    // only checked Admin or Commercial+owner. Let's stick to the user's explicit rule:
-    // "Usuario" can modify it always and when it's not associated with a budget.
-    // This implies that if it has no budgets, a 'Usuario' can modify it IF they are the owner.
-    // The backend handles the final authorization. Frontend only controls UI visibility.
-    if (!hasBudgets && userRoles.includes('Usuario') && client.ownerId === currentUserId) {
-      return true;
-    }
-
 
     return false;
   };

@@ -49,9 +49,10 @@ const DashboardNavbar = () => {
     { path: "/clients", icon: Users, label: "Clientes", requiredRoles: ["Administrador", "Comercial", "Usuario"] },
     { path: "/budgets", icon: FileText, label: "Presupuestos", requiredRoles: ["Administrador", "Comercial", "Usuario"] },
     { path: "/products-management", icon: Package, label: "Productos", requiredRoles: ["Administrador", "Contable"] },
-    { path: "/payments", icon: FileText, label: "Comprobantes", requiredRoles: ["Administrador", "Contable"] },
+    { path: "/payments", icon: FileText, label: "Comprobantes", requiredRoles: ["Administrador", "Contable", "Usuario"] },
     { path: "/invoices", icon: FileText, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Usuario"] }, // New Invoices Link
     { path: "/reports", icon: BarChart3, label: "Reportes", requiredRoles: ["Administrador", "Contable"] },
+    { path: "/admin/roles", icon: Users, label: "Roles", requiredRoles: ["Administrador"] }, // Gestión de Roles
     { path: "/settings", icon: Settings, label: "Configuración", requiredRoles: ["Administrador"] },
   ];
 

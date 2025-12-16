@@ -103,16 +103,24 @@ export const updateClient = async (req: Request, res: Response) => {
 
     // Comprobación de autorización
     const hasBudgets = existingClient._count.budgets > 0;
+    const isOwner = existingClient.ownerId === authUserId;
 
+    // Los roles privilegiados pueden hacer casi todo
+    const canBeManagedByPrivileged = roles.includes('Administrador') || roles.includes('Contable');
+
+    // Escenario 1: El cliente tiene presupuestos asociados
     if (hasBudgets) {
-      // Si el cliente tiene presupuestos asociados, solo Admin o Contable puede actualizar
-      if (!roles.includes('Administrador') && !roles.includes('Contable')) {
-        return res.status(403).json({ error: 'Forbidden: Client has associated budgets and you do not have permission to update it.' });
+      if (!canBeManagedByPrivileged) {
+        return res.status(403).json({ error: 'No puedes modificar este cliente porque ya tiene presupuestos asociados. Solo un Administrador o Contable puede hacerlo.' });
       }
-    } else {
-      // Si el cliente no tiene presupuestos asociados, aplica la lógica existente (Admin o Comercial como propietario)
-      if (!roles.includes('Administrador') && !(roles.includes('Comercial') && existingClient.ownerId === authUserId)) {
-        return res.status(403).json({ error: 'Forbidden: You do not have permission to update this client.' });
+    } 
+    // Escenario 2: El cliente NO tiene presupuestos
+    else {
+      const canBeManagedByComercial = roles.includes('Comercial') && isOwner;
+      const canBeManagedByUsuario = roles.includes('Usuario') && isOwner;
+
+      if (!canBeManagedByPrivileged && !canBeManagedByComercial && !canBeManagedByUsuario) {
+        return res.status(403).json({ error: 'No tienes permiso para modificar este cliente.' });
       }
     }
 
@@ -166,25 +174,34 @@ export const deleteClient = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Cliente no encontrado.' });
     }
 
-    // Comprobación de autorización
+    // Nueva lógica de autorización
     const hasBudgets = existingClient._count.budgets > 0;
+    const isOwner = existingClient.ownerId === authUserId;
+    const isAdmin = roles.includes('Administrador');
+    const isContable = roles.includes('Contable');
+    const isUsuario = roles.includes('Usuario');
+    // Asumir que el rol 'Comercial' debe comportarse como 'Usuario' según la ambigüedad en la solicitud
+    const isComercial = roles.includes('Comercial'); 
 
-    if (hasBudgets) {
-      // Si el cliente tiene presupuestos asociados, solo Admin o Contable puede eliminar
-      if (!roles.includes('Administrador') && !roles.includes('Contable')) {
-        return res.status(403).json({ 
-          error: `No puedes eliminar este cliente porque tiene ${existingClient._count.budgets} presupuesto(s) asociado(s). Solo los Administradores y Contables pueden eliminar clientes con presupuestos.` 
-        });
-      }
-    } else {
-      // Si el cliente no tiene presupuestos asociados, aplica la lógica existente (Admin o Comercial como propietario)
-      if (!roles.includes('Administrador') && !(roles.includes('Comercial') && existingClient.ownerId === authUserId)) {
-        return res.status(403).json({ 
-          error: 'No tienes permiso para eliminar este cliente. Solo los Administradores pueden eliminar cualquier cliente, o los Comerciales pueden eliminar sus propios clientes.' 
-        });
+    let authorized = false;
+    let errorMessage = 'No tienes permiso para eliminar este cliente.';
+
+    if (isAdmin || isContable) {
+      // Admin y Contable pueden eliminar sin restricciones
+      authorized = true;
+    } else if ((isUsuario || isComercial) && isOwner) {
+      if (hasBudgets) {
+        errorMessage = 'No puedes eliminar este cliente porque tiene presupuestos asociados. Solo un Administrador o Contable puede hacerlo.';
+      } else {
+        // Usuario/Comercial puede eliminar sus propios clientes si no tienen presupuestos
+        authorized = true;
       }
     }
 
+    if (!authorized) {
+      return res.status(403).json({ error: errorMessage });
+    }
+    
     // Usar una transacción para asegurar que todos los registros relacionados se eliminen en el orden correcto
     await prisma.$transaction(async (tx) => {
       // Eliminar todas las facturas relacionadas con los pagos de los presupuestos de este cliente

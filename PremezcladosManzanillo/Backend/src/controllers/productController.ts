@@ -10,6 +10,9 @@ export const getProducts = async (req: Request, res: Response) => {
       orderBy: {
         createdAt: "desc",
       },
+      include: {
+        category: true,
+      },
     });
     res.json(products);
   } catch (error) {
@@ -27,14 +30,24 @@ export const createProduct = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Name, price, and type are required." });
     }
 
+    const productData: any = {
+      name,
+      description,
+      price: parseFloat(price),
+      type,
+    };
+
+    if (category) {
+      productData.category = {
+        connectOrCreate: {
+          where: { name: category },
+          create: { name: category },
+        },
+      };
+    }
+
     const newProduct = await prisma.product.create({
-      data: {
-        name,
-        description,
-        price: parseFloat(price),
-        type,
-        category,
-      },
+      data: productData,
     });
     res.status(201).json(newProduct);
   } catch (error) {
@@ -49,15 +62,25 @@ export const updateProduct = async (req: Request, res: Response) => {
   try {
     const { name, description, price, type, category } = req.body;
 
+    const updateData: any = {
+      name,
+      description,
+      price: price ? parseFloat(price) : undefined,
+      type,
+    };
+
+    if (category) {
+      updateData.category = {
+        connectOrCreate: {
+          where: { name: category },
+          create: { name: category },
+        },
+      };
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id },
-      data: {
-        name,
-        description,
-        price: price ? parseFloat(price) : undefined,
-        type,
-        category,
-      },
+      data: updateData,
     });
     res.json(updatedProduct);
   } catch (error) {

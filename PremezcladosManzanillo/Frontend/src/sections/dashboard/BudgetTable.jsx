@@ -15,24 +15,32 @@ const BudgetTable = ({ budgets, onEdit, onDelete, onApprove, onReject, onViewDet
       <thead className="dark:bg-dark-surface">
         <tr className="text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
           <th scope="col" className="px-6 py-3">Título</th>
+          <th scope="col" className="px-6 py-3">Observaciones</th>
           <th scope="col" className="px-6 py-3">Cliente</th>
-          <th scope="col" className="px-6 py-3">Fecha Creación</th>
+          <th scope="col" className="px-6 py-3">Fecha</th>
           <th scope="col" className="px-6 py-3">Fecha Entrega</th>
-          <th scope="col" className="px-6 py-3">Volumen (m³)</th>
+          <th scope="col" className="px-6 py-3">Volumen</th>
           <th scope="col" className="px-6 py-3">Total</th>
           <th scope="col" className="px-6 py-3">Estado</th>
           <th scope="col" className="px-6 py-3">Procesado Por</th>
-          <th scope="col" className="px-6 py-3">Fecha Proceso</th>
-          <th scope="col" className="px-6 py-3">Motivo Rechazo</th>
-          <th scope="col" className="relative px-6 py-3"><span className="sr-only">Acciones</span></th>
+          <th scope="col" className="px-6 py-3">Procesado El</th>
+          <th scope="col" className="px-6 py-3">Razón Rechazo</th>
+          <th scope="col" className="px-6 py-3 text-right">Acciones</th>
         </tr>
       </thead>
       <tbody className="bg-white dark:bg-dark-primary divide-y divide-brand-light dark:divide-dark-surface">
         {budgets.map((budget) => (
-          <tr key={budget.id} onClick={() => onViewDetail(budget)} className="hover:bg-gray-50 dark:hover:bg-dark-surface cursor-pointer">
+          <tr 
+            key={budget.id} 
+            className="hover:bg-brand-light/20 dark:hover:bg-dark-surface cursor-pointer transition-colors duration-150"
+            onClick={() => onViewDetail(budget)}
+          >
             <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm font-medium text-brand-primary dark:text-gray-100">{budget.title}</div>
                 <div className="text-xs text-brand-text dark:text-gray-400">{budget.products.length} items</div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate" title={budget.observations}>
+              {budget.observations || 'N/A'}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">{budget.client?.name || 'N/A'}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">{format(new Date(budget.createdAt), 'dd/MM/yyyy')}</td>

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 // import { mockBudgets } from '../../mock/data'; // No longer needed
 
-const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets = [] }) => {
+const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets = [], initialValues = null }) => {
   const [budgetId, setBudgetId] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
   const [paidAmount, setPaidAmount] = useState("");
-  const [method, setMethod] = useState("Transferencia"); // Changed default to "Transferencia" (matching backend enum-like strings)
+  const [method, setMethod] = useState("Transferencia");
   const [reference, setReference] = useState("");
   const [bankFrom, setBankFrom] = useState("");
   const [bankTo, setBankTo] = useState("");
@@ -13,10 +13,13 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
   const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
-    if (approvedBudgets.length > 0 && !budgetId) {
-      setBudgetId(approvedBudgets[0].id); // Select first approved budget by default
+    if (initialValues) {
+      if (initialValues.budgetId) setBudgetId(initialValues.budgetId);
+      if (initialValues.amount) setPaidAmount(initialValues.amount);
+    } else if (approvedBudgets.length > 0 && !budgetId) {
+      setBudgetId(approvedBudgets[0].id);
     }
-  }, [approvedBudgets, budgetId]);
+  }, [approvedBudgets, budgetId, initialValues]);
 
   const validateForm = () => {
     const errors = {};

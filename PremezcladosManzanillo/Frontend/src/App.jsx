@@ -19,6 +19,7 @@ import BudgetsPage from "./pages/BudgetsPage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx"; // Importar la nueva página
 import PaymentsPage from "./pages/PaymentsPage.jsx";
 import InvoicesPage from "./pages/InvoicesPage.jsx"; // Importar la nueva página de facturas
+import AdminRolesPage from "./pages/AdminRolesPage.jsx"; // Importar la nueva página de gestión de roles
 import Reports from "./sections/dashboard/Reports.jsx";
 import Settings from "./sections/dashboard/Settings.jsx";
 import HomePage from "./pages/HomePage.jsx";
@@ -31,6 +32,7 @@ import ServicesPage from "./pages/ServicesPage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
 import ProjectsPage from "./pages/ProjectsPage.jsx";
+import BudgetBuilderPage from "./pages/BudgetBuilderPage.jsx";
 
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
 import AuthenticatedApiProvider from "./components/AuthenticatedApiProvider.jsx"; // Importar el nuevo provider
@@ -119,9 +121,11 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/clients" element={<ClientsPage />} />
               <Route path="/budgets/*" element={<BudgetsPage />} />
+              <Route path="/dashboard/budgets/build/:id" element={<BudgetBuilderPage />} />
               <Route path="/products-management" element={<ProductsPage />} />
               <Route path="/payments" element={<PaymentsPage />} />
               <Route path="/invoices" element={<InvoicesPage />} /> {/* Nueva ruta para la página de facturas */}
+              <Route path="/admin/roles" element={<AdminRolesPage />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
             </Route>

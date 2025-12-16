@@ -35,17 +35,18 @@ const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove })
 
   if (!budget) return null;
 
-  const project = budget.project || {
-    nombreProyecto: budget.nombreProyecto || budget.title || '',
-    direccion: budget.direccion || '',
-    fechaColado: budget.fechaColado || '',
-    tipoObra: budget.tipoObra || '',
-    resistencia: budget.resistencia || '',
-    tipoConcreto: budget.tipoConcreto || '',
-    volumen: budget.volumen ?? '',
-    elemento: budget.elemento || '',
-    requiereBomba: budget.requiereBomba || '',
-    observaciones: budget.observaciones || '',
+  // Mapeo de campos del backend (en inglés) a español para la UI
+  const project = {
+    nombreProyecto: budget.title || '',
+    direccion: budget.address || '',
+    fechaColado: budget.deliveryDate ? formatDate(budget.deliveryDate) : '',
+    tipoObra: budget.workType || '',
+    resistencia: budget.resistance || '',
+    tipoConcreto: budget.concreteType || '',
+    volumen: budget.volume ?? '',
+    elemento: budget.element || '',
+    requiereBomba: budget.pumpRequired ? 'Sí' : (budget.pumpRequired === false ? 'No' : ''),
+    observaciones: budget.observations || '',
   };
 
   const fechaColado = project.fechaColado || formatDate(budget.createdAt);
@@ -87,28 +88,30 @@ const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove })
             <div>
               <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Datos del proyecto</h4>
               <div className="space-y-2">
-                <div><span className="font-medium">Nombre:</span> {project.nombreProyecto || '—'}</div>
-                <div><span className="font-medium">Dirección:</span> {project.direccion || '—'}</div>
-                <div><span className="font-medium">Fecha estimada de colado:</span> {fechaColado || '—'}</div>
-                <div><span className="font-medium">Tipo de obra:</span> {project.tipoObra || '—'}</div>
+                <div><span className="font-medium">Nombre:</span> {project.nombreProyecto || <span className="text-gray-400 italic">No especificado</span>}</div>
+                <div><span className="font-medium">Dirección:</span> {project.direccion || <span className="text-gray-400 italic">No especificada</span>}</div>
+                <div><span className="font-medium">Fecha estimada de colado:</span> {fechaColado || <span className="text-gray-400 italic">Pendiente por definir</span>}</div>
+                <div><span className="font-medium">Tipo de obra:</span> {project.tipoObra || <span className="text-gray-400 italic">No especificado</span>}</div>
               </div>
             </div>
 
             <div>
               <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Especificaciones del concreto</h4>
               <div className="space-y-2">
-                <div><span className="font-medium">Resistencia (f’c):</span> {project.resistencia || '—'}</div>
-                <div><span className="font-medium">Tipo de concreto:</span> {project.tipoConcreto || '—'}</div>
-                <div><span className="font-medium">Volumen (m³):</span> {project.volumen !== '' ? project.volumen : '—'}</div>
-                <div><span className="font-medium">Elemento a colar:</span> {project.elemento || '—'}</div>
-                <div><span className="font-medium">Requiere bomba:</span> {project.requiereBomba || '—'}</div>
+                <div><span className="font-medium">Resistencia (f’c):</span> {project.resistencia || <span className="text-gray-400 italic">No especificada</span>}</div>
+                <div><span className="font-medium">Tipo de concreto:</span> {project.tipoConcreto || <span className="text-gray-400 italic">No especificado</span>}</div>
+                <div><span className="font-medium">Volumen (m³):</span> {project.volumen !== '' ? project.volumen : <span className="text-gray-400 italic">—</span>}</div>
+                <div><span className="font-medium">Elemento a colar:</span> {project.elemento || <span className="text-gray-400 italic">No especificado</span>}</div>
+                <div><span className="font-medium">Requiere bomba:</span> {project.requiereBomba || <span className="text-gray-400 italic">No especificado</span>}</div>
               </div>
             </div>
           </div>
 
           <div>
             <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Observaciones</h4>
-            <div className="text-sm text-gray-800 dark:text-gray-300">{project.observaciones || '—'}</div>
+            <div className="text-sm text-gray-800 dark:text-gray-300 bg-gray-50 dark:bg-dark-surface p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                {project.observaciones ? project.observaciones : <span className="text-gray-400 italic">Sin observaciones registradas.</span>}
+            </div>
           </div>
 
           <div className="flex justify-end mt-5 gap-2 items-center">

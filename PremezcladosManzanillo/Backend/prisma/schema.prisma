@@ -125,12 +125,55 @@ model Product {
   price       Float
   // Type can be 'CONCRETE', 'BLOCK', 'SERVICE', etc.
   type        String
-  // Category can be 'Estructurales', 'Pavimentos', 'Asesorias', etc.
-  category    String?
+  // Relations to categories/subcategories
+  category    Category? @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+  subcategory Subcategory? @relation(fields: [subcategoryId], references: [id])
+  subcategoryId String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   budgets BudgetProduct[]
+  // Historical prices per product
+  productPrices ProductPrice[]
+}
+
+// Product categories
+model Category {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  subcategories Subcategory[]
+  products    Product[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Subcategory {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  category    Category  @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@unique([name, categoryId])
+}
+
+// Historical product prices (multi-moneda)
+model ProductPrice {
+  id           String   @id @default(cuid())
+  product      Product  @relation(fields: [productId], references: [id])
+  productId    String
+  date         DateTime // date when price is effective
+  currency     String
+  price        Float
+  createdById  String?  // user id who set the price
+  createdByRole String?
+  createdAt    DateTime @default(now())
+
+  @@index([productId, date])
 }
 
 // Notification model for user alerts

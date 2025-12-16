@@ -16,26 +16,26 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
 
   const canEditOrDeleteBudget = (budget) => {
     // Admin can always edit/delete
-    if (userRoles.includes('Administrador')) {
-      return true;
-    }
+    if (userRoles.includes('Administrador')) return true;
 
     // Contable can edit/delete APPROVED or PENDING budgets
-    if (userRoles.includes('Contable') && (budget.status === 'APPROVED' || budget.status === 'PENDING')) {
-      return true;
-    }
+    if (userRoles.includes('Contable') && (budget.status === 'APPROVED' || budget.status === 'PENDING')) return true;
     
-    // Comercial can edit/delete PENDING budgets they own
-    if (userRoles.includes('Comercial') && budget.status === 'PENDING' && budget.creatorId === currentUserId) {
-      return true;
+    // Comercial/Usuario can delete PENDING budgets they own created TODAY
+    const isOwner = budget.creatorId === currentUserId;
+    if ((userRoles.includes('Comercial') || userRoles.includes('Usuario')) && budget.status === 'PENDING' && isOwner) {
+       const today = new Date().setHours(0,0,0,0);
+       const created = new Date(budget.createdAt).setHours(0,0,0,0);
+       return created === today;
     }
 
     return false;
   };
 
   const canApproveOrRejectBudget = (budget) => {
-    // Only Admin can approve/reject and only if budget is PENDING
-    return userRoles.includes('Administrador') && budget.status === 'PENDING';
+    // Admin AND Contable can approve/reject if budget is PENDING
+    const isPrivileged = userRoles.includes('Administrador') || userRoles.includes('Contable');
+    return isPrivileged && budget.status === 'PENDING';
   };
 
   const handleOpenRejectionModal = (budget) => {
@@ -111,6 +111,11 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
                                 {budget.rejectionReason && (
                                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                                     Motivo de rechazo: {budget.rejectionReason}
+                                  </p>
+                                )}
+                                {budget.observations && (
+                                  <p className="text-xs text-gray-500 mt-2 italic truncate" title={budget.observations}>
+                                    "{budget.observations}"
                                   </p>
                                 )}
                             </div>

@@ -3,6 +3,45 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Inicializar un presupuesto (esqueleto)
+export const initBudget = async (req: Request, res: Response) => {
+  const { title, clientId, address } = req.body;
+  const creatorId = req.auth?.payload.sub;
+
+  if (!creatorId) {
+    return res.status(401).json({ error: 'Authenticated user ID not found.' });
+  }
+  if (!clientId) {
+    return res.status(400).json({ error: 'Client ID is required.' });
+  }
+  if (!title) {
+    return res.status(400).json({ error: 'Title is required.' });
+  }
+
+  try {
+    const newBudget = await prisma.budget.create({
+      data: {
+        title,
+        address,
+        total: 0,
+        status: 'PENDING', // O 'DRAFT' si decides implementarlo
+        creator: { connect: { id: creatorId } },
+        client: { connect: { id: clientId } },
+        // No products initially
+      },
+      include: {
+        client: true,
+      },
+    });
+
+    res.status(201).json(newBudget);
+  } catch (error: any) {
+    console.error('Error initializing budget:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+};
+
+
 // Obtener todos los presupuestos, filtrados por rol de usuario
 export const getBudgets = async (req: Request, res: Response) => {
   try {
@@ -197,6 +236,7 @@ const validateDeliveryDate = (deliveryDate: string | undefined) => {
 export const createBudget = async (req: Request, res: Response) => {
   const { title, clientId, status, products, address, deliveryDate, workType, resistance, concreteType, element, observations, volume } = req.body;
   const creatorId = req.auth?.payload.sub;
+  const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!creatorId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
@@ -207,10 +247,15 @@ export const createBudget = async (req: Request, res: Response) => {
   if (!Array.isArray(products) || products.length === 0) {
     return res.status(400).json({ error: 'At least one product is required.' });
   }
+  if (!observations || observations.trim() === '') {
+    return res.status(400).json({ error: 'Observations are required.' });
+  }
 
   try {
     validateDeliveryDate(deliveryDate);
-    const total = await calculateTotal(products);
+
+    const isPrivileged = roles.some(r => ['Administrador', 'Contable'].includes(r));
+    const total = await calculateTotal(products, isPrivileged, deliveryDate);
 
     const newBudget = await prisma.budget.create({
       data: {
@@ -229,13 +274,28 @@ export const createBudget = async (req: Request, res: Response) => {
         client: { connect: { id: clientId } },
         products: {
           create: await Promise.all(
-            products.map(async (p: { productId: string; quantity: number }) => {
-              const product = await prisma.product.findUnique({ where: { id: p.productId } });
-              if (!product) throw new Error(`Product with ID ${p.productId} not found.`);
+            products.map(async (p: { productId: string; quantity: number; unitPrice?: number }) => {
+              // Resolve unit price: use provided if privileged, otherwise use historical or product default
+              const resolvedPrice = await (async () => {
+                // If privileged and provided unitPrice, use it
+                if (isPrivileged && p.unitPrice !== undefined && p.unitPrice !== null) {
+                  return Number(p.unitPrice);
+                }
+                // Try product price for the date
+                const priceRecord = await (prisma as any).productPrice.findFirst({
+                  where: { productId: p.productId, date: { lte: deliveryDate ? new Date(deliveryDate) : new Date() } },
+                  orderBy: { date: 'desc' }
+                });
+                if (priceRecord) return priceRecord.price;
+                const product = await prisma.product.findUnique({ where: { id: p.productId } });
+                if (!product) throw new Error(`Product with ID ${p.productId} not found.`);
+                return product.price;
+              })();
+
               return {
                 quantity: p.quantity,
-                unitPrice: product.price, // Precio histórico
-                totalPrice: p.quantity * product.price,
+                unitPrice: resolvedPrice,
+                totalPrice: p.quantity * resolvedPrice,
                 product: { connect: { id: p.productId } },
               };
             })
@@ -263,10 +323,15 @@ export const updateBudget = async (req: Request, res: Response) => {
   if (!Array.isArray(products) || products.length === 0) {
     return res.status(400).json({ error: 'At least one product is required.' });
   }
+  if (!observations || observations.trim() === '') {
+    return res.status(400).json({ error: 'Observations are required.' });
+  }
 
   try {
+    const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
+    const isPrivileged = roles.some(r => ['Administrador', 'Contable'].includes(r));
     validateDeliveryDate(deliveryDate);
-    const total = await calculateTotal(products);
+    const total = await calculateTotal(products, isPrivileged, deliveryDate);
 
     const updatedBudget = await prisma.$transaction(async (tx) => {
       // 1. Eliminar productos de presupuesto existentes
@@ -290,13 +355,26 @@ export const updateBudget = async (req: Request, res: Response) => {
           client: clientId ? { connect: { id: clientId } } : undefined,
           products: {
             create: await Promise.all(
-              products.map(async (p: { productId: string; quantity: number }) => {
-                const product = await tx.product.findUnique({ where: { id: p.productId } });
-                if (!product) throw new Error(`Product with ID ${p.productId} not found.`);
+              products.map(async (p: { productId: string; quantity: number; unitPrice?: number }) => {
+                // Resolve unit price similar to createBudget
+                const resolvedPrice = await (async () => {
+                  if (isPrivileged && p.unitPrice !== undefined && p.unitPrice !== null) {
+                    return Number(p.unitPrice);
+                  }
+                  const priceRecord = await (tx as any).productPrice.findFirst({
+                      where: { productId: p.productId, date: { lte: deliveryDate ? new Date(deliveryDate) : new Date() } },
+                      orderBy: { date: 'desc' }
+                    });
+                  if (priceRecord) return priceRecord.price;
+                  const product = await tx.product.findUnique({ where: { id: p.productId } });
+                  if (!product) throw new Error(`Product with ID ${p.productId} not found.`);
+                  return product.price;
+                })();
+
                 return {
                   quantity: p.quantity,
-                  unitPrice: product.price,
-                  totalPrice: p.quantity * product.price,
+                  unitPrice: resolvedPrice,
+                  totalPrice: p.quantity * resolvedPrice,
                   product: { connect: { id: p.productId } },
                 };
               })
@@ -322,10 +400,19 @@ export const updateBudget = async (req: Request, res: Response) => {
 export const deleteBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    // El borrado en cascada de Prisma manejará las entradas de BudgetProduct
-    await prisma.budget.delete({
-      where: { id: id },
+    // Transacción para asegurar integridad
+    await prisma.$transaction(async (tx) => {
+        // 1. Eliminar productos asociados manualmente (por si acaso no hay CASCADE)
+        await tx.budgetProduct.deleteMany({
+          where: { budgetId: id },
+        });
+
+        // 2. Eliminar el presupuesto
+        await tx.budget.delete({
+          where: { id: id },
+        });
     });
+
     res.status(204).send();
   } catch (error) {
     console.error(`Error deleting budget with ID ${id}:`, error);
@@ -334,9 +421,27 @@ export const deleteBudget = async (req: Request, res: Response) => {
 };
 
 // Auxiliar para calcular el precio total
-const calculateTotal = async (products: { productId: string; quantity: number }[]): Promise<number> => {
+const calculateTotal = async (
+  products: { productId: string; quantity: number; unitPrice?: number }[],
+  isPrivileged: boolean,
+  deliveryDate?: string
+): Promise<number> => {
   let total = 0;
   for (const p of products) {
+    // If privileged and provided unitPrice, use it
+    if (isPrivileged && p.unitPrice !== undefined && p.unitPrice !== null) {
+      total += p.quantity * Number(p.unitPrice);
+      continue;
+    }
+    // Try price record for date
+    const priceRecord = await (prisma as any).productPrice.findFirst({
+      where: { productId: p.productId, date: { lte: deliveryDate ? new Date(deliveryDate) : new Date() } },
+      orderBy: { date: 'desc' }
+    });
+    if (priceRecord) {
+      total += p.quantity * priceRecord.price;
+      continue;
+    }
     const product = await prisma.product.findUnique({ where: { id: p.productId } });
     if (!product) throw new Error(`Product with ID ${p.productId} not found during calculation.`);
     total += p.quantity * product.price;

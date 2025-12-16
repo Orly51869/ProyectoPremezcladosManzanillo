@@ -12,10 +12,10 @@ export const createPayment = async (req: Request, res: Response) => {
   const receiptFile = req.file as Express.Multer.File | undefined; // Acceder al archivo subido
 
   if (!authUserId) {
-    return res.status(401).json({ error: 'Authenticated user ID not found.' });
+    return res.status(401).json({ error: 'No se encontró el ID del usuario autenticado.' });
   }
   if (!budgetId || !paidAmount || !method) {
-    return res.status(400).json({ error: 'Budget ID, paid amount, and method are required to create a payment.' });
+    return res.status(400).json({ error: 'El ID del presupuesto, monto pagado y método de pago son requeridos.' });
   }
 
   try {
@@ -25,10 +25,10 @@ export const createPayment = async (req: Request, res: Response) => {
     });
 
     if (!budget) {
-      return res.status(404).json({ error: 'Budget not found.' });
+      return res.status(404).json({ error: 'Presupuesto no encontrado.' });
     }
     if (budget.status !== 'APPROVED') {
-      return res.status(400).json({ error: 'Payments can only be registered for APPROVED budgets.' });
+      return res.status(400).json({ error: 'Solo se pueden registrar pagos para presupuestos APROBADOS.' });
     }
 
     const currentPaidAmount = budget.payments.reduce((sum, p) => sum + p.paidAmount, 0);
@@ -36,7 +36,7 @@ export const createPayment = async (req: Request, res: Response) => {
     const totalPending = budget.total - currentPaidAmount;
 
     if (newPaidAmount > totalPending) {
-        return res.status(400).json({ error: `Payment amount exceeds remaining pending amount. Pending: ${totalPending}` });
+        return res.status(400).json({ error: `El monto del pago excede el saldo pendiente. Pendiente: ${totalPending.toFixed(2)}` });
     }
 
     // Convertir la ruta local del archivo a una URL accesible
@@ -65,7 +65,7 @@ export const createPayment = async (req: Request, res: Response) => {
     res.status(201).json(newPayment);
   } catch (error) {
     console.error('Error creating payment:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Error interno del servidor.' });
   }
 };
 
@@ -93,7 +93,7 @@ export const getPayments = async (req: Request, res: Response) => {
         res.status(200).json(payments);
     } catch (error) {
         console.error('Error fetching payments:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error interno del servidor.' });
     }
 };
 
@@ -116,11 +116,11 @@ export const getPaymentById = async (req: Request, res: Response) => {
         if (payment) {
             res.status(200).json(payment);
         } else {
-            res.status(404).json({ error: 'Payment not found' });
+            res.status(404).json({ error: 'Pago no encontrado.' });
         }
     } catch (error) {
         console.error(`Error fetching payment with ID ${id}:`, error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error interno del servidor.' });
     }
 };
 
@@ -132,10 +132,10 @@ export const updatePayment = async (req: Request, res: Response) => {
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) {
-    return res.status(401).json({ error: 'Authenticated user ID not found.' });
+    return res.status(401).json({ error: 'No se encontró el ID del usuario autenticado.' });
   }
   if (!roles.includes('Administrador') && !roles.includes('Contable')) {
-    return res.status(403).json({ error: 'Forbidden: Only administrators and accountants can validate payments.' });
+    return res.status(403).json({ error: 'Acceso denegado: Solo administradores y contables pueden validar pagos.' });
   }
 
   // Aserción de tipos para acceder a archivos desde multer
@@ -152,11 +152,11 @@ export const updatePayment = async (req: Request, res: Response) => {
   try {
     const existingPayment = await prisma.payment.findUnique({ where: { id: id } });
     if (!existingPayment) {
-      return res.status(404).json({ error: 'Payment not found.' });
+      return res.status(404).json({ error: 'Pago no encontrado.' });
     }
     // Solo permitir cambiar el estado desde PENDING
     if (existingPayment.status !== 'PENDING') {
-        return res.status(400).json({ error: 'Only PENDING payments can be updated.' });
+        return res.status(400).json({ error: 'Solo se pueden actualizar pagos en estado PENDIENTE.' });
     }
 
     const updatedPayment = await prisma.payment.update({
@@ -203,7 +203,7 @@ export const updatePayment = async (req: Request, res: Response) => {
     res.status(200).json(updatedPayment);
   } catch (error) {
     console.error(`Error updating payment with ID ${id}:`, error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Error interno del servidor.' });
   }
 };
 
@@ -214,16 +214,16 @@ export const deletePayment = async (req: Request, res: Response) => {
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) {
-    return res.status(401).json({ error: 'Authenticated user ID not found.' });
+    return res.status(401).json({ error: 'No se encontró el ID del usuario autenticado.' });
   }
   if (!roles.includes('Administrador')) { // Only admin can delete payments for now
-    return res.status(403).json({ error: 'Forbidden: Only administrators can delete payments.' });
+    return res.status(403).json({ error: 'Acceso denegado: Solo administradores pueden eliminar pagos.' });
   }
 
   try {
     const existingPayment = await prisma.payment.findUnique({ where: { id: id } });
     if (!existingPayment) {
-        return res.status(404).json({ error: 'Payment not found.' });
+        return res.status(404).json({ error: 'Pago no encontrado.' });
     }
 
     await prisma.payment.delete({
@@ -232,6 +232,6 @@ export const deletePayment = async (req: Request, res: Response) => {
     res.status(204).send();
   } catch (error) {
     console.error(`Error deleting payment with ID ${id}:`, error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Error interno del servidor.' });
   }
 };

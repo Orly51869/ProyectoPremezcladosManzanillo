@@ -43,8 +43,12 @@ const ProductsPage = () => {
   }, [userRoles]);
 
   const categoryOptions = useMemo(() => {
-    const categories = [...new Set(products.map(p => p.category))];
-    return [{ value: 'all', label: 'Todas las Categorías' }, ...categories.map(c => ({ value: c, label: c }))];
+    const categoryNames = products
+      .map(p => p.category?.name || (typeof p.category === 'string' ? p.category : null))
+      .filter(Boolean);
+      
+    const uniqueCategories = [...new Set(categoryNames)];
+    return [{ value: 'all', label: 'Todas las Categorías' }, ...uniqueCategories.map(c => ({ value: c, label: c }))];
   }, [products]);
 
   const typeOptions = useMemo(() => {
@@ -55,7 +59,8 @@ const ProductsPage = () => {
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
+      const productCategoryName = product.category?.name || (typeof product.category === 'string' ? product.category : '');
+      const matchesCategory = categoryFilter === 'all' || productCategoryName === categoryFilter;
       const matchesType = typeFilter === 'all' || product.type === typeFilter;
       return matchesSearch && matchesCategory && matchesType;
     });
@@ -149,10 +154,10 @@ const ProductsPage = () => {
           </div>
           <div className="flex gap-2 w-full md:w-auto justify-end">
             <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="p-3 border border-brand-light dark:border-dark-surface rounded-xl dark:bg-dark-surface text-sm dark:text-gray-200">
-              {categoryOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              {categoryOptions.map((opt, index) => <option key={`${opt.value}-${index}`} value={opt.value}>{opt.label}</option>)}
             </select>
             <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="p-3 border border-brand-light dark:border-dark-surface rounded-xl dark:bg-dark-surface text-sm dark:text-gray-200">
-              {typeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              {typeOptions.map((opt, index) => <option key={`${opt.value}-${index}`} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
         </div>

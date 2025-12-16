@@ -61,11 +61,22 @@ const PaymentsPage = () => {
     );
   }, [payments, search]);
 
+  const [initialPaymentValues, setInitialPaymentValues] = useState(null);
+
+  const handlePayPending = (payment) => {
+    setInitialPaymentValues({
+      budgetId: payment.budgetId,
+      amount: payment.pending, // Sugerir el monto pendiente como abono
+    });
+    setShowForm(true);
+  };
+
   const handleRegisterPayment = async (formData) => { // Aceptar formData
     try {
       // Backend validates budget status and amount
       await api.post('/api/payments', formData); // Enviar formData directamente
       setShowForm(false);
+      setInitialPaymentValues(null); // Reset initial values
       fetchPayments(); // Refresh payments list
       alert("Pago registrado con éxito. Pendiente de validación.");
     } catch (err) {
@@ -165,6 +176,7 @@ const PaymentsPage = () => {
         onValidate={handleValidatePayment}
         onResend={handleResendForValidation}
         onDownloadReceipt={handleDownloadReceipt}
+        onPayPending={handlePayPending}
         userRoles={userRoles}
         currentUserId={currentUserId}
       />

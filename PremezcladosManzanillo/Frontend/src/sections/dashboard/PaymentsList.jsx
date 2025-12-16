@@ -10,6 +10,8 @@ const PaymentsList = ({
   onValidate = () => {},
   onResend = () => {},
   onDownloadReceipt = () => {}, // New prop for downloading receipt
+  onPayPending = () => {},
+  budgetDebtMap = {},
   userRoles = [],
   currentUserId = null,
 }) => {
@@ -172,6 +174,15 @@ const PaymentsList = ({
                           Reenviar
                         </button>
                       )}
+                      {budgetDebtMap[p.budgetId] > 0.01 && (
+                        <button
+                          onClick={() => onPayPending(p)}
+                          className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1"
+                          title="Registrar abono"
+                        >
+                           Abonar
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -188,6 +199,8 @@ const PaymentsList = ({
               onOpenValidationModal={handleOpenValidationModal} // Pass function to open validation modal
               onResend={onResend}
               onDownloadReceipt={onDownloadReceipt} // Pass download receipt handler
+              onPayPending={onPayPending}
+              budgetRemainingDebt={budgetDebtMap[p.budgetId]}
               canValidatePayment={canValidatePayment}
             />
           ))}

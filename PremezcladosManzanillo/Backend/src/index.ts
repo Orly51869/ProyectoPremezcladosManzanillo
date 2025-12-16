@@ -1,7 +1,17 @@
+/***********************************************/
+/**               index.ts                    **/
+/***********************************************/
+// Archivo principal del backend que configura y ejecuta la aplicación 
+
+// Librerías y archivos externos
+import cors from 'cors';
 import express from 'express';
 import * as dotenv from 'dotenv';
+import { jwtCheck } from './middleware/jwtCheck';
+import { userProvisioningMiddleware } from './middleware/userProvisioningMiddleware';
 dotenv.config(); // Cargar variables de entorno
 
+// Inicialización de la aplicación
 const app = express();
 const port = 3001;
 
@@ -11,12 +21,11 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1); // Salir con un código de error
 });
 
+// Manejador global de excepciones no capturadas
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception thrown:', error);
   process.exit(1); // Salir con un código de error
 });
-
-import cors from 'cors';
 
 // Configuración de CORS con el paquete `cors`
 const corsOptions = {
@@ -27,17 +36,15 @@ const corsOptions = {
 console.log('Backend: Applying CORS middleware');
 app.use(cors(corsOptions));
 
-import { jwtCheck } from './middleware/jwtCheck';
-import { userProvisioningMiddleware } from './middleware/userProvisioningMiddleware';
-
 // Enrutadores
 import budgetsRouter from './routes/budgets';
 import clientsRouter from './routes/clients';
 import productsRouter from './routes/products';
 import paymentsRouter from './routes/payments';
 import notificationsRouter from './routes/notifications';
-import invoicesRouter from './routes/invoices'; // Importar el nuevo router de facturas
+import invoicesRouter from './routes/invoices'; 
 import dashboardRouter from './routes/dashboard';
+import usersRouter from './routes/users';
 
 console.log('Backend: Applying express.json middleware');
 app.use(express.json());
@@ -59,6 +66,9 @@ console.log('Backend: Applying Auth middleware to /api/invoices');
 app.use('/api/invoices', jwtCheck, userProvisioningMiddleware, invoicesRouter);
 console.log('Backend: Applying Auth middleware to /api/dashboard');
 app.use('/api/dashboard', jwtCheck, userProvisioningMiddleware, dashboardRouter);
+console.log('Backend: Applying Auth middleware to /api/users');
+app.use('/api/users', jwtCheck, userProvisioningMiddleware, usersRouter);
+
 
 console.log('Backend: Registering public endpoint /');
 app.get('/', (req, res) => {

@@ -7,10 +7,12 @@ import {
   deleteBudget,
   approveBudget, // Import new function
   rejectBudget, // Import new function
+  initBudget, // Nueva función
 } from '../controllers/budgetController';
 
 const router = Router();
 
+router.post('/init', initBudget); // Ruta para inicialización rápida
 router.get('/', getBudgets);
 router.get('/:id', getBudgetById);
 router.post('/', createBudget);
