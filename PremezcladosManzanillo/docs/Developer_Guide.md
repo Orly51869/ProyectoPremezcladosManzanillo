@@ -1,90 +1,105 @@
-# 🛠️ Guía de Desarrollo - Premezclado Manzanillo
+# 🛠️ Guía Técnica para Desarrolladores - Premezclado Manzanillo
 
-Esta guía está dirigida a desarrolladores que deseen mantener o extender la funcionalidad de la plataforma.
-
-## 🏗️ Arquitectura del Proyecto
-
-El proyecto utiliza una arquitectura **Monorepo** (virtualmente separada en carpetas) con:
-
-- **Frontend:** React + Vite + TailwindCSS
-- **Backend:** Node.js + Express + TypeScript + Prisma ORM
-- **Base de Datos:** SQLite (archivo `dev.db` local)
-
-> [IMAGEN: Diagrama de arquitectura simple]
+Esta guía detalla la arquitectura técnica y los estándares de desarrollo para la plataforma.
 
 ---
 
-## 🔧 Configuración del Entorno
+## 1. Arquitectura de Alto Nivel
+La aplicación sigue un modelo de **Desacoplamiento Front-Back**, lo que permite escalar cada parte de forma independiente.
 
-### Requisitos
-- Node.js (v18+)
-- pnpm (recomendado) o npm
+-   **Backend (API Restful):** Construido con Node.js y Express en TypeScript. Utiliza Prisma ORM para interactuar con SQLite (o PostgreSQL en producción).
+-   **Frontend (SPA):** Desarrollado con React 18, Vite y Tailwind CSS. Gestiona el estado de forma local y vía Context API para temas globales (Moneda, Autenticación).
 
-### Instalación
-1. Clonar el repositorio.
-2. Configurar variables de entorno:
-   - Copiar `.env.example` a `.env` en `Backend/` y `Frontend/`.
-   - **Backend:** Configurar `DATABASE_URL`, `AUTH0_...`, `GROQ_API_KEY`.
-   - **Frontend:** Configurar `VITE_AUTH0_...`.
+---
 
-### Ejecución
-```bash
-# Terminal 1: Backend
-cd Backend
-pnpm install
-npx prisma migrate dev
-pnpm run dev
+## 2. Flujo de Autenticación y Autorización
+Utilizamos **Auth0** con el flujo de *Authorization Code Flow with PKCE*.
 
-# Terminal 2: Frontend
-cd Frontend
-pnpm install
-pnpm run dev
+1.  **Token JWT:** El frontend obtiene un Access Token de Auth0.
+2.  **Validación:** El backend usa el middleware `jwtCheck` para validar la firma del emisor (Auth0).
+3.  **Aprovisionamiento Local:** El middleware `userProvisioningMiddleware` verifica si el `sub` del JWT existe en la base de datos local. Si no existe, lo crea automáticamente para mantener la integridad de las relaciones (Clientes -> Usuarios).
+4.  **Roles:** Los roles se inyectan en el token como un *Custom Claim* (`https://premezcladomanzanillo.com/roles`). El backend verifica estos roles para proteger rutas sensibles.
+
+---
+
+## 3. Sistema de Configuración Dinámica (CMS Interno)
+Para permitir que el rol **Comercial** edite la Web, implementamos un sistema de Clave-Valor en la base de datos:
+
+-   **Modelo `Setting`:** Tiene campos `key` (PK), `value` (JSON String) y `type`.
+-   **Endpoint `GET /api/settings`:** Es público. Devuelve un mapa de todas las configuraciones para que la Landing Page se "hidrate" con los textos e imágenes actuales.
+-   **Endpoint `POST /api/settings`:** Protegido por roles. Almacena las configuraciones serializadas. Los componentes de React (`HeroSection`, etc.) usan `JSON.parse()` para procesarlos.
+
+---
+
+## 4. Implementación de Auditoría (Audit Log)
+Cada acción que mueva dinero o cambie la configuración del sistema debe ser auditada.
+
+**Uso del Logger:**
+```typescript
+import { logActivity } from '../utils/auditLogger';
+
+// Dentro de un controlador
+await logActivity({
+  userId: req.auth.payload.sub,
+  userName: req.user.name,
+  action: 'UPDATE',
+  entity: 'SETTING',
+  details: 'Banner principal actualizado por el comercial.'
+});
 ```
 
 ---
 
-## 🔐 Autenticación y Roles
+## 5. Gestión de Moneda e IVA
+El sistema es multi-moneda de forma visual pero opera sobre una base única.
+-   **CurrencyContext:** Gestiona el estado global de la moneda (USD/BS).
+-   **Cálculos:** Todos los cálculos financieros deben centralizarse en el frontend usando las utilidades de formato para evitar errores de redondeo en decimales.
+-   **IVA:** El porcentaje de IVA se recupera desde la tabla `Setting` (`key: 'vat_rate'`), permitiendo cambios legales sin tocar código.
 
-La autenticación se maneja vía **Auth0**.
-- El frontend obtiene un Token JWT.
-- El backend valida el token con `express-oauth2-jwt-bearer`.
-- Los roles se gestionan mediante la **Management API** de Auth0.
+---
 
-### Flujo de Actualización de Roles
-1. El frontend envía `PUT /api/users/:id/roles`.
-2. El backend (`userController.ts`) solicita un token M2M a Auth0.
-3. El backend llama a la Auth0 Management API para actualizar los roles del usuario.
-
-> **Nota:** Asegúrate de que la aplicación M2M en Auth0 tenga permisos para `read:users`, `update:users`, `read:roles`.
+## 6. Procedimientos de Despliegue y Base de Datos
+-   **Generar esquemas:** `npx prisma generate` después de cualquier cambio en `schema.prisma`.
+-   **Sincronización:** En desarrollo, usar `npx prisma db push`. En producción, usar `npx prisma migrate deploy`.
+-   **M2M Credentials:** Asegure que el servidor tenga acceso a las variables `AUTH0_M2M_CLIENT_ID` y `SECRET` para que la eliminación de usuarios y gestión de roles funcione.
 
 ---
 
 ## 📂 Estructura del Backend
-- `src/controllers`: Lógica de negocio (Budget, Payment, User context).
-- `src/routes`: Definición de endpoints API.
-- `src/middleware`:
-    - `jwtCheck`: Valida token de Auth0.
-    - `requireAdmin`: Protege rutas sensibles.
-    - `userProvisioning`: Crea el usuario en BD local si es su primer login.
-- `prisma/schema.prisma`: Definición de modelos de datos.
 
-### Añadir una nueva funcionalidad
-1. Modificar `schema.prisma` si requiere cambios en BD.
-2. Ejecutar `npx prisma migrate dev`.
-3. Crear controlador y rutas.
-4. Registrar rutas en `index.ts`.
+- `src/controllers/`:
+    - `settingController.ts`: Maneja las configuraciones dinámicas de la landing (Hero, Productos, Servicios).
+    - `userController.ts`: Incluye `deleteUser` que limpia datos en Auth0 y DB.
+    - `auditController.ts`: Consulta los logs de actividad.
+- `src/routes/`:
+    - `settings.ts`: Endpoints para lectura pública y escritura protegida de configuraciones.
+    - `audit.ts`: Acceso restringido a logs de auditoría.
+- `prisma/schema.prisma`:
+    - Modelo `Setting`: Almacena claves/valores para la personalización.
+    - Modelo `AuditLog`: Registro histórico de acciones.
 
 ---
 
-## 🎨 Estructura del Frontend
-- `src/pages`: Vistas principales (routing).
-- `src/components`: Componentes reutilizables (Navbar, Cards, Modals).
-- `src/sections/dashboard`: Módulos específicos del dashboard.
-- `src/utils/api.js`: Instancia de Axios con interceptor para inyectar el token JWT.
+## 📂 Estructura del Frontend
+
+- `src/pages/`:
+    - `CustomizationPage.jsx`: Interfaz de administración para el rol Comercial.
+    - `AdminRolesPage.jsx`: Gestión de usuarios y eliminación definitiva.
+- `src/sections/home/`:
+    - `HeroSection.jsx`, `ProductsSection.jsx`, `ServicesSection.jsx`: Ahora cargan sus datos dinámicamente desde `/api/settings`.
+- `src/components/ContentCard.jsx`: Estandarizado con altura `h-80` para simetría visual.
 
 ---
 
-## ⚠️ Solución de Problemas Comunes
-- **Error 404 en API:** Reinicia el servidor backend para aplicar cambios en rutas.
-- **Error CORS:** Verifica que el origen del frontend esté en la whitelist de `corsOptions` en `index.ts`.
-- **Prisma Error:** Si cambias el esquema, no olvides `npx prisma generate`.
+## 🚀 Flujo de Personalización Dinámica
+1. El Administrador cambia una imagen en `CustomizationPage`.
+2. Se envía un `POST` a `/api/settings` con la nueva URL (almacenada como JSON en el campo `value`).
+3. La landing page, al cargar, hace un `fetch` a `/api/settings` y actualiza el estado local de los componentes.
+
+---
+
+## ⚠️ Notas de Mantenimiento
+- **Sincronización:** Si cambias el esquema de Prisma, usa `npx prisma db push` para aplicar cambios rápidos o `migrate dev` para producción.
+- **Auth0:** La eliminación de usuarios requiere que las credenciales M2M en el `.env` tengan el permiso `delete:users`.
+- **Estética:** Mantener el uso de Tailwind y Framer Motion para asegurar que la UI siga sintiéndose premium y fluida.
+

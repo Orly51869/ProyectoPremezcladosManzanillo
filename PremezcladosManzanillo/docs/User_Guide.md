@@ -1,83 +1,90 @@
-# 📘 Guía de Usuario - Premezclado Manzanillo
+# 📘 Guía de Usuario Detallada - Premezclado Manzanillo
 
-Bienvenido a la plataforma de gestión de Premezclado Manzanillo. Esta guía te ayudará a navegar y utilizar las funcionalidades principales del sistema según tu rol.
-
-## 🚀 Inicio de Sesión
-1. Dirígete a la página principal.
-2. Haz clic en el botón **"Iniciar Sesión / Registro"** en la esquina superior derecha.
-3. Ingresa tu correo electrónico y contraseña.
-
-> [IMAGEN: Pantalla de Login]
+Esta guía proporciona una explicación exhaustiva de todas las herramientas disponibles en la plataforma de Premezclado Manzanillo, diseñada para optimizar la gestión comercial y técnica de la empresa.
 
 ---
 
-## 👥 Gestión de Clientes
-*(Disponible para todos los usuarios registrados)*
+## 1. Acceso y Configuración Inicial
+### Inicio de Sesión
+La plataforma utiliza **Auth0** para una seguridad de grado bancario. 
+1. Acceda a la URL principal.
+2. Haga clic en **"Iniciar Sesión"**. Será redirigido al portal seguro.
+3. Puede usar sus credenciales corporativas o registrarse. 
+   - *Nota:* Los nuevos usuarios registrados tendrán el rol de **Usuario** por defecto y permisos limitados hasta que un administrador los promueva.
 
-### Crear un Cliente
-1. Ve a la sección **Clientes** en el menú superior.
-2. Haz clic en el botón **"Nuevo Cliente"**.
-3. Completa el formulario con los datos requeridos (Nombre, Email, RIF, Teléfono, Dirección).
-4. Haz clic en **Guardar**.
-
-> [IMAGEN: Modal de creación de cliente]
-
-### Editar/Eliminar Cliente
-- Solo puedes editar o eliminar clientes que hayas creado tú (si eres Usuario estándar).
-- Los Administradores y Comerciales tienen permisos ampliados.
+### Perfil de Usuario
+En la esquina superior derecha del Dashboard, encontrará su avatar circular. Al hacer clic, podrá ver su correo electrónico vinculado y cerrar la sesión de forma segura.
 
 ---
 
-## 📝 Gestión de Presupuestos
-*(Funcionalidad principal)*
+## 2. Personalización de la Landing Page (Módulo Visual)
+*(Exclusivo para Administradores y Comerciales)*
 
-### Crear un Presupuesto
-1. Ve a la categoría **Presupuestos**.
-2. Haz clic en **"Nuevo Presupuesto"**.
-3. Selecciona un **Cliente** de la lista y asigna un **Título** al proyecto. Haz clic en "Continuar".
-4. Serás redirigido al **Constructor de Presupuestos**.
-5. En el panel izquierdo, selecciona los productos o servicios (Concreto, Bombeo, Aditivos).
-6. Ajusta las cantidades y agrégalos al presupuesto.
-7. Revisa el total y haz clic en **"Guardar Cambios"**.
+Este módulo permite que el equipo de ventas actualice la oferta visual del sitio público sin depender de desarrolladores.
 
-> [IMAGEN: Constructor de Presupuestos]
+### Secciones Modificables:
+1.  **Banner Principal (Hero):**
+    *   **Imágenes:** Puede gestionar un carrusel dinámico. Se recomiendan imágenes de alta resolución (mínimo 1920x1080px) de la planta o proyectos terminados.
+    *   **Textos:** Cada imagen puede llevar una frase de impacto diferente.
+2.  **Catálogo Destacado (Home):** 
+    *   Permite seleccionar qué categorías de concreto (Estructural, Pavimentos, etc.) se muestran en la página de inicio para captar la atención del cliente.
+3.  **Servicios Destacados:** 
+    *   Actualización de descripciones e imágenes para servicios como "Bombeo de Concreto" o "Laboratorio".
 
-### Aprobar/Rechazar Presupuesto
+---
+
+## 3. Flujo de Ventas: De Cliente a Presupuesto
+
+### Gestión de Clientes
+Antes de generar un presupuesto, el cliente debe existir en la base de datos.
+- **RIF/Cédula:** El sistema valida que el formato sea correcto.
+- **Asignación:** Los clientes creados por un usuario son visibles para ese usuario, pero los Administradores tienen una visión global de toda la cartera.
+
+### Constructor de Presupuestos (El "Corazón" del Sistema)
+Es una herramienta interactiva donde se diseña la solución técnica para la obra:
+1.  **Configuración General:** Nombre del proyecto y fecha estimada de colado.
+2.  **Selección de Mezcla:** Elija el tipo de concreto (por ejemplo, C-210 o C-250).
+3.  **Servicios Adicionales:** Añada metros de tubería de bombeo o aditivos hidrófugos/fibras.
+4.  **Cálculo Automático:** El sistema calcula el precio de la mezcla y el total en tiempo real según los precios vigentes en el catálogo.
+
+---
+
+## 4. Gestión de Pagos y Comprobantes
+Los usuarios pueden reportar sus pagos directamente:
+1.  Seleccione el presupuesto aprobado.
+2.  Suba la imagen de la transferencia o depósito.
+3.  **Estados del Pago:**
+    - **Pendiente:** El pago ha sido reportado pero no validado.
+    - **Validado:** El departamento contable confirmó los fondos. El presupuesto se marca como "Pagado".
+
+---
+
+## 5. Matriz de Roles y Permisos (Detallada)
+
+| Funcionalidad | Administrador | Comercial | Contable | Usuario (Cliente) |
+| :--- | :---: | :---: | :---: | :---: |
+| Crear Clientes | ✅ | ✅ | ❌ | ❌ |
+| Crear Presupuestos | ✅ | ✅ | ✅ | ✅ |
+| Aprobar Presupuestos | ✅ | ❌ | ✅ | ❌ |
+| Modificar Precios | ✅ | ❌ | ✅ | ❌ |
+| Personalizar Web | ✅ | ✅ | ❌ | ❌ |
+| Gestionar Roles | ✅ | ❌ | ❌ | ❌ |
+| Eliminar Usuarios | ✅ | ❌ | ❌ | ❌ |
+| Ver Auditoría | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+## 6. Reportes y Estadísticas
 *(Solo Administradores y Contables)*
-- En la lista de presupuestos, verás botones de ✅ (Aprobar) y ❌ (Rechazar) para los presupuestos pendientes.
-- Al aprobar, el presupuesto pasa a estado `APPROVED`.
-- Al rechazar, debes ingresar un motivo.
+El sistema genera visualizaciones de:
+- **Volumen de Ventas:** M3 de concreto proyectados vs. despachados.
+- **Estado de Cartera:** Montos pendientes por cobrar y pagos por validar.
+- **Actividad:** Seguimiento de cotizaciones generadas por cada vendedor.
 
 ---
 
-## 💳 Gestión de Pagos
-1. Ve a la sección **Comprobantes**.
-2. Los usuarios pueden registrar pagos asociados a presupuestos aprobados.
-3. Sube el comprobante de transferencia (imagen o PDF).
-4. El equipo de administración validará el pago.
+## 7. Soporte y FAQs
+- **¿Qué pasa si elimino a un usuario?** Se elimina su acceso de Auth0 y su registro local. Sus presupuestos y clientes creados NO se eliminan, pero quedan huérfanos para que un administrador los reasigne.
+- **¿Cómo actualizo los precios del concreto?** Debe ir a la sección "Productos" en el dashboard. Los cambios afectan a los presupuestos *nuevos*, los antiguos mantienen el precio de cuando fueron creados para respetar la oferta al cliente.
+- **Error de Carga de Comprobante:** Asegúrese de que el archivo sea menor a 5MB y en formato JPG, PNG o PDF.
 
-> [IMAGEN: Formulario de registro de pago]
-
----
-
-## 🛡️ Gestión de Roles (Solo Administradores)
-Esta funcionalidad permite asignar roles a los usuarios (Administrador, Contable, Comercial, Usuario) para controlar su acceso.
-
-1. Navega a **Roles** en el menú superior (icono de Usuarios).
-2. Verás una lista de todos los usuarios registrados.
-3. En la columna "Acciones", selecciona el nuevo rol en el menú desplegable.
-4. Confirma la acción en la ventana emergente.
-
-> [IMAGEN: Tabla de gestión de roles]
-
-**Roles disponibles:**
-- **Administrador:** Acceso total.
-- **Contable:** Gestión de presupuestos, pagos y facturas.
-- **Comercial:** Gestión de clientes y presupuestos.
-- **Usuario:** Crear presupuestos y ver solo sus propios registros.
-
----
-
-## ❓ Preguntas Frecuentes
-- **¿Olvidaste tu contraseña?** Usa la opción "Recuperar contraseña" en la pantalla de login de Auth0.
-- **¿No puedes ver un presupuesto?** Verifica que el presupuesto pertenezca a un cliente asignado a ti.

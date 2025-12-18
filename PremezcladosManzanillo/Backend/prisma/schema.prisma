@@ -1,3 +1,10 @@
+/********************************/
+/**      schema.prisma         **/
+/********************************/
+// Arquitectura de la base de datos
+
+
+// Esquema de la base de datos
 datasource db {
   provider = "sqlite"
   url      = "file:./dev.db"
@@ -7,9 +14,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
-
-// User model linked to Auth0 authentication
+// Modelo de usuario vinculado a la autenticación de Auth0
 model User {
   id    String  @id // Corresponds to the 'sub' claim from the Auth0 JWT
   email String  @unique
@@ -23,7 +28,7 @@ model User {
   notifications     Notification[] // Relation to notifications
 }
 
-// Client model associated with a User
+// Modelo de cliente asociado con un Usuario
 model Client {
   id          String   @id @default(cuid())
   name        String
@@ -34,15 +39,15 @@ model Client {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relation to the User who owns this client record
+  // Relación con el usuario que posee este registro de cliente
   owner   User   @relation(fields: [ownerId], references: [id])
   ownerId String
 
-  // Relation to Budgets
+  // Relación con presupuestos
   budgets Budget[]
 }
 
-// Budget model
+// Modelos de presupuestos
 model Budget {
   id              String       @id @default(cuid())
   title           String
@@ -66,7 +71,7 @@ model Budget {
   clientId String
 
   products BudgetProduct[]
-  payments Payment[] // Added reverse relation for payments from budget
+  payments Payment[] // Relación con pagos
 
   // Nuevos campos para el proceso de aprobación
   processedBy   User?   @relation("ProcessedBudgets", fields: [processedById], references: [id])
@@ -75,7 +80,7 @@ model Budget {
   rejectionReason String?
 }
 
-// Payment model
+// Modelos de pagos
 model Payment {
   id                String    @id @default(cuid())
   budgetId          String
@@ -101,7 +106,7 @@ model Payment {
   updatedAt         DateTime  @updatedAt
 }
 
-// Model for the products included in a budget (join table)
+// Modelos de productos
 model BudgetProduct {
   id         String @id @default(cuid())
   quantity   Float
@@ -117,15 +122,15 @@ model BudgetProduct {
   productId String
 }
 
-// Model for Products and Services
+// Modelos de productos y servicios
 model Product {
   id          String   @id @default(cuid())
   name        String   @unique
   description String?
   price       Float
-  // Type can be 'CONCRETE', 'BLOCK', 'SERVICE', etc.
+  // Tipo de producto (CONCRETE, BLOCK, SERVICE, etc.)
   type        String
-  // Relations to categories/subcategories
+  // Relaciones con categorías y subcategorías
   category    Category? @relation(fields: [categoryId], references: [id])
   categoryId  String?
   subcategory Subcategory? @relation(fields: [subcategoryId], references: [id])
@@ -134,11 +139,11 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   budgets BudgetProduct[]
-  // Historical prices per product
+  // Precios históricos por producto
   productPrices ProductPrice[]
 }
 
-// Product categories
+// Categorías de productos
 model Category {
   id          String       @id @default(cuid())
   name        String       @unique
@@ -161,34 +166,34 @@ model Subcategory {
   @@unique([name, categoryId])
 }
 
-// Historical product prices (multi-moneda)
+// Precios históricos por producto
 model ProductPrice {
   id           String   @id @default(cuid())
   product      Product  @relation(fields: [productId], references: [id])
   productId    String
-  date         DateTime // date when price is effective
+  date         DateTime // fecha cuando el precio es efectivo
   currency     String
   price        Float
-  createdById  String?  // user id who set the price
+  createdById  String?  // id del usuario que estableció el precio
   createdByRole String?
   createdAt    DateTime @default(now())
 
   @@index([productId, date])
 }
 
-// Notification model for user alerts
+// Modelo de notificación para alertas de usuario
 model Notification {
   id        String   @id @default(cuid())
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  // Relation to the User who receives the notification
+  // Relación con el usuario que recibe la notificación
   user   User   @relation(fields: [userId], references: [id])
   userId String
 }
 
-// Invoice model linked to a payment
+// Modelo de factura vinculada a un pago
 model Invoice {
   id                  String   @id @default(cuid())
   invoiceNumber       String   @unique
@@ -197,12 +202,12 @@ model Invoice {
   fiscalInvoiceUrl    String?
   deliveryOrderUrl    String?
 
-  // One-to-one relation with Payment
+  // Relación uno a uno con Payment
   payment   Payment @relation(fields: [paymentId], references: [id])
   paymentId String  @unique
 }
 
-// Model for tracking user activities and administrative changes
+// Modelo para rastrear actividades y cambios administrativos de usuarios
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String
@@ -218,7 +223,7 @@ model AuditLog {
   @@index([createdAt])
 }
 
-// Model for dynamic application settings (backgrounds, titles, etc.)
+// Modelo para configuraciones dinámicas de la aplicación (fondos, títulos, etc.)
 model Setting {
   key       String   @id
   value     String
