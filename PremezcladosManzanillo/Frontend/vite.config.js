@@ -42,6 +42,13 @@ export default defineConfig({
     // Forzar re-optimización si hay problemas
     force: false,
   },
+  // Configuración de tests
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/tests/setup.js'],
+    include: ['src/**/*.{test,spec}.{js,jsx}'],
+  },
   // Optimizaciones de build
   build: {
     // Reducir el tamaño del bundle

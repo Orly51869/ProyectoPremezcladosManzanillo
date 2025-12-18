@@ -105,3 +105,9 @@ export const getExchangeRates = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al obtener tasas de cambio', details: error.message });
   }
 };
+
+// Exportar para poder limpiar la caché en los tests
+export const clearCurrencyCache = () => {
+    cachedRates = null;
+    lastFetchTime = 0;
+};

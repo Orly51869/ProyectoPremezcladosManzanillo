@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import { logActivity } from "../utils/auditLogger";
-
-const prisma = new PrismaClient();
+import prisma from "../lib/prisma";
 
 // Obtener todos los productos
 export const getProducts = async (req: Request, res: Response) => {

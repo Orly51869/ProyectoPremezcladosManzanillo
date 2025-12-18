@@ -1,11 +1,11 @@
 /********************************/
 /**     auditController.ts     **/
 /********************************/
-// Archivo que permite definir 
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+// Archivo que permite definir controladores para la auditoría
 
-const prisma = new PrismaClient();
+// Importaciones
+import { Request, Response } from 'express';
+import prisma from '../lib/prisma';
 
 export const getAuditLogs = async (req: Request, res: Response) => {
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];

@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { logActivity } from '../utils/auditLogger';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 
 // Helper to get Management API Token
 const getManagementToken = async () => {

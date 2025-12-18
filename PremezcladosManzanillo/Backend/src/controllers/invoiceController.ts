@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 
 // Obtener todas las facturas para el usuario autenticado (o todas si es admin)
 export const getInvoices = async (req: Request, res: Response) => {

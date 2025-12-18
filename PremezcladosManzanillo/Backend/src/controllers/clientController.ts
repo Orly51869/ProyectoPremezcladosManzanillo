@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { logActivity } from '../utils/auditLogger';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 
 // Obtener clientes según el rol del usuario
 export const getClientsByOwner = async (req: Request, res: Response) => {
