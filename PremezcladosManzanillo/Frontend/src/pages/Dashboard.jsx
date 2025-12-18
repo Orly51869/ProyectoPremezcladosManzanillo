@@ -35,6 +35,7 @@ ChartJS.register(
 );
 
 import { formatDate, formatCurrency } from "../utils/helpers";
+import CurrencyToggle from "../components/CurrencyToggle"; // Correct relative path from src/pages
 
 const Dashboard = () => {
   const { user } = useAuth0();
@@ -143,9 +144,8 @@ const Dashboard = () => {
                 <span className="font-medium">{user?.name || "Usuario"}</span>
               </p>
             </div>
-            <div className="text-left sm:text-right">
-              <p className="text-sm text-brand-text dark:text-gray-300">Panel</p>
-              <p className="text-xs text-brand-text dark:text-gray-400">Resumen ejecutivo</p>
+            <div className="text-left sm:text-right flex flex-col items-end gap-2">
+              <CurrencyToggle />
             </div>
           </div>
         </div>

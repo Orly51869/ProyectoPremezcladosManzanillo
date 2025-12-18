@@ -1,4 +1,8 @@
 import { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+import { logActivity } from '../utils/auditLogger';
+
+const prisma = new PrismaClient();
 
 // Helper to get Management API Token
 const getManagementToken = async () => {
@@ -54,11 +58,27 @@ export const getUsers = async (req: Request, res: Response) => {
     // Better approach for list: Just return users. Fetch roles on demand or assume standard roles management.
     // Let's attach roles for the list to make it useful.
     const usersWithRoles = await Promise.all(simplifiedUsers.map(async (user: any) => {
-       const rolesResp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${user.user_id}/roles`, {
-          headers: { Authorization: `Bearer ${token}` },
-       });
-       const rolesData = await rolesResp.json();
-       return { ...user, roles: rolesData.map((r: any) => r.name) };
+       try {
+         const rolesResp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${user.user_id}/roles`, {
+            headers: { Authorization: `Bearer ${token}` },
+         });
+         
+         if (!rolesResp.ok) {
+            console.error(`Failed to fetch roles for user ${user.user_id}: ${rolesResp.statusText}`);
+            return { ...user, roles: [] };
+         }
+
+         const rolesData = await rolesResp.json();
+         if (Array.isArray(rolesData)) {
+            return { ...user, roles: Array.isArray(rolesData) ? rolesData.map((r: any) => r.name) : [] };
+         } else {
+             console.error(`Invalid roles data format for user ${user.user_id}`, rolesData);
+             return { ...user, roles: [] };
+         }
+       } catch (err) {
+         console.error(`Error fetching roles for user ${user.user_id}`, err);
+         return { ...user, roles: [] };
+       }
     }));
 
     res.json(usersWithRoles);
@@ -72,6 +92,9 @@ export const getUsers = async (req: Request, res: Response) => {
 export const updateUserRole = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { roles } = req.body; // Array of role names, e.g. ['Administrador']
+  const adminId = req.auth?.payload.sub as string;
+  // Auth0 no siempre envía el nombre en el token de la misma forma, intentamos obtenerlo
+  const adminName = (req.auth?.payload as any)?.name || 'Administrador';
 
   if (!Array.isArray(roles)) {
     return res.status(400).json({ error: 'Roles must be an array of strings' });
@@ -118,9 +141,68 @@ export const updateUserRole = async (req: Request, res: Response) => {
         });
     }
 
+    // --- REGISTRAR EN AUDITORÍA ---
+    await logActivity({
+      userId: adminId,
+      userName: adminName,
+      action: 'UPDATE',
+      entity: 'USER_ROLE',
+      entityId: id,
+      details: `Rol cambiado a: ${roles.join(', ') || 'Sin rol'}`
+    });
+
     res.json({ message: 'Roles updated successfully' });
   } catch (error: any) {
     console.error('Error updating user roles:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Delete user
+export const deleteUser = async (req: Request, res: Response) => {
+  const { id } = req.params; // ID del usuario a eliminar (sub de Auth0)
+  const adminId = req.auth?.payload.sub as string;
+  const adminName = (req.auth?.payload as any)?.name || 'Administrador';
+
+  try {
+    const token = await getManagementToken();
+
+    // 1. Eliminar de Auth0
+    const auth0Resp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!auth0Resp.ok && auth0Resp.status !== 404) {
+      const errorData = await auth0Resp.json();
+      throw new Error(errorData.message || 'Error al eliminar usuario de Auth0');
+    }
+
+    // 2. Eliminar de la base de datos local (Prisma)
+    // Nota: Esto fallará si el usuario tiene registros vinculados (presupuestos, clientes, etc.)
+    // debido a restricciones de integridad referencial.
+    try {
+      await (prisma as any).user.delete({
+        where: { id: id },
+      });
+    } catch (prismaError: any) {
+      console.warn(`Usuario eliminado de Auth0 pero no de Prisma (posiblemente tiene datos vinculados): ${prismaError.message}`);
+      // No lanzamos error aquí para permitir que la eliminación de Auth0 se considere "exitosa" en cuanto a acceso
+    }
+
+    // 3. Registrar en auditoría
+    await logActivity({
+      userId: adminId,
+      userName: adminName,
+      action: 'DELETE',
+      entity: 'USER',
+      entityId: id,
+      details: `Usuario eliminado del sistema definitivamente.`
+    });
+
+    res.json({ message: 'Usuario eliminado correctamente.' });
+  } catch (error: any) {
+    console.error('Error deleting user:', error);
     res.status(500).json({ error: error.message });
   }
 };

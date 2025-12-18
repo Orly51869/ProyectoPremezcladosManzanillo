@@ -45,6 +45,9 @@ import notificationsRouter from './routes/notifications';
 import invoicesRouter from './routes/invoices'; 
 import dashboardRouter from './routes/dashboard';
 import usersRouter from './routes/users';
+import currencyRoutes from './routes/currency';
+import auditRouter from './routes/audit';
+import settingsRouter from './routes/settings';
 
 console.log('Backend: Applying express.json middleware');
 app.use(express.json());
@@ -68,6 +71,10 @@ console.log('Backend: Applying Auth middleware to /api/dashboard');
 app.use('/api/dashboard', jwtCheck, userProvisioningMiddleware, dashboardRouter);
 console.log('Backend: Applying Auth middleware to /api/users');
 app.use('/api/users', jwtCheck, userProvisioningMiddleware, usersRouter);
+app.use('/api/audit', jwtCheck, userProvisioningMiddleware, auditRouter);
+app.use('/api/settings', settingsRouter);
+console.log('Backend: Registering public endpoint /api/currency');
+app.use('/api/currency', currencyRoutes);
 
 
 console.log('Backend: Registering public endpoint /');

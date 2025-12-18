@@ -66,11 +66,25 @@ const PavementConcretesPage = () => {
     }, []);
 
     const pavementCategory = useMemo(() => {
-        const pavementProducts = allProducts.filter(p => p.category === 'Pavimento'); // Assuming 'category' field in your API response
+        const pavementProducts = allProducts.filter(p => 
+            p.category === 'Pavimento' || 
+            (p.category && typeof p.category === 'object' && p.category.name === 'Pavimento')
+        );
 
-        if (pavementProducts.length === 0 && loading === false) {
-          return null;
-        }
+        const displayProducts = pavementProducts.length > 0
+            ? pavementProducts.map(p => ({
+                id: p.id,
+                title: p.name,
+                description: p.description,
+                f_c: p.resistance,
+                imageSrc: p.image || '/assets/Carretera.png'
+              }))
+            : [
+                { id: 'pavi-vial-40', title: 'PAVI-VIAL 40', description: 'Pavimentos de tráfico ligero.', f_c: null, imageSrc: '/assets/Carretera.png' },
+                { id: 'pavi-vial-45', title: 'PAVI-VIAL 45', description: 'Calles urbanas o estacionamientos.', f_c: null, imageSrc: '/assets/Carretera.png' },
+                { id: 'pavi-vial-50', title: 'PAVI-VIAL 50', description: 'Vías de tráfico medio o pesado.', f_c: null, imageSrc: '/assets/Carretera.png' },
+                { id: 'pavi-vial-50-ft', title: 'PAVI-VIAL 50 FT', description: 'Pavimentos de alta resistencia con aditivos especiales.', f_c: null, imageSrc: '/assets/Carretera.png' },
+            ];
 
         return {
             id: 'pavimentos',
@@ -78,15 +92,9 @@ const PavementConcretesPage = () => {
             subtitle: 'Diseñados para soportar tránsito vehicular y ofrecer una superficie durable y uniforme.',
             description: 'Recomendados para calles, avenidas, patios de maniobra y zonas industriales.',
             heroImageSrc: '/assets/Concreto-Pavimento.png',
-            products: pavementProducts.map(p => ({
-              id: p.id,
-              title: p.name,
-              description: p.description,
-              f_c: p.resistance, // Assuming 'resistance' from API maps to 'f_c'
-              imageSrc: p.image || '/assets/Carretera.png' // Assuming 'image' field in API response
-            })),
+            products: displayProducts,
         };
-    }, [allProducts, loading]);
+    }, [allProducts]);
 
     if (loading) {
         return (

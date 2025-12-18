@@ -4,7 +4,7 @@ import Modal from '../../components/Modal.jsx'; // Generic Modal component
 const PaymentValidationModal = ({ onClose, onSubmit, payment }) => {
   const [status, setStatus] = useState(payment.status || 'PENDING');
   const [observations, setObservations] = useState(payment.observations || '');
-  const [proFormaInvoiceFile, setProFormaInvoiceFile] = useState(null);
+
   const [fiscalInvoiceFile, setFiscalInvoiceFile] = useState(null);
   const [deliveryOrderFile, setDeliveryOrderFile] = useState(null);
   const [errors, setErrors] = useState({});
@@ -13,7 +13,6 @@ const PaymentValidationModal = ({ onClose, onSubmit, payment }) => {
     setStatus(payment.status || 'PENDING');
     setObservations(payment.observations || '');
     // Reset file inputs when payment changes
-    setProFormaInvoiceFile(null);
     setFiscalInvoiceFile(null);
     setDeliveryOrderFile(null);
   }, [payment]);
@@ -38,7 +37,6 @@ const PaymentValidationModal = ({ onClose, onSubmit, payment }) => {
     const formData = new FormData();
     formData.append('status', status);
     formData.append('observations', observations);
-    if (proFormaInvoiceFile) formData.append('proFormaInvoice', proFormaInvoiceFile);
     if (fiscalInvoiceFile) formData.append('fiscalInvoice', fiscalInvoiceFile);
     if (deliveryOrderFile) formData.append('deliveryOrder', deliveryOrderFile);
 
@@ -79,10 +77,7 @@ const PaymentValidationModal = ({ onClose, onSubmit, payment }) => {
         {status === 'VALIDATED' && (
           <div className="space-y-3">
             <p className="font-semibold text-gray-800 dark:text-gray-100">Documentos (Opcional)</p>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Factura Proforma (PDF)</label>
-              <input type="file" accept="application/pdf" onChange={(e) => setProFormaInvoiceFile(e.target.files[0])} className="w-full text-sm dark:text-gray-300" />
-            </div>
+            {/* Factura Proforma eliminada a petición del usuario */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Factura Fiscal (PDF)</label>
               <input type="file" accept="application/pdf" onChange={(e) => setFiscalInvoiceFile(e.target.files[0])} className="w-full text-sm dark:text-gray-300" />

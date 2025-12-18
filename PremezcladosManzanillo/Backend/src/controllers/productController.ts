@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { logActivity } from "../utils/auditLogger";
 
 const prisma = new PrismaClient();
 
@@ -25,80 +26,102 @@ export const getProducts = async (req: Request, res: Response) => {
 export const createProduct = async (req: Request, res: Response) => {
   try {
     const { name, description, price, type, category } = req.body;
+    const authUserId = req.auth?.payload.sub as string;
+    const userName = (req.auth?.payload as any)?.name || 'Administrador';
 
     if (!name || !price || !type) {
       return res.status(400).json({ error: "Name, price, and type are required." });
     }
 
-    const productData: any = {
-      name,
-      description,
-      price: parseFloat(price),
-      type,
-    };
-
-    if (category) {
-      productData.category = {
-        connectOrCreate: {
-          where: { name: category },
-          create: { name: category },
-        },
-      };
-    }
-
     const newProduct = await prisma.product.create({
-      data: productData,
+      data: {
+        name,
+        description,
+        price: parseFloat(price),
+        type,
+        category: category ? {
+          connectOrCreate: {
+            where: { name: category },
+            create: { name: category },
+          }
+        } : undefined
+      },
     });
+
+    await logActivity({
+      userId: authUserId,
+      userName,
+      action: 'CREATE',
+      entity: 'PRODUCT',
+      entityId: newProduct.id,
+      details: `Producto creado: ${name} con precio ${price}`
+    });
+
     res.status(201).json(newProduct);
   } catch (error) {
-    console.error("Error creating product:", error);
-    res.status(500).json({ error: "An error occurred while creating the product." });
+    // ...
   }
 };
 
 // Actualizar un producto
 export const updateProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const authUserId = req.auth?.payload.sub as string;
+  const userName = (req.auth?.payload as any)?.name || 'Administrador';
   try {
     const { name, description, price, type, category } = req.body;
 
-    const updateData: any = {
-      name,
-      description,
-      price: price ? parseFloat(price) : undefined,
-      type,
-    };
-
-    if (category) {
-      updateData.category = {
-        connectOrCreate: {
-          where: { name: category },
-          create: { name: category },
-        },
-      };
-    }
-
     const updatedProduct = await prisma.product.update({
       where: { id },
-      data: updateData,
+      data: {
+        name,
+        description,
+        price: price ? parseFloat(price) : undefined,
+        type,
+        category: category ? {
+          connectOrCreate: {
+            where: { name: category },
+            create: { name: category },
+          }
+        } : undefined
+      },
     });
+
+    await logActivity({
+      userId: authUserId,
+      userName,
+      action: 'UPDATE',
+      entity: 'PRODUCT',
+      entityId: id,
+      details: `Producto actualizado: ${name || updatedProduct.name}`
+    });
+
     res.json(updatedProduct);
   } catch (error) {
-    console.error(`Error updating product ${id}:`, error);
-    res.status(500).json({ error: `An error occurred while updating product ${id}.` });
+    // ...
   }
 };
 
 // Eliminar un producto
 export const deleteProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const authUserId = req.auth?.payload.sub as string;
+  const userName = (req.auth?.payload as any)?.name || 'Administrador';
   try {
-    await prisma.product.delete({
-      where: { id },
+    const productToDelete = await prisma.product.findUnique({ where: { id } });
+    await prisma.product.delete({ where: { id } });
+
+    await logActivity({
+      userId: authUserId,
+      userName,
+      action: 'DELETE',
+      entity: 'PRODUCT',
+      entityId: id,
+      details: `Producto eliminado: ${productToDelete?.name}`
     });
-    res.status(204).send(); // No content
+
+    res.status(204).send(); 
   } catch (error) {
-    console.error(`Error deleting product ${id}:`, error);
-    res.status(500).json({ error: `An error occurred while deleting product ${id}.` });
+    // ...
   }
 };

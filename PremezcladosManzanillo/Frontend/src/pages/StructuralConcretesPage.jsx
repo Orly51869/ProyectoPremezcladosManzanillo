@@ -66,15 +66,30 @@ const StructuralConcretesPage = () => {
     }, []);
 
     const structuralCategory = useMemo(() => {
-        // Here, you would ideally map your fetched products to match the structure
-        // that 'productCategories' from mock data used to have.
-        // For now, let's create a simplified category based on fetched products.
-        const structuralProducts = allProducts.filter(p => p.category === 'Estructural'); // Assuming 'category' field in your API response
+        const structuralProducts = allProducts.filter(p => 
+            p.category === 'Estructural' || 
+            (p.category && typeof p.category === 'object' && p.category.name === 'Estructural')
+        );
 
-        if (structuralProducts.length === 0 && loading === false) {
-          // If no structural products are found after loading, return null or a default empty state
-          return null;
-        }
+        // Fallback al mock data si no hay productos en la DB aún
+        const displayProducts = structuralProducts.length > 0 
+            ? structuralProducts.map(p => ({
+                id: p.id,
+                title: p.name,
+                description: p.description,
+                f_c: p.resistance,
+                imageSrc: p.image || '/assets/Concreto.png'
+              }))
+            : [
+                { id: 'c-100', title: 'Concreto 100 kg/cm²', description: 'Ideal para obras livianas o no estructurales.', f_c: '100 kg/cm²', imageSrc: '/assets/Concreto.png' },
+                { id: 'c-120', title: 'Concreto 120 kg/cm²', description: 'Para cimentaciones o pisos de baja carga.', f_c: '120 kg/cm²', imageSrc: '/assets/Concreto.png' },
+                { id: 'c-150', title: 'Concreto 150 kg/cm²', description: 'Recomendado para estructuras ligeras o muros.', f_c: '150 kg/cm²', imageSrc: '/assets/Concreto.png' },
+                { id: 'c-210', title: 'Concreto 210 kg/cm²', description: 'Uso general en estructuras residenciales y comerciales.', f_c: '210 kg/cm²', imageSrc: '/assets/Concreto.png' },
+                { id: 'c-250', title: 'Concreto 250 kg/cm²', description: 'Excelente equilibrio entre resistencia y trabajabilidad.', f_c: '250 kg/cm²', imageSrc: '/assets/Concreto.png' },
+                { id: 'c-280', title: 'Concreto 280 kg/cm²', description: 'Ideal para estructuras de mayor exigencia.', f_c: '280 kg/cm²', imageSrc: '/assets/Concreto.png' },
+                { id: 'c-300', title: 'Concreto 300 kg/cm²', description: 'Para proyectos industriales o de alta carga.', f_c: '300 kg/cm²', imageSrc: '/assets/Concreto.png' },
+                { id: 'c-350', title: 'Concreto 350 kg/cm²', description: 'Máxima resistencia para aplicaciones especiales.', f_c: '350 kg/cm²', imageSrc: '/assets/Concreto.png' },
+            ];
 
         return {
             id: 'estructurales',
@@ -82,15 +97,9 @@ const StructuralConcretesPage = () => {
             subtitle: 'Desarrollados para ofrecer alta resistencia y desempeño confiable en elementos como columnas, vigas, losas y fundaciones.',
             description: 'Disponibles en diferentes grados según las exigencias del proyecto. (Disponible con asentamiento normal 5” o con bomba 7”, según el método de colocación requerido).',
             heroImageSrc: '/assets/Concreto.png',
-            products: structuralProducts.map(p => ({
-              id: p.id,
-              title: p.name,
-              description: p.description,
-              f_c: p.resistance, // Assuming 'resistance' from API maps to 'f_c'
-              imageSrc: p.image || '/assets/Concreto.png' // Assuming 'image' field in API response
-            })),
+            products: displayProducts,
         };
-    }, [allProducts, loading]);
+    }, [allProducts]);
 
     if (loading) {
         return (

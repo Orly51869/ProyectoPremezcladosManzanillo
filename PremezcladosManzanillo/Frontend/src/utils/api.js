@@ -58,4 +58,14 @@ export const getRecentActivity = async () => {
   }
 };
 
+export const getExchangeRates = async () => {
+  try {
+    const response = await api.get("/api/currency/rates");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching exchange rates:", error);
+    return null;
+  }
+};
+
 export default api;

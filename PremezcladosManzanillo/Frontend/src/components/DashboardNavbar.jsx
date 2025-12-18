@@ -1,19 +1,37 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { motion } from "framer-motion";
-import { Home, Users, FileText, BarChart3, Settings, Menu, X, Sun, Moon, LogOut, Package } from "lucide-react";
-import NotificationBell from "./NotificationBell"; // Import NotificationBell
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  LayoutDashboard, 
+  Users, 
+  FileSpreadsheet, 
+  Package, 
+  CreditCard, 
+  Receipt, 
+  PieChart, 
+  UserCog, 
+  Settings, 
+  Menu, 
+  X, 
+  Sun, 
+  Moon, 
+  LogOut, 
+  Bell,
+  ChevronDown,
+  Palette
+} from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const DashboardNavbar = () => {
   const { user, logout } = useAuth0();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   // Obtener roles del usuario desde Auth0
   const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
 
-  // --- Dark Mode Logic (sin cambios) ---
+  // Logic para modo oscuro
   const [theme, setTheme] = useState(
     localStorage.getItem('theme') ||
     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
@@ -26,43 +44,23 @@ const DashboardNavbar = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // --- DEBUGGING FLAG ---
-  // Este useEffect se ejecuta cuando el objeto 'user' está disponible y muestra su contenido.
-  useEffect(() => {
-    if (user) {
-      console.log("--- Auth0 User Data ---");
-      console.log(user);
-      const roles = user['https://premezcladomanzanillo.com/roles'] || [];
-      console.log("--- User Roles ---");
-      console.log(roles);
-      console.log("--------------------");
-    }
-  }, [user]);
-  // --- END DEBUGGING FLAG ---
-
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   const navItems = [
-    { path: "/dashboard", icon: Home, label: "Panel", requiredRoles: ["Administrador"] },
-    { path: "/clients", icon: Users, label: "Clientes", requiredRoles: ["Administrador", "Comercial", "Usuario"] },
-    { path: "/budgets", icon: FileText, label: "Presupuestos", requiredRoles: ["Administrador", "Comercial", "Usuario"] },
-    { path: "/products-management", icon: Package, label: "Productos", requiredRoles: ["Administrador", "Contable"] },
-    { path: "/payments", icon: FileText, label: "Comprobantes", requiredRoles: ["Administrador", "Contable", "Usuario"] },
-    { path: "/invoices", icon: FileText, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Usuario"] }, // New Invoices Link
-    { path: "/reports", icon: BarChart3, label: "Reportes", requiredRoles: ["Administrador", "Contable"] },
-    { path: "/admin/roles", icon: Users, label: "Roles", requiredRoles: ["Administrador"] }, // Gestión de Roles
-    { path: "/settings", icon: Settings, label: "Configuración", requiredRoles: ["Administrador"] },
+    { path: "/clients", icon: Users, label: "Clientes", requiredRoles: ["Administrador", "Comercial", "Contable"] },
+    { path: "/budgets", icon: FileSpreadsheet, label: "Presupuestos", requiredRoles: ["Administrador", "Comercial", "Contable", "Usuario"] },
+    { path: "/products-management", icon: Package, label: "Productos", requiredRoles: ["Administrador", "Comercial", "Contable"] },
+    { path: "/payments", icon: CreditCard, label: "Comprobantes", requiredRoles: ["Administrador", "Contable", "Comercial", "Usuario"] },
+    { path: "/invoices", icon: Receipt, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Usuario"] },
+    { path: "/customize", icon: Palette, label: "Personalizar", requiredRoles: ["Administrador", "Comercial"] },
+    { path: "/reports", icon: PieChart, label: "Reportes", requiredRoles: ["Administrador", "Contable"] },
+    { path: "/admin/roles", icon: UserCog, label: "Roles", requiredRoles: ["Administrador"] },
   ];
 
-  // Filtrar navItems basado en los roles del usuario
   const availableNavItems = navItems.filter(item => {
-    // Si no se requieren roles, el item es visible para todos.
-    if (!item.requiredRoles || item.requiredRoles.length === 0) {
-      return true;
-    }
-    // Si se requieren roles, verifica si el usuario tiene al menos uno de ellos.
+    if (!item.requiredRoles || item.requiredRoles.length === 0) return true;
     return userRoles.some(userRole => item.requiredRoles.includes(userRole));
   });
 
@@ -70,35 +68,26 @@ const DashboardNavbar = () => {
     <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed w-full top-0 z-50 bg-white/90 dark:bg-dark-surface backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm"
+      className="fixed w-full top-0 z-50 bg-white/90 dark:bg-dark-primary backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm"
     >
-      <div className="w-full px-4">
-        <div className="flex items-center py-0 flex-wrap md:flex-nowrap">
-          <Link to="/" className="flex items-center ml-0">
-            <div className="w-20 h-20 md:w-20 md:h-20 flex items-center justify-center">
-              <img
-                src={"/assets/LOGO_PREMEZCLADOS.svg"}
-                alt="Logo Premezclados"
-                className="w-full h-full object-contain"
-              />
+      <div className="max-w-[1920px] mx-auto px-4 lg:px-6">
+        <div className="flex items-center h-20 justify-between">
+          
+          {/* Logo */}
+          <Link to="/" className="flex items-center flex-shrink-0 mr-4">
+            <img
+              src="/assets/LOGO_PREMEZCLADOS.svg"
+              alt="Logo"
+              className="w-14 h-14 md:w-16 md:h-16 object-contain"
+            />
+            <div className="hidden xl:block ml-2 leading-tight">
+              <span className="text-base font-bold text-gray-900 dark:text-white block">Premezclado</span>
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block">Manzanillo, C.A.</span>
             </div>
-            <span className="ml-1 hidden md:block whitespace-nowrap leading-tight">
-              <span className="text-base font-bold text-gray-900 dark:text-gray-100 block">Premezclado</span>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300 block">Manzanillo, C.A.</span>
-            </span>
           </Link>
 
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 rounded-lg text-brand-mid"
-          >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-
-          {/* Contenedor de Navegación */}
-          <div
-            className={`md:flex ${isOpen ? "flex" : "hidden"} md:items-center md:gap-2 md:ml-3 md:mr-4 absolute md:static top-full left-0 w-full md:w-auto md:flex-1 md:min-w-0 md:justify-end bg-white md:bg-transparent md:border-none border-t md:shadow-none shadow-sm z-10 overflow-hidden md:overflow-visible md:pr-2 lg:pr-3 xl:pr-4`}
-          >
+          {/* Nav Items */}
+          <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
             {availableNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -106,67 +95,131 @@ const DashboardNavbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 h-10 rounded-lg transition-all duration-300 ease-in-out transform min-w-0 ${isActive ? "bg-brand-primary text-white dark:bg-dark-btn dark:text-white" : "text-brand-text dark:text-gray-300 hover:bg-brand-primary hover:text-white hover:scale-105 dark:hover:bg-dark-btn dark:hover:text-white dark:hover:scale-105"}`}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${
+                    isActive 
+                      ? "bg-brand-primary text-white dark:bg-dark-btn dark:text-white" 
+                      : "text-gray-600 dark:text-gray-300 hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn"
+                  }`}
                   title={item.label}
-                  onClick={() => setIsOpen(false)}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="hidden lg:inline text-xs md:text-sm font-medium whitespace-nowrap truncate">{item.label}</span>
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm font-semibold whitespace-nowrap">{item.label}</span>
                 </Link>
               );
             })}
           </div>
 
-          {/* Perfil de Usuario y Logout */}
-          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+          {/* Utilidades (Derecha) */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            
+            {/* Dark Mode */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-primary transition-colors border border-transparent"
+              title="Alternar Tema"
+            >
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
+
+            {/* Mobile menu trigger */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+
+            {/* User Dropdown (Plan B Agrupado) */}
             {user && (
-              <div className="user-profile">
-                {user.picture ? (
-                  <img
-                  src={user.picture}
-                  alt={user.name ? user.name.split(' ')[0] : 'Usuario'}
-                  className="user-avatar"
-                  referrerPolicy="no-referrer"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                ) : (
-                  <div className="user-avatar-placeholder">
-                    <span>{user.name ? user.name.split(' ')[0].charAt(0).toUpperCase() : 'U'}</span>
+              <div className="relative group ml-1">
+                <button className="flex items-center p-1 rounded-full hover:bg-gray-100 dark:hover:bg-dark-primary border border-transparent transition-all">
+                  {/* Foto de Perfil / Avatar con FIX */}
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-brand-light flex items-center justify-center shadow-sm">
+                    {user.picture && !imgError ? (
+                      <img 
+                        src={user.picture} 
+                        alt="" 
+                        className="w-full h-full object-cover"
+                        onError={() => setImgError(true)}
+                      />
+                    ) : (
+                      <span className="text-brand-primary font-bold text-lg">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </span>
+                    )}
                   </div>
-                )}
-                <div className="hidden md:block">
-                  <p className="user-name">{user.name ? user.name.split(' ')[0] : 'Usuario'}</p>
-                  <p
-                    className="hidden 2xl:block text-[11px] text-gray-500 dark:text-gray-400 max-w-[120px] truncate"
-                    title={user.email}
-                  >
-                    {user.email}
-                  </p>
+                </button>
+
+                {/* Dropdown Box */}
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-dark-surface rounded-xl shadow-2xl border border-gray-100 dark:border-gray-800 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-50">
+                  
+                  <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 mb-1">
+                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                  </div>
+
+                  <div className="px-1">
+                    <Link to="/dashboard" className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 rounded-lg hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn transition-colors">
+                      <LayoutDashboard className="w-4 h-4" />
+                      <span>Panel Principal</span>
+                    </Link>
+
+                    {userRoles.includes("Administrador") && (
+                      <Link to="/settings" className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 rounded-lg hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn transition-colors">
+                        <Settings className="w-4 h-4" />
+                        <span>Configuración</span>
+                      </Link>
+                    )}
+
+                    <Link to="/notifications" className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 rounded-lg hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn transition-colors">
+                      <Bell className="w-4 h-4" />
+                      <span>Notificaciones</span>
+                    </Link>
+                  </div>
+
+                  <div className="my-1 border-t border-gray-100 dark:border-gray-800"></div>
+
+                  <div className="px-1">
+                    <button
+                      onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Cerrar Sesión</span>
+                    </button>
+                  </div>
                 </div>
+
               </div>
             )}
-            <NotificationBell />
-            <button
-              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-              aria-label="Cerrar sesión"
-              className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center justify-center"
-            >
-              <LogOut className="w-5 h-5 md:w-6 md:h-6" />
-            </button>
           </div>
-
-          {/* Botón de Dark/Light Mode */}
-          <button
-            onClick={toggleTheme}
-            aria-label={`Cambiar a modo ${theme === 'light' ? 'oscuro' : 'claro'}`}
-            className="p-2 ml-4 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition border-none flex-shrink-0 flex items-center justify-center"
-          >
-            {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-          </button>
         </div>
+
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="md:hidden overflow-hidden bg-white dark:bg-dark-surface border-t border-gray-100 dark:border-gray-800"
+            >
+              <div className="flex flex-col p-4 space-y-1">
+                {availableNavItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="flex items-center gap-4 p-4 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-primary font-bold"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <item.icon className="w-6 h-6" />
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.nav>
   );

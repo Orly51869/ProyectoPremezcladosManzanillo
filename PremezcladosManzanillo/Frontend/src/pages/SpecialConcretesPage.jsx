@@ -106,11 +106,23 @@ const SpecialConcretesPage = () => {
     }, []);
 
     const specialCategory = useMemo(() => {
-        const specialProducts = allProducts.filter(p => p.category === 'Especial'); // Assuming 'category' field in your API response
+        const specialProducts = allProducts.filter(p => 
+            p.category === 'Especial' || 
+            (p.category && typeof p.category === 'object' && p.category.name === 'Especial')
+        );
 
-        if (specialProducts.length === 0 && loading === false) {
-          return null;
-        }
+        const displayProducts = specialProducts.length > 0
+            ? specialProducts.map(p => ({
+                id: p.id,
+                title: p.name,
+                description: p.description,
+                f_c: p.resistance,
+                imageSrc: p.image || '/assets/Bloques.png'
+              }))
+            : [
+                { id: 'relleno-fluido-10', title: 'Relleno Fluido 10 kg/cm²', description: 'Ideal para relleno de ductos, zanjas o huecos.', f_c: '10 kg/cm²', imageSrc: '/assets/Bloques.png' },
+                { id: 'relleno-fluido-20', title: 'Relleno Fluido 20 kg/cm²', description: 'Mayor resistencia para rellenos estructurales o áreas de difícil acceso.', f_c: '20 kg/cm²', imageSrc: '/assets/Bloques.png' },
+            ];
 
         return {
             id: 'especiales',
@@ -118,15 +130,9 @@ const SpecialConcretesPage = () => {
             subtitle: 'Formulados para aplicaciones con requerimientos específicos, donde se necesita una mezcla fluida, de fácil colocación y sin necesidad de vibrado.',
             description: 'Facilitan el trabajo, reducen tiempos de colocación y mejoran la compactación.',
             heroImageSrc: '/assets/Edificio.png',
-            products: specialProducts.map(p => ({
-              id: p.id,
-              title: p.name,
-              description: p.description,
-              f_c: p.resistance, // Assuming 'resistance' from API maps to 'f_c'
-              imageSrc: p.image || '/assets/Bloques.png' // Assuming 'image' field in API response
-            })),
+            products: displayProducts,
         };
-    }, [allProducts, loading]);
+    }, [allProducts]);
 
     // For aditivosAdicionales, we can either fetch them from a separate endpoint or define them directly here
     // For now, let's define a placeholder for aditivosAdicionales

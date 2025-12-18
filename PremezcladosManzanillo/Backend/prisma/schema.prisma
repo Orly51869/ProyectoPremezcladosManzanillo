@@ -202,3 +202,26 @@ model Invoice {
   paymentId String  @unique
 }
 
+// Model for tracking user activities and administrative changes
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  userName  String?
+  action    String   // e.g., "CREATE", "UPDATE", "DELETE", "LOGIN", "ROLE_CHANGE"
+  entity    String   // e.g., "BUDGET", "CLIENT", "PAYMENT", "USER_ROLE"
+  entityId  String?
+  details   String?  // JSON string with more info
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Model for dynamic application settings (backgrounds, titles, etc.)
+model Setting {
+  key       String   @id
+  value     String
+  type      String   @default("text") // text, image, color, etc.
+  updatedAt DateTime @updatedAt
+}

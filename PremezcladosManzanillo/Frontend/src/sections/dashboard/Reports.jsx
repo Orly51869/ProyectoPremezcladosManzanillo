@@ -13,10 +13,16 @@ import { useAuth0 } from '@auth0/auth0-react'; // Import useAuth0 if user detail
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+import { generateReportPDF } from '../../utils/reportGenerator';
 import { formatCurrency } from '../../utils/helpers';
 
 const Reports = () => {
-  const { isAuthenticated, user } = useAuth0(); // Use Auth0 to check for admin role if needed
+  const { isAuthenticated, user } = useAuth0();
+  const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+  const primaryRole = userRoles.includes('Administrador') ? 'Administrador' : 
+                      userRoles.includes('Contable') ? 'Contable' :
+                      userRoles.includes('Comercial') ? 'Comercial' : 'Usuario';
+
   const [reportStats, setReportStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -64,9 +70,11 @@ const Reports = () => {
   }), []);
 
   const handleExport = (format) => {
-    alert(`Exportando reportes en ${format.toUpperCase()}... (simulado)`);
-    // Aquí se implementaría la lógica real para exportar datos,
-    // posiblemente llamando a un endpoint del backend que genere el reporte.
+    if (format === 'pdf') {
+      generateReportPDF(null, reportStats, primaryRole, user?.name || 'Usuario');
+    } else {
+      alert(`Exportación en ${format.toUpperCase()} no disponible por el momento.`);
+    }
   };
 
   if (loading) {

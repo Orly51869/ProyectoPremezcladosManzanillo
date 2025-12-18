@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { logActivity } from '../utils/auditLogger';
 
 const prisma = new PrismaClient();
 
@@ -41,6 +42,7 @@ export const getClientsByOwner = async (req: Request, res: Response) => {
 // Crear un nuevo cliente
 export const createClient = async (req: Request, res: Response) => {
   const ownerId = req.auth?.payload.sub;
+  const userName = (req.auth?.payload as any)?.name || 'Usuario';
   if (!ownerId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
@@ -62,6 +64,16 @@ export const createClient = async (req: Request, res: Response) => {
         owner: { connect: { id: ownerId } },
       },
     });
+
+    await logActivity({
+      userId: ownerId,
+      userName,
+      action: 'CREATE',
+      entity: 'CLIENT',
+      entityId: newClient.id,
+      details: `Cliente creado: ${name}`
+    });
+
     res.status(201).json(newClient);
   } catch (error: any) {
     if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
@@ -76,7 +88,8 @@ export const createClient = async (req: Request, res: Response) => {
 export const updateClient = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name, email, phone, address } = req.body;
-  const authUserId = req.auth?.payload.sub;
+  const authUserId = req.auth?.payload.sub as string;
+  const userName = (req.auth?.payload as any)?.name || 'Usuario';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) {
@@ -133,6 +146,16 @@ export const updateClient = async (req: Request, res: Response) => {
         address,
       },
     });
+
+    await logActivity({
+      userId: authUserId,
+      userName,
+      action: 'UPDATE',
+      entity: 'CLIENT',
+      entityId: id,
+      details: `Cliente actualizado: ${name}`
+    });
+
     res.status(200).json(updatedClient);
   } catch (error) {
     console.error(`Error updating client with ID ${id}:`, error);
@@ -145,6 +168,7 @@ export const deleteClient = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub;
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
+  const userName = (req.auth?.payload as any)?.name || 'Usuario';
 
   if (!authUserId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
@@ -238,6 +262,15 @@ export const deleteClient = async (req: Request, res: Response) => {
       await tx.client.delete({
         where: { id: id },
       });
+    });
+
+    await logActivity({
+      userId: authUserId as string,
+      userName: userName,
+      action: 'DELETE',
+      entity: 'CLIENT',
+      entityId: id,
+      details: `Cliente eliminado: ${existingClient.name}`
     });
 
     res.status(204).send(); // No content for successful deletion

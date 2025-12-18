@@ -1,14 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ContentCard from '../../components/ContentCard.jsx'; 
 import { Link } from 'react-router-dom';
 
-// Se puede importar directamente la data para los títulos, pero por simplicidad de la sección Home, definimos tarjetas enfocadas en la categoría.
-const productCategoriesCards = [
+const ProductsSection = () => {
+  const [productCategoriesCards, setProductCategoriesCards] = useState([
     { 
         id: 'estructurales', 
         title: "Concretos Estructurales", 
         description: "Mezclas de alta resistencia para cimentaciones, columnas y losas.", 
-        imgSrc: "/assets/Concreto.png" // Reutilizar la imagen del concreto
+        imgSrc: "/assets/Concreto.png" 
     },
     { 
         id: 'pavimentos', 
@@ -22,12 +22,22 @@ const productCategoriesCards = [
         description: "Rellenos fluidos y mezclas autocompactables para aplicaciones específicas.", 
         imgSrc: "/assets/Edificio.png"
     }    
-];
+  ]);
 
-const ProductsSection = () => {
+  useEffect(() => {
+    const API_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:3001';
+    fetch(`${API_URL}/api/settings`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.products_config) {
+           try { setProductCategoriesCards(JSON.parse(data.products_config)); } catch(e) { console.error(e); }
+        }
+      });
+  }, []);
+
   return (
     <section id="productos" className="py-12">
-      <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8 text-center">Nuestros Productos Destacados</h2>
+      <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-10 text-center">Nuestros Productos Destacados</h2>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Enlaces dinámicos a cada categoría de producto */}

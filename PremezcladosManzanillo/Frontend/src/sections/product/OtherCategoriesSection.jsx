@@ -24,8 +24,8 @@ const OtherCategoriesSection = ({ currentCategoryId }) => {
                     >
                         <ContentCard 
                             title={category.title}
-                            description={category.subtitle} // Using subtitle as description for the card
-                            imgSrc={category.heroImageSrc} // Using heroImageSrc as imgSrc
+                            description={category.subtitle} 
+                            imgSrc={category.heroImageSrc} 
                         />
                     </Link>
                 ))}

@@ -10,6 +10,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
+import { CurrencyProvider } from "./context/CurrencyContext";
 
 // Importación de páginas y componentes
 import HomepageNavbar from "./components/HomepageNavbar.jsx";
@@ -20,6 +21,8 @@ import ProductsPage from "./pages/ProductsPage.jsx"; // Importar la nueva págin
 import PaymentsPage from "./pages/PaymentsPage.jsx";
 import InvoicesPage from "./pages/InvoicesPage.jsx"; // Importar la nueva página de facturas
 import AdminRolesPage from "./pages/AdminRolesPage.jsx"; // Importar la nueva página de gestión de roles
+import NotificationsPage from "./pages/NotificationsPage.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import Reports from "./sections/dashboard/Reports.jsx";
 import Settings from "./sections/dashboard/Settings.jsx";
 import HomePage from "./pages/HomePage.jsx";
@@ -38,6 +41,7 @@ import DashboardLayout from "./layouts/DashboardLayout.jsx";
 import AuthenticatedApiProvider from "./components/AuthenticatedApiProvider.jsx"; // Importar el nuevo provider
 import ChatWidget from "./components/ChatWidget.jsx";
 import ScrollToTop from "./components/ScrollToTop";
+import CustomizationPage from "./pages/CustomizationPage.jsx";
 
 // Componente para manejar el scroll a las anclas (sin cambios)
 const ScrollToAnchor = () => {
@@ -96,43 +100,47 @@ const App = () => {
   }
 
   return (
-    <Router>
-      <ScrollToTop />
-      <ScrollToAnchor />
-      <ChatWidget />
-      <Routes>
-        {/* Rutas Públicas */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/productos" element={<ProductsCatalogPage />} />
-        <Route path="/productos/estructurales" element={<StructuralConcretesPage />} />
-        <Route path="/productos/pavimentos" element={<PavementConcretesPage />} />
-        <Route path="/productos/especiales" element={<SpecialConcretesPage />} />
-        <Route path="/productos/:productId" element={<ProductDetailPage />} />
-        <Route path="/servicios" element={<ServicesPage />} />
-        <Route path="/nosotros" element={<AboutPage />} />
-        <Route path="/contacto" element={<ContactPage />} />
-        <Route path="/proyectos" element={<ProjectsPage />} />
-        
-
-        {/* Rutas Protegidas */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AuthenticatedApiProvider />}> {/* AuthenticatedApiProvider ahora renderiza un Outlet */}
-            <Route element={<DashboardLayout />}> {/* DashboardLayout envuelve las páginas del dashboard */}
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/clients" element={<ClientsPage />} />
-              <Route path="/budgets/*" element={<BudgetsPage />} />
-              <Route path="/dashboard/budgets/build/:id" element={<BudgetBuilderPage />} />
-              <Route path="/products-management" element={<ProductsPage />} />
-              <Route path="/payments" element={<PaymentsPage />} />
-              <Route path="/invoices" element={<InvoicesPage />} /> {/* Nueva ruta para la página de facturas */}
-              <Route path="/admin/roles" element={<AdminRolesPage />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/settings" element={<Settings />} />
+    <CurrencyProvider>
+      <Router>
+        <ScrollToTop />
+        <ScrollToAnchor />
+        <ChatWidget />
+        <Routes>
+          {/* Rutas Públicas */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/productos" element={<ProductsCatalogPage />} />
+          <Route path="/productos/estructurales" element={<StructuralConcretesPage />} />
+          <Route path="/productos/pavimentos" element={<PavementConcretesPage />} />
+          <Route path="/productos/especiales" element={<SpecialConcretesPage />} />
+          <Route path="/productos/:productId" element={<ProductDetailPage />} />
+          <Route path="/servicios" element={<ServicesPage />} />
+          <Route path="/nosotros" element={<AboutPage />} />
+          <Route path="/contacto" element={<ContactPage />} />
+          <Route path="/proyectos" element={<ProjectsPage />} />
+          
+  
+          {/* Rutas Protegidas */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AuthenticatedApiProvider />}> {/* AuthenticatedApiProvider ahora renderiza un Outlet */}
+              <Route element={<DashboardLayout />}> {/* DashboardLayout envuelve las páginas del dashboard */}
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/clients" element={<ClientsPage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/budgets/*" element={<BudgetsPage />} />
+                <Route path="/dashboard/budgets/build/:id" element={<BudgetBuilderPage />} />
+                <Route path="/products-management" element={<ProductsPage />} />
+                <Route path="/payments" element={<PaymentsPage />} />
+                <Route path="/invoices" element={<InvoicesPage />} /> {/* Nueva ruta para la página de facturas */}
+                <Route path="/admin/roles" element={<AdminRolesPage />} />
+                <Route path="/customize" element={<CustomizationPage />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/settings" element={<Settings />} />
+              </Route>
             </Route>
           </Route>
-        </Route>
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
+    </CurrencyProvider>
   );
 };
 
