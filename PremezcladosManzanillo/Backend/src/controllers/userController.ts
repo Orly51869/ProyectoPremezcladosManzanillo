@@ -20,124 +20,151 @@ const getManagementToken = async () => {
   return data.access_token;
 };
 
-// Get all users
+// Get all users with roles efficiently
 export const getUsers = async (req: Request, res: Response) => {
   try {
     const token = await getManagementToken();
-    const response = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users?q=identities.connection:"Username-Password-Authentication" OR identities.connection:"google-oauth2"&search_engine=v3`, {
+    
+    // 1. Obtener lista base de usuarios
+    const usersResp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users?q=identities.connection:"Username-Password-Authentication" OR identities.connection:"google-oauth2"&search_engine=v3`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (!response.ok) throw new Error('Failed to fetch users from Auth0');
-    const users = await response.json();
+    if (!usersResp.ok) throw new Error('Failed to fetch users from Auth0');
+    const auth0Users = await usersResp.json();
     
-    // Simplificar respuesta
-    const simplifiedUsers = users.map((u: any) => ({
-      user_id: u.user_id,
-      email: u.email,
-      name: u.name,
-      picture: u.picture,
-      logins_count: u.logins_count,
-      last_login: u.last_login,
-      roles: [] // Los roles se obtienen por separado o s e asume que están en app_metadata. 
-               // Nota: Auth0 no devuelve roles en la lista de usuarios por defecto sin una llamada extra o incluir 'app_metadata' si ahí se guardan.
-               // Para obtener roles reales, habría que consultar /users/{id}/roles para cada uno, lo cual es lento.
-               // Estrategia alternativa: Obtener todos los roles y sus usuarios asignados?
-               // Por simplicidad inicial: Dejar roles vacíos o intentar leer de app_metadata si están ahí.
-               // Si usamos la Authorization Core, necesitamos llamar a getUserRoles.
+    // 2. Obtener todos los roles disponibles
+    const rolesResp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/roles`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const allRoles = await rolesResp.json();
+
+    // 3. Para cada rol, obtener sus integrantes (Esto es mucho más eficiente que ir usuario por usuario)
+    const roleAssignments: { [key: string]: string[] } = {}; // { 'rol_id': ['user_id1', 'user_id2'] }
+    
+    await Promise.all(allRoles.map(async (role: any) => {
+      const resp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/roles/${role.id}/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resp.ok) {
+        const usersInRole = await resp.json();
+        roleAssignments[role.name] = usersInRole.map((u: any) => u.user_id);
+      }
     }));
 
-    // Optimización: Obtener roles para cada usuario (limitado a N usuarios o hacerlo en paralelo)
-    // O mejor, dejemos que el frontend pida los detalles si es necesario, o carguemos roles aquí.
-    // Para esta versión v1, vamos a intentar obtener los roles de un usuario específico cuando se edite,
-    // pero para la lista, quizás sea pesado.
-    // Vamos a intentar obtener los roles de cada usuario en paralelo (cuidado con rate limits).
-    
-    // Better approach for list: Just return users. Fetch roles on demand or assume standard roles management.
-    // Let's attach roles for the list to make it useful.
-    const usersWithRoles = await Promise.all(simplifiedUsers.map(async (user: any) => {
-       try {
-         const rolesResp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${user.user_id}/roles`, {
-            headers: { Authorization: `Bearer ${token}` },
-         });
-         
-         if (!rolesResp.ok) {
-            console.error(`Failed to fetch roles for user ${user.user_id}: ${rolesResp.statusText}`);
-            return { ...user, roles: [] };
-         }
+    // 4. Mapear los roles de vuelta a cada usuario
+    const usersWithRoles = auth0Users.map((u: any) => {
+      // Prioridad 1: app_metadata (es instantáneo)
+      // Prioridad 2: Asignación por Rol (el mapeo que hicimos arriba)
+      const rolesFromMetadata = u.app_metadata?.roles || [];
+      const rolesFromMapping = allRoles
+        .filter((role: any) => roleAssignments[role.name]?.includes(u.user_id))
+        .map((role: any) => role.name);
 
-         const rolesData = await rolesResp.json();
-         if (Array.isArray(rolesData)) {
-            return { ...user, roles: Array.isArray(rolesData) ? rolesData.map((r: any) => r.name) : [] };
-         } else {
-             console.error(`Invalid roles data format for user ${user.user_id}`, rolesData);
-             return { ...user, roles: [] };
-         }
-       } catch (err) {
-         console.error(`Error fetching roles for user ${user.user_id}`, err);
-         return { ...user, roles: [] };
-       }
-    }));
+      // Combinar y eliminar duplicados
+      const userRoles = [...new Set([...rolesFromMetadata, ...rolesFromMapping])];
+
+      return {
+        user_id: u.user_id,
+        email: u.email,
+        name: u.name,
+        picture: u.picture,
+        logins_count: u.logins_count,
+        last_login: u.last_login,
+        roles: userRoles.length > 0 ? userRoles : [],
+      };
+    });
 
     res.json(usersWithRoles);
   } catch (error: any) {
-    console.error('Error fetching users:', error);
+    console.error('Error fetching users with robust roles mapping:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
-// Update user role
+// Update user role with high reliability
 export const updateUserRole = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { roles } = req.body; // Array of role names, e.g. ['Administrador']
+  const { roles: roleNames } = req.body; 
   const adminId = req.auth?.payload.sub as string;
-  // Auth0 no siempre envía el nombre en el token de la misma forma, intentamos obtenerlo
   const adminName = (req.auth?.payload as any)?.name || 'Administrador';
 
-  if (!Array.isArray(roles)) {
+  if (!Array.isArray(roleNames)) {
     return res.status(400).json({ error: 'Roles must be an array of strings' });
   }
 
   try {
     const token = await getManagementToken();
     
-    // 1. Get all available roles to map names to IDs
-    const rolesResp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/roles`, {
+    // 1. Obtener el catálogo oficial de roles de Auth0
+    const allRolesResp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/roles`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const allRoles = await rolesResp.json();
-    const roleIdsToAdd = allRoles.filter((r: any) => roles.includes(r.name)).map((r: any) => r.id);
+    const auth0Catalog = await allRolesResp.json();
 
-    // 2. Clear existing roles first (optional, but ensures strict set)
-    // First get current user roles
+    // 2. Mapear nombres a IDs (Solo los que existan en Auth0)
+    const roleIdsToAssign = auth0Catalog
+      .filter((r: any) => roleNames.includes(r.name))
+      .map((r: any) => r.id);
+
+    console.log(`[Auth0 Sync] Asignando roles: ${roleNames.join(', ')} -> IDs: ${roleIdsToAssign.join(', ')}`);
+
+    // 3. Obtener roles actuales del usuario para borrarlos
     const currentRolesResp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${id}/roles`, {
-        headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
     const currentRoles = await currentRolesResp.json();
-    const roleIdsToRemove = currentRoles.map((r: any) => r.id);
+    const roleIdsToDelete = currentRoles.map((r: any) => r.id);
 
-    if (roleIdsToRemove.length > 0) {
-        await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${id}/roles`, {
-            method: 'DELETE',
-            headers: { 
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ roles: roleIdsToRemove }),
-        });
+    console.log(`[Auth0 Sync] Borrando ${roleIdsToDelete.length} roles previos.`);
+
+    // 4. LIMPIEZA: Eliminar roles viejos
+    if (roleIdsToDelete.length > 0) {
+      const delResp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${id}/roles`, {
+        method: 'DELETE',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ roles: roleIdsToDelete }),
+      });
+      if (!delResp.ok) {
+        const errData = await delResp.json();
+        console.error('[Auth0 Error Delete]', errData);
+        throw new Error('Error al limpiar roles previos en Auth0');
+      }
     }
 
-    // 3. Assign new roles
-    if (roleIdsToAdd.length > 0) {
-        await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${id}/roles`, {
-            method: 'POST',
-            headers: { 
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ roles: roleIdsToAdd }),
-        });
+    // 5. ASIGNACIÓN: Poner los nuevos roles
+    if (roleIdsToAssign.length > 0) {
+      const addResp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${id}/roles`, {
+        method: 'POST',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ roles: roleIdsToAssign }),
+      });
+      if (!addResp.ok) {
+        const errData = await addResp.json();
+        console.error('[Auth0 Error Post]', errData);
+        throw new Error('Error al asignar nuevos roles en Auth0');
+      }
     }
+
+    // 6. REDUNDANCIA: Guardar roles en app_metadata para acceso rápido e inmediato
+    await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${id}`, {
+      method: 'PATCH',
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        app_metadata: { roles: roleNames }
+      }),
+    });
+
+    console.log('[Auth0 Sync] Operación completada con éxito (Roles + Metadata).');
 
     // --- REGISTRAR EN AUDITORÍA ---
     await logActivity({
@@ -146,13 +173,13 @@ export const updateUserRole = async (req: Request, res: Response) => {
       action: 'UPDATE',
       entity: 'USER_ROLE',
       entityId: id,
-      details: `Rol cambiado a: ${roles.join(', ') || 'Sin rol'}`
+      details: `Rol actualizado a: ${roleNames.join(', ') || 'Sin rol'} (Force Sync OK)`
     });
 
-    res.json({ message: 'Roles updated successfully' });
+    res.json({ message: 'Roles actualizados exitosamente en Auth0 y Auditoría.' });
   } catch (error: any) {
-    console.error('Error updating user roles:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error crítico actualizando roles:', error);
+    res.status(500).json({ error: `No se pudo sincronizar con Auth0: ${error.message}` });
   }
 };
 

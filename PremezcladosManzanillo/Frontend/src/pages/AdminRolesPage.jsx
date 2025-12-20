@@ -207,6 +207,7 @@ const AdminRolesPage = () => {
                         <option value="">Sin rol (Ninguno)</option>
                         <option value="Administrador">Administrador</option>
                         <option value="Contable">Contable</option>
+                        <option value="Operaciones">Operaciones</option>
                         <option value="Comercial">Comercial</option>
                         <option value="Usuario">Usuario</option>
                       </select>

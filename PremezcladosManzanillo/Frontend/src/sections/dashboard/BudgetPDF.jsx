@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import React from 'react';
 import { Download } from 'lucide-react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { getLogoDataUrl, addCompanyHeader } from '../../utils/pdfHelpers';
 import { useSettings } from '../../context/SettingsContext';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -18,6 +19,14 @@ const formatDate = (value) => {
 const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
   const { settings } = useSettings();
   const { formatPrice, currency, exchangeRate } = useCurrency();
+  const { user } = useAuth0();
+  
+  const userRoles = (user?.['https://premezcladomanzanillo.com/roles'] || []).map(r => r.toLowerCase());
+  const isOperaciones = userRoles.includes('operaciones');
+  const isAdminOrContable = userRoles.includes('administrador') || userRoles.includes('contable');
+  
+  // Ocultar precios SOLAMENTE si es Operaciones puro (sin admin/contable)
+  const hidePrices = isOperaciones && !isAdminOrContable;
   
   if (!budget) return null;
 
@@ -82,7 +91,9 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
     y += 45;
 
     // --- DETALLES DE PRODUCTOS ---
-    const tableColumn = ["Descripción", "Unidad", "Cantidad", "Precio Unitario", "Total"];
+    const tableColumn = hidePrices 
+      ? ["Descripción", "Unidad", "Cantidad"] 
+      : ["Descripción", "Unidad", "Cantidad", "Precio Unitario", "Total"];
     
     // El backend usa 'products', el frontend a veces usa 'items'. Normalizamos:
     const rawItems = budget.products || budget.items || [];
@@ -92,14 +103,19 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
       const description = item.tipoConcreto && item.resistencia
         ? `${item.tipoConcreto} ${item.resistencia}`
         : (productData.name || item.description || 'N/A');
-        
-      return [
+      
+      const row = [
         description,
         item.unit || productData.type || 'N/A',
         (item.quantity || item.volume || 0).toLocaleString('es-VE', { minimumFractionDigits: 2 }),
-        formatPrice(item.unitPrice || 0),
-        formatPrice(item.totalPrice || item.total || 0),
       ];
+
+      if (!hidePrices) {
+        row.push(formatPrice(item.unitPrice || 0));
+        row.push(formatPrice(item.totalPrice || item.total || 0));
+      }
+        
+      return row;
     });
 
     autoTable(doc, {
@@ -119,48 +135,50 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
     y += 10;
 
     // --- TOTALES ---
-    const ivaPercentage = parseFloat(settings?.company_iva || "16") / 100;
-    const igtfPercentage = parseFloat(settings?.company_igtf || "3") / 100;
-    
-    const calculatedSubtotal = rawItems.reduce((acc, item) => acc + (item.totalPrice || item.total || 0), 0);
-    const ivaAmount = calculatedSubtotal * ivaPercentage;
-    const totalWithIva = calculatedSubtotal + ivaAmount;
-    
-    const totalsTableRows = [
-      ['Subtotal:', formatPrice(budget.subtotal || calculatedSubtotal)],
-      [`IVA (${settings?.company_iva || 16}%):`, formatPrice(budget.iva || ivaAmount)],
-    ];
+    if (!hidePrices) {
+      const ivaPercentage = parseFloat(settings?.company_iva || "16") / 100;
+      const igtfPercentage = parseFloat(settings?.company_igtf || "3") / 100;
+      
+      const calculatedSubtotal = rawItems.reduce((acc, item) => acc + (item.totalPrice || item.total || 0), 0);
+      const ivaAmount = calculatedSubtotal * ivaPercentage;
+      const totalWithIva = calculatedSubtotal + ivaAmount;
+      
+      const totalsTableRows = [
+        ['Subtotal:', formatPrice(budget.subtotal || calculatedSubtotal)],
+        [`IVA (${settings?.company_iva || 16}%):`, formatPrice(budget.iva || ivaAmount)],
+      ];
 
-    // Si hay IGTF configurado, mostrarlo como referencia
-    if (igtfPercentage > 0) {
-      const igtfAmount = totalWithIva * igtfPercentage;
-      totalsTableRows.push([`IGTF Aplicable (${settings?.company_igtf}%):`, formatPrice(igtfAmount)]);
-      totalsTableRows.push(['Total (inc. IVA + IGTF):', formatPrice(totalWithIva + igtfAmount)]);
-    } else {
-      totalsTableRows.push(['Total a Pagar:', formatPrice(budget.total || totalWithIva)]);
-    }
+      // Si hay IGTF configurado, mostrarlo como referencia
+      if (igtfPercentage > 0) {
+        const igtfAmount = totalWithIva * igtfPercentage;
+        totalsTableRows.push([`IGTF Aplicable (${settings?.company_igtf}%):`, formatPrice(igtfAmount)]);
+        totalsTableRows.push(['Total (inc. IVA + IGTF):', formatPrice(totalWithIva + igtfAmount)]);
+      } else {
+        totalsTableRows.push(['Total a Pagar:', formatPrice(budget.total || totalWithIva)]);
+      }
 
-    autoTable(doc, {
-      startY: y,
-      body: totalsTableRows,
-      theme: 'plain',
-      styles: { fontSize: 10, cellPadding: 1, textColor: [0, 0, 0] },
-      columnStyles: {
-        0: { fontStyle: 'bold', halign: 'right' },
-        1: { halign: 'right', fontStyle: 'bold' },
-      },
-      margin: { left: 100 },
-      tableWidth: 90,
-      didDrawPage: (data) => { y = data.cursor.y; }
-    });
-    y += 5;
-
-    // Si la moneda es Bolívares, mostrar la tasa de cambio de referencia
-    if (currency === 'VES' && exchangeRate) {
-      doc.setFontSize(8);
-      doc.setTextColor(100);
-      doc.text(`Tasa de cambio de referencia (BCV): ${exchangeRate.toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs./USD`, 196, y, { align: 'right' });
+      autoTable(doc, {
+        startY: y,
+        body: totalsTableRows,
+        theme: 'plain',
+        styles: { fontSize: 10, cellPadding: 1, textColor: [0, 0, 0] },
+        columnStyles: {
+          0: { fontStyle: 'bold', halign: 'right' },
+          1: { halign: 'right', fontStyle: 'bold' },
+        },
+        margin: { left: 100 },
+        tableWidth: 90,
+        didDrawPage: (data) => { y = data.cursor.y; }
+      });
       y += 5;
+
+      // Si la moneda es Bolívares, mostrar la tasa de cambio de referencia
+      if (currency === 'VES' && exchangeRate) {
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        doc.text(`Tasa de cambio de referencia (BCV): ${exchangeRate.toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs./USD`, 196, y, { align: 'right' });
+        y += 5;
+      }
     }
 
     y += 5;

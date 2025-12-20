@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   getNotifications,
+  getUnreadCount,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
@@ -14,6 +15,9 @@ router.use(jwtCheck);
 
 // GET /api/notifications - Obtener todas las notificaciones para el usuario autenticado
 router.get('/', getNotifications);
+
+// GET /api/notifications/unread-count - Obtener el conteo de notificaciones no leídas
+router.get('/unread-count', getUnreadCount);
 
 // PATCH /api/notifications/:id/read - Marcar una notificación específica como leída
 router.patch('/:id/read', markNotificationAsRead);

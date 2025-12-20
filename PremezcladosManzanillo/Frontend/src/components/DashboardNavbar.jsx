@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { motion, AnimatePresence } from "framer-motion";
+import api from '../utils/api';
 import { 
   LayoutDashboard, 
   Users, 
@@ -26,10 +27,45 @@ const DashboardNavbar = () => {
   const { user, logout } = useAuth0();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [hasClients, setHasClients] = useState(true);
+  const [hasPayments, setHasPayments] = useState(true);
+  const [hasInvoices, setHasInvoices] = useState(true);
   const [imgError, setImgError] = useState(false);
 
   // Obtener roles del usuario desde Auth0
-  const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+  const userRoles = (user?.['https://premezcladomanzanillo.com/roles'] || []).map(r => r.toLowerCase());
+  const isOnlyUsuario = userRoles.includes('usuario') && !userRoles.includes('administrador') && !userRoles.includes('comercial') && !userRoles.includes('contable') && !userRoles.includes('operaciones');
+
+  // Polling para notificaciones y check de registros
+  useEffect(() => {
+    const fetchNavbarData = async () => {
+      if (!user) return;
+      try {
+        // Conteo de notificaciones
+        const notifResp = await api.get('/api/notifications/unread-count');
+        setUnreadCount(notifResp.data.count || 0);
+
+        // Si es Rol Usuario puro, verificar posesión de registros para limpiar interfaz
+        if (isOnlyUsuario) {
+          const [clientsResp, paymentsResp, invoicesResp] = await Promise.all([
+            api.get('/api/clients'),
+            api.get('/api/payments'),
+            api.get('/api/invoices')
+          ]);
+          setHasClients(clientsResp.data.length > 0);
+          setHasPayments(paymentsResp.data.length > 0);
+          setHasInvoices(invoicesResp.data.length > 0);
+        }
+      } catch (error) {
+        console.error("Error al obtener datos del Navbar:", error);
+      }
+    };
+
+    fetchNavbarData();
+    const interval = setInterval(fetchNavbarData, 30000); 
+    return () => clearInterval(interval);
+  }, [user, isOnlyUsuario]);
 
   // Logic para modo oscuro
   const [theme, setTheme] = useState(
@@ -49,19 +85,31 @@ const DashboardNavbar = () => {
   };
 
   const navItems = [
-    { path: "/clients", icon: Users, label: "Clientes", requiredRoles: ["Administrador", "Comercial", "Contable"] },
+    { path: "/clients", icon: Users, label: "Clientes", requiredRoles: ["Administrador", "Comercial", "Contable", "Usuario"] },
     { path: "/budgets", icon: FileSpreadsheet, label: "Presupuestos", requiredRoles: ["Administrador", "Comercial", "Contable", "Usuario"] },
     { path: "/products-management", icon: Package, label: "Productos", requiredRoles: ["Administrador", "Comercial", "Contable"] },
     { path: "/payments", icon: CreditCard, label: "Comprobantes", requiredRoles: ["Administrador", "Contable", "Comercial", "Usuario"] },
-    { path: "/invoices", icon: Receipt, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Usuario"] },
+    { path: "/invoices", icon: Receipt, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Operaciones", "Usuario"] },
     { path: "/customize", icon: Palette, label: "Personalizar", requiredRoles: ["Administrador", "Comercial"] },
     { path: "/reports", icon: PieChart, label: "Reportes", requiredRoles: ["Administrador", "Contable"] },
     { path: "/admin/roles", icon: UserCog, label: "Roles", requiredRoles: ["Administrador"] },
   ];
 
   const availableNavItems = navItems.filter(item => {
-    if (!item.requiredRoles || item.requiredRoles.length === 0) return true;
-    return userRoles.some(userRole => item.requiredRoles.includes(userRole));
+    // 1. Filtrado básico por rol
+    const hasRole = !item.requiredRoles || item.requiredRoles.length === 0 || 
+                    userRoles.some(userRole => item.requiredRoles.map(r => r.toLowerCase()).includes(userRole));
+    
+    if (!hasRole) return false;
+
+    // 2. Lógica especial para el rol Usuario (Navegación Progresiva)
+    if (isOnlyUsuario) {
+      if (item.path === "/clients" && !hasClients) return false;
+      if (item.path === "/payments" && !hasPayments) return false;
+      if (item.path === "/invoices" && !hasInvoices) return false;
+    }
+
+    return true;
   });
 
   return (
@@ -132,7 +180,7 @@ const DashboardNavbar = () => {
             {/* User Dropdown (Plan B Agrupado) */}
             {user && (
               <div className="relative group ml-1">
-                <button className="flex items-center p-1 rounded-full hover:bg-gray-100 dark:hover:bg-dark-primary border border-transparent transition-all">
+                <button className="flex items-center p-1 rounded-full hover:bg-gray-100 dark:hover:bg-dark-primary border border-transparent transition-all relative">
                   {/* Foto de Perfil / Avatar con FIX */}
                   <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-brand-light flex items-center justify-center shadow-sm">
                     {user.picture && !imgError ? (
@@ -148,6 +196,11 @@ const DashboardNavbar = () => {
                       </span>
                     )}
                   </div>
+
+                  {/* Badge de punto rojo */}
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 block h-3 w-3 rounded-full bg-red-500 border-2 border-white dark:border-dark-primary h-3 w-3"></span>
+                  )}
                 </button>
 
                 {/* Dropdown Box */}
@@ -171,9 +224,16 @@ const DashboardNavbar = () => {
                       </Link>
                     )}
 
-                    <Link to="/notifications" className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 rounded-lg hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn transition-colors">
-                      <Bell className="w-4 h-4" />
-                      <span>Notificaciones</span>
+                    <Link to="/notifications" className="flex items-center justify-between px-3 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 rounded-lg hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn transition-colors">
+                      <div className="flex items-center gap-3">
+                        <Bell className="w-4 h-4" />
+                        <span>Notificaciones</span>
+                      </div>
+                      {unreadCount > 0 && (
+                        <span className="flex items-center justify-center bg-red-500 text-white text-[10px] h-4 min-w-[16px] px-1 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
                     </Link>
                   </div>
 

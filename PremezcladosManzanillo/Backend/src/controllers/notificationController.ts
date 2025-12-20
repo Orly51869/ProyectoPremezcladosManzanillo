@@ -21,6 +21,28 @@ export const getNotifications = async (req: Request, res: Response) => {
   }
 };
 
+// Obtener el conteo de notificaciones no leídas
+export const getUnreadCount = async (req: Request, res: Response) => {
+  const authUserId = req.auth?.payload.sub;
+
+  if (!authUserId) {
+    return res.status(401).json({ error: 'Authenticated user ID not found.' });
+  }
+
+  try {
+    const count = await prisma.notification.count({
+      where: { 
+        userId: authUserId,
+        read: false
+      },
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    console.error('Error fetching unread count:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Marcar una notificación como leída
 export const markNotificationAsRead = async (req: Request, res: Response) => {
   const { id } = req.params;

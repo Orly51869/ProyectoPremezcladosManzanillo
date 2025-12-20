@@ -22,14 +22,18 @@ export const sendNotificationToRoles = async (roles: string[], message: string) 
 
     if (users.length === 0) return;
 
-    // Crear las notificaciones masivamente para todos esos usuarios
-    await prisma.notification.createMany({
-      data: users.map((user) => ({
-        userId: user.id,
-        message,
-        read: false,
-      })),
-    });
+    // Crear las notificaciones usando una transacción para asegurar consistencia
+    await prisma.$transaction(
+      users.map((user) => 
+        prisma.notification.create({
+          data: {
+            userId: user.id,
+            message,
+            read: false,
+          },
+        })
+      )
+    );
     
     console.log(`Notificación enviada a ${users.length} usuarios con roles: ${roles.join(', ')}`);
   } catch (error) {

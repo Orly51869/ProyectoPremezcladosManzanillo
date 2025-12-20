@@ -36,8 +36,9 @@ const InvoicesPage = () => {
     fetchInvoices();
   }, [fetchInvoices]);
 
-  const canUploadDocuments = userRoles.includes('Administrador') || userRoles.includes('Contable');
+  const canUploadDocuments = userRoles.includes('Administrador') || userRoles.includes('Contable') || userRoles.includes('Operaciones');
   const isContable = userRoles.includes('Contable');
+  const isOperaciones = userRoles.includes('Operaciones');
 
   const handleOpenUploadModal = (invoice) => {
     setSelectedInvoice(invoice);
