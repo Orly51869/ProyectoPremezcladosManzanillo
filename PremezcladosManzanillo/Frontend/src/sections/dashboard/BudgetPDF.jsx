@@ -40,6 +40,13 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
     doc.text(`Cotización N°: ${budget.folio || budget.id.slice(-6).toUpperCase()}`, 196, 20, { align: 'right' });
     doc.setFont('helvetica', 'normal');
     doc.text(`Fecha: ${formatDate(budget.createdAt)}`, 196, 26, { align: 'right' });
+    if (budget.validUntil) {
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(180, 0, 0); // Rojo suave para resaltar vencimiento
+      doc.text(`Válido hasta: ${formatDate(budget.validUntil)}`, 196, 32, { align: 'right' });
+      doc.setTextColor(0);
+      doc.setFont('helvetica', 'normal');
+    }
 
     // --- Detalles del Cliente ---
     doc.setFontSize(11);

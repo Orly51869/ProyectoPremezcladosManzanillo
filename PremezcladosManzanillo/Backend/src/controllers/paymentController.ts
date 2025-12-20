@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { logActivity } from '../utils/auditLogger';
 import prisma from '../lib/prisma';
+import { sendNotificationToRoles } from '../utils/notificationHelper';
 
 // Crear un nuevo pago
 export const createPayment = async (req: Request, res: Response) => {
@@ -20,6 +21,11 @@ export const createPayment = async (req: Request, res: Response) => {
 
     if (!budget) return res.status(404).json({ error: 'Presupuesto no encontrado.' });
     if (budget.status !== 'APPROVED') return res.status(400).json({ error: 'Solo se pueden registrar pagos para presupuestos APROBADOS.' });
+
+    // Validar vencimiento del presupuesto
+    if (budget.validUntil && new Date() > new Date(budget.validUntil)) {
+      return res.status(400).json({ error: 'Este presupuesto ha vencido. Contacte a su asesor para renovar la cotización.' });
+    }
 
     const currentPaidAmount = budget.payments.reduce((sum, p) => sum + p.paidAmount, 0);
     
@@ -69,6 +75,12 @@ export const createPayment = async (req: Request, res: Response) => {
       entityId: newPayment.id,
       details: `Pago registrado (${currency || 'USD'}): ${budget.title} por ${amountInCurrency || paidAmount}`
     });
+
+    // Notificar a administradores y contables sobre el nuevo pago pendiente de validación
+    await sendNotificationToRoles(
+      ['Administrador', 'Contable'],
+      `Nuevo pago registrado por ${userName} para el presupuesto "${budget.title}" (${newAmountInUSD.toFixed(2)} USD).`
+    );
 
     res.status(201).json(newPayment);
   } catch (error) {

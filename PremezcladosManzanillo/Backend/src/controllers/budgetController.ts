@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { logActivity } from '../utils/auditLogger';
 import prisma from '../lib/prisma';
+import { sendNotificationToRoles } from '../utils/notificationHelper';
 
 // Inicializar un presupuesto (esqueleto)
 export const initBudget = async (req: Request, res: Response) => {
@@ -257,6 +258,7 @@ export const createBudget = async (req: Request, res: Response) => {
         title, address, deliveryDate: deliveryDate ? new Date(deliveryDate) : undefined,
         workType, resistance, concreteType, element, observations,
         volume: volume ? parseFloat(volume) : undefined,
+        validUntil: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 días de validez por defecto
         total, status: status || 'PENDING',
         creator: { connect: { id: creatorId } },
         client: { connect: { id: clientId } },
@@ -289,6 +291,12 @@ export const createBudget = async (req: Request, res: Response) => {
       details: `Presupuesto creado: ${newBudget.title}`
     });
 
+    // Notificar a administradores y contables sobre el nuevo presupuesto
+    await sendNotificationToRoles(
+      ['Administrador', 'Contable'], 
+      `Nuevo presupuesto pendiente: "${newBudget.title}" creado por ${userName}.`
+    );
+
     res.status(201).json(newBudget);
   } catch (error: any) {
     console.error('Error creating budget:', error);
@@ -319,6 +327,7 @@ export const updateBudget = async (req: Request, res: Response) => {
           title, address, deliveryDate: deliveryDate ? new Date(deliveryDate) : undefined,
           workType, resistance, concreteType, element, observations,
           volume: volume ? parseFloat(volume) : undefined,
+          validUntil: req.body.validUntil ? new Date(req.body.validUntil) : undefined,
           total, status,
           client: clientId ? { connect: { id: clientId } } : undefined,
           products: {

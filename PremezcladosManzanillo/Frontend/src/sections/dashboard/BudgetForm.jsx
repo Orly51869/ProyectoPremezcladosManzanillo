@@ -29,6 +29,7 @@ const BudgetForm = ({
     element: initialValues.element || "",
     observations: initialValues.observations || "",
     volume: initialValues.volume || "",
+    validUntil: initialValues.validUntil ? format(new Date(initialValues.validUntil), "yyyy-MM-dd") : "",
     pumpRequired: initialValues.pumpRequired === true ? "true" : "false",
   });
   
@@ -132,6 +133,7 @@ const BudgetForm = ({
     const budgetData = {
       ...formState,
       volume: formState.volume ? parseFloat(formState.volume) : undefined,
+      validUntil: formState.validUntil || undefined,
       pumpRequired: formState.pumpRequired === 'true',
       products: productItems.map(({ productId, quantity, unitPrice }) => {
         const base = { productId, quantity: Number(quantity) };
@@ -228,6 +230,16 @@ const BudgetForm = ({
                 value={formState.deliveryDate}
                 onChange={handleFormChange}
                 className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-red-700 dark:text-red-400 font-bold">Válido Hasta (Vencimiento)</label>
+              <input
+                type="date"
+                name="validUntil"
+                value={formState.validUntil || format(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")}
+                onChange={handleFormChange}
+                className="mt-1 block w-full rounded-lg border border-red-200 dark:border-red-900 bg-red-50/30 dark:bg-red-900/10 px-3 py-2 focus:ring-2 focus:ring-red-200 dark:text-gray-200"
               />
             </div>
           </div>

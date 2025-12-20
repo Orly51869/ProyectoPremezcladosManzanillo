@@ -76,7 +76,7 @@ const Settings = () => {
             const productData = {
               name: row.nombre || row.name || row.Nombre || row.Name,
               price: row.precio || row.price || row.Precio || row.Price,
-              type: row.unidad || row.type || row.Unidad || row.Type || 'Unidad',
+              type: row.tipo || row.Tipo || row.unidad || row.type || row.Unidad || row.Type || 'Unidad',
               category: row.categoria || row.category || row.Categoria || row.Category,
               description: row.descripcion || row.description || row.Descripcion || row.Description || ""
             };
@@ -298,7 +298,8 @@ const Settings = () => {
                   <tbody>
                     <tr><td className="border p-1">nombre</td><td className="border p-1">Ej: Concreto 250</td></tr>
                     <tr><td className="border p-1">precio</td><td className="border p-1">Ej: 145.50</td></tr>
-                    <tr><td className="border p-1">unidad</td><td className="border p-1">m3, viaje, etc.</td></tr>
+                    <tr><td className="border p-1">tipo</td><td className="border p-1">Unidad (m3, m2, kg, etc)</td></tr>
+                    <tr><td className="border p-1">categoria</td><td className="border p-1">Ej: Estructurales</td></tr>
                   </tbody>
                 </table>
               </li>

@@ -35,8 +35,8 @@ No se pueden crear presupuestos sin productos definidos. Puede hacerlo de dos fo
     *   Prepare un archivo **CSV** con los siguientes encabezados obligatorios:
         *   `nombre`: Nombre del producto.
         *   `precio`: Monto en USD (use punto para decimales, ej: 150.50).
-        *   `unidad`: Unidad de medida (ej: m3, viaje, kg).
-        *   `categoria` (Opcional): Nombre de la categoría a la que pertenece.
+        *   `tipo`: Unidad de medida o tipo (ej: m3, viaje, kg). Este aparece como "TIPO" en la tabla.
+        *   `categoria`: Nombre de la categoría a la que pertenece (ej: Estructurales, Especiales).
     *   Seleccione el archivo y haga clic en **"Procesar Archivo"**. El sistema creará automáticamente las categorías que no existan.
 
 ### Paso 3: Registro de Clientes
