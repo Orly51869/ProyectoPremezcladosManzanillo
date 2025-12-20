@@ -39,6 +39,7 @@ const InvoicesPage = () => {
   const canUploadDocuments = userRoles.includes('Administrador') || userRoles.includes('Contable') || userRoles.includes('Operaciones');
   const isContable = userRoles.includes('Contable');
   const isOperaciones = userRoles.includes('Operaciones');
+  const isAdminOrContable = userRoles.includes('Administrador') || userRoles.includes('Contable');
 
   const handleOpenUploadModal = (invoice) => {
     setSelectedInvoice(invoice);
@@ -157,7 +158,7 @@ const InvoicesPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex flex-col gap-1 items-end">
-                        {invoice.fiscalInvoiceUrl && (
+                        {invoice.fiscalInvoiceUrl && (!isOperaciones || isAdminOrContable) && (
                           <div className="flex items-center gap-2 group">
                             <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500">Factura</span>
                             <div className="flex gap-1">

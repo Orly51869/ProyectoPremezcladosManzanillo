@@ -87,8 +87,8 @@ const DashboardNavbar = () => {
   const navItems = [
     { path: "/clients", icon: Users, label: "Clientes", requiredRoles: ["Administrador", "Comercial", "Contable", "Usuario"] },
     { path: "/budgets", icon: FileSpreadsheet, label: "Presupuestos", requiredRoles: ["Administrador", "Comercial", "Contable", "Usuario"] },
-    { path: "/products-management", icon: Package, label: "Productos", requiredRoles: ["Administrador", "Comercial", "Contable"] },
-    { path: "/payments", icon: CreditCard, label: "Comprobantes", requiredRoles: ["Administrador", "Contable", "Comercial", "Usuario"] },
+    { path: "/products-management", icon: Package, label: "Productos", requiredRoles: ["Administrador", "Contable"] },
+    { path: "/payments", icon: CreditCard, label: "Comprobantes", requiredRoles: ["Administrador", "Contable", "Usuario"] },
     { path: "/invoices", icon: Receipt, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Operaciones", "Usuario"] },
     { path: "/customize", icon: Palette, label: "Personalizar", requiredRoles: ["Administrador", "Comercial"] },
     { path: "/reports", icon: PieChart, label: "Reportes", requiredRoles: ["Administrador", "Contable"] },
