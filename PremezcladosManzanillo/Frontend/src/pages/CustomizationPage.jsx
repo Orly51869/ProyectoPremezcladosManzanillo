@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Image as ImageIcon, Layout, Save, Plus, Trash2, RefreshCcw } from 'lucide-react';
 import api from '../utils/api';
+import { useSettings } from '../context/SettingsContext';
 
 const CustomizationPage = () => {
+  const { settings, updateSetting: updateGlobalSetting } = useSettings();
   const [activeTab, setActiveTab] = useState('hero');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -68,12 +70,35 @@ const CustomizationPage = () => {
     }
   };
 
-  // Handlers for Hero
-  const updateHeroImage = (index, url) => {
-     const newImages = [...heroConfig.images];
-     newImages[index] = url;
-     setHeroConfig({ ...heroConfig, images: newImages });
+  // Helper para subir archivos al servidor
+  const handleFileUpload = async (file) => {
+    if (!file) return null;
+    try {
+      const formData = new FormData();
+      formData.append('asset', file);
+      const { data } = await api.post('/api/settings/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return data.url;
+    } catch (error) {
+      console.error("Error uploading file", error);
+      setMessage({ type: 'error', text: 'Error al subir la imagen al servidor.' });
+      return null;
+    }
   };
+
+  // Handlers for Hero
+  const handleHeroImageUpload = async (index, file) => {
+     setLoading(true);
+     const url = await handleFileUpload(file);
+     if (url) {
+       const newImages = [...heroConfig.images];
+       newImages[index] = url;
+       setHeroConfig({ ...heroConfig, images: newImages });
+     }
+     setLoading(false);
+  };
+
   const addHeroSlide = () => {
      setHeroConfig({ 
        images: [...heroConfig.images, ''], 
@@ -125,17 +150,19 @@ const CustomizationPage = () => {
           onClick={() => setActiveTab('products')}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'products' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
-          Productos
+          Sección Productos
         </button>
         <button 
           onClick={() => setActiveTab('services')}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'services' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
-          Servicios
+          Sección Servicios
         </button>
       </div>
 
       <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8">
+
+
         {activeTab === 'hero' && (
           <div className="space-y-8">
             <div className="flex justify-between items-center">
@@ -162,14 +189,14 @@ const CustomizationPage = () => {
                   </div>
                   <div className="flex-1 space-y-4">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">URL de la Imagen</label>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cambiar Imagen del Slide</label>
                       <input 
-                        type="text"
-                        value={img}
-                        onChange={(e) => updateHeroImage(idx, e.target.value)}
-                        className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm"
-                        placeholder="https://ejemplo.com/imagen.jpg"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleHeroImageUpload(idx, e.target.files[0])}
+                        className="w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-primary file:text-white hover:file:bg-green-700"
                       />
+                      <p className="mt-1 text-[10px] text-gray-400 truncate">URL: {img || 'Ninguna imagen cargada'}</p>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Frase del Banner</label>
@@ -247,16 +274,21 @@ const CustomizationPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">URL Imagen</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cambiar Imagen de Categoría</label>
                     <input 
-                      type="text"
-                      value={prod.imgSrc}
-                      onChange={(e) => {
-                        const newProds = [...productsConfig];
-                        newProds[idx].imgSrc = e.target.value;
-                        setProductsConfig(newProds);
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        setLoading(true);
+                        const url = await handleFileUpload(e.target.files[0]);
+                        if (url) {
+                          const newProds = [...productsConfig];
+                          newProds[idx].imgSrc = url;
+                          setProductsConfig(newProds);
+                        }
+                        setLoading(false);
                       }}
-                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 text-xs"
+                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:bg-gray-200"
                     />
                   </div>
                 </div>
@@ -315,16 +347,21 @@ const CustomizationPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">URL Imagen</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cambiar Imagen del Servicio</label>
                     <input 
-                      type="text"
-                      value={srv.imgSrc}
-                      onChange={(e) => {
-                        const newSrvs = [...servicesConfig];
-                        newSrvs[idx].imgSrc = e.target.value;
-                        setServicesConfig(newSrvs);
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        setLoading(true);
+                        const url = await handleFileUpload(e.target.files[0]);
+                        if (url) {
+                          const newSrvs = [...servicesConfig];
+                          newSrvs[idx].imgSrc = url;
+                          setServicesConfig(newSrvs);
+                        }
+                        setLoading(false);
                       }}
-                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 text-xs"
+                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:bg-gray-200"
                     />
                   </div>
                 </div>

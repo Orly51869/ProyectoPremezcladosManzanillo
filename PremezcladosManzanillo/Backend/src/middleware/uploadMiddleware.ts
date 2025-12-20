@@ -69,3 +69,22 @@ export const uploadInvoiceDocuments = multer({
   { name: 'fiscalInvoice', maxCount: 1 },
   { name: 'deliveryOrder', maxCount: 1 },
 ]);
+
+// Configure multer for assets (logos, hero images, etc.)
+const assetStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../../uploads/assets');
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `asset-${uniqueSuffix}${path.extname(file.originalname)}`);
+  },
+});
+
+export const uploadAssets = multer({
+  storage: assetStorage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+}).single('asset');

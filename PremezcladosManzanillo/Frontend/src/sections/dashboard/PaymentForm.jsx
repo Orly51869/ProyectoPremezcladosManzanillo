@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from "react";
-// import { mockBudgets } from '../../mock/data'; // No longer needed
+import { useCurrency } from "../../context/CurrencyContext";
+import { useSettings } from "../../context/SettingsContext";
 
 const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets = [], initialValues = null }) => {
+  const { exchangeRate: currentExchangeRate } = useCurrency();
+  const { settings } = useSettings();
   const [budgetId, setBudgetId] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
-  const [paidAmount, setPaidAmount] = useState("");
+  const [paidAmount, setPaidAmount] = useState(""); // Este será el equivalente en USD
+  const [currency, setCurrency] = useState("USD");
+  const [applyIgtf, setApplyIgtf] = useState(false);
+  const [amountInCurrency, setAmountInCurrency] = useState(""); // Monto en VES si aplica
+  const [exchangeRate, setExchangeRate] = useState(currentExchangeRate || "");
+  
   const [method, setMethod] = useState("Transferencia");
   const [reference, setReference] = useState("");
   const [bankFrom, setBankFrom] = useState("");
@@ -24,10 +32,38 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
   const validateForm = () => {
     const errors = {};
     if (!budgetId) errors.budgetId = "Debe seleccionar un presupuesto.";
-    if (!paidAmount || parseFloat(paidAmount) <= 0) errors.paidAmount = "El monto pagado debe ser mayor a 0.";
+    
+    if (currency === 'USD') {
+      if (!paidAmount || parseFloat(paidAmount) <= 0) errors.paidAmount = "El monto pagado debe ser mayor a 0.";
+    } else {
+      if (!amountInCurrency || parseFloat(amountInCurrency) <= 0) errors.amountInCurrency = "El monto en Bs. debe ser mayor a 0.";
+      if (!exchangeRate || parseFloat(exchangeRate) <= 0) errors.exchangeRate = "La tasa de cambio debe ser válida.";
+    }
+    
     if (!method) errors.method = "Debe seleccionar un método de pago.";
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  // Efecto para calcular el equivalente en USD cuando cambian los Bs. o la Tasa
+  useEffect(() => {
+    if (currency === 'VES' && amountInCurrency && exchangeRate) {
+      const usdValue = (parseFloat(amountInCurrency) / parseFloat(exchangeRate)).toFixed(2);
+      setPaidAmount(usdValue);
+    }
+  }, [currency, amountInCurrency, exchangeRate]);
+
+  // Efecto para "Pre-llenar" los Bs. si ya hay un monto en USD y se cambia a VES
+  useEffect(() => {
+    if (currency === 'VES' && paidAmount && !amountInCurrency && exchangeRate) {
+      const vesValue = (parseFloat(paidAmount) * parseFloat(exchangeRate)).toFixed(2);
+      setAmountInCurrency(vesValue);
+    }
+  }, [currency]);
+
+  // Helper para formatear siempre en USD
+  const formatPriceUSD = (val) => {
+    return parseFloat(val || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
   };
 
   const handleSubmit = (e) => {
@@ -41,6 +77,17 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
     formData.append('paidAmount', paidAmount); // Correctly sending paidAmount
     formData.append('date', paymentDate || new Date().toISOString());
     formData.append('method', method);
+    formData.append('currency', currency);
+    if (currency === 'VES') {
+      formData.append('exchangeRate', exchangeRate);
+      formData.append('amountInCurrency', amountInCurrency);
+    }
+    
+    // En Venezuela, el IGTF es el 3% (o lo configurado) sobre el monto pagado
+    if (applyIgtf) {
+      const igtfCalculated = parseFloat(paidAmount || 0) * (parseFloat(settings?.company_igtf || 3) / 100);
+      formData.append('igtfAmount', igtfCalculated.toFixed(2));
+    }
     if (reference) formData.append('reference', reference);
     if (bankFrom) formData.append('bankFrom', bankFrom);
     if (bankTo) formData.append('bankTo', bankTo);
@@ -88,16 +135,85 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
           />
         </div>
 
-        <div>
-          <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">Monto Pagado</label>
-          <input
-            type="number"
-            step="0.01"
-            value={paidAmount}
-            onChange={(e) => setPaidAmount(e.target.value)}
-            className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg"
-          />
-          {formErrors.paidAmount && <p className="text-red-500 text-xs mt-1">{formErrors.paidAmount}</p>}
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">Moneda del Pago</label>
+              <select 
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg"
+              >
+                <option value="USD">Dólares ($)</option>
+                <option value="VES">Bolívares (Bs.)</option>
+              </select>
+            </div>
+            <div className="flex-[2]">
+              <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">
+                {currency === 'USD' ? 'Monto a Abonar a Deuda ($)' : 'Monto en Bolívares (Bs.)'}
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={currency === 'USD' ? paidAmount : amountInCurrency}
+                onChange={(e) => currency === 'USD' ? setPaidAmount(e.target.value) : setAmountInCurrency(e.target.value)}
+                className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg font-bold"
+                placeholder="0.00"
+              />
+              {formErrors.paidAmount && <p className="text-red-500 text-xs mt-1">{formErrors.paidAmount}</p>}
+              {formErrors.amountInCurrency && <p className="text-red-500 text-xs mt-1">{formErrors.amountInCurrency}</p>}
+            </div>
+          </div>
+
+          {/* Sección de IGTF */}
+          <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
+            <div className="flex items-center justify-between mb-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={applyIgtf} 
+                  onChange={(e) => setApplyIgtf(e.target.checked)}
+                  className="rounded text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm font-bold text-orange-800 dark:text-orange-300">¿Aplica IGTF? ({settings?.company_igtf || 3}%)</span>
+              </label>
+              {applyIgtf && (
+                <div className="text-right">
+                  <span className="block text-sm font-bold text-orange-700 dark:text-orange-400">
+                    + {formatPriceUSD(parseFloat(paidAmount || 0) * (parseFloat(settings?.company_igtf || 3) / 100))}
+                  </span>
+                  {currency === 'VES' && exchangeRate && (
+                    <span className="text-[10px] text-orange-600 dark:text-orange-400">
+                      ≈ {((parseFloat(paidAmount || 0) * (parseFloat(settings?.company_igtf || 3) / 100)) * parseFloat(exchangeRate)).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs.
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <p className="text-[10px] text-orange-600 dark:text-orange-400">El IGTF es un impuesto adicional y no se resta del saldo pendiente del presupuesto.</p>
+          </div>
+          
+          {currency === 'VES' && (
+            <div className="flex gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+              <div className="flex-1">
+                <label className="block text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">Tasa BCV del Pago</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={exchangeRate}
+                  onChange={(e) => setExchangeRate(e.target.value)}
+                  className="w-full p-2 border border-blue-200 dark:border-blue-700 bg-white dark:bg-dark-primary dark:text-white rounded-lg text-sm"
+                />
+                {formErrors.exchangeRate && <p className="text-red-500 text-xs mt-1">{formErrors.exchangeRate}</p>}
+              </div>
+              <div className="flex-[1.5] flex flex-col justify-center">
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Equivalente a abonar:</span>
+                <span className="text-lg font-bold text-blue-800 dark:text-blue-200">
+                   {paidAmount ? `$ ${parseFloat(paidAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '$ 0.00'}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div>

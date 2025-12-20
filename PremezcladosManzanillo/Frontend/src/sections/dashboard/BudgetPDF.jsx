@@ -1,7 +1,10 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import React from 'react'; // Import React
+import React from 'react';
 import { Download } from 'lucide-react';
+import { getLogoDataUrl, addCompanyHeader } from '../../utils/pdfHelpers';
+import { useSettings } from '../../context/SettingsContext';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -13,70 +16,66 @@ const formatDate = (value) => {
 };
 
 const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
+  const { settings } = useSettings();
+  const { formatPrice, currency, exchangeRate } = useCurrency();
+  
   if (!budget) return null;
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
     const doc = new jsPDF();
-    let y = 15; // Initial Y position
+    const logoDataUrl = await getLogoDataUrl(settings?.company_logo);
 
-    // --- Company Header (Hardcoded for now, ideally from config) ---
+    // --- Header Corporativo Dinámico ---
+    let y = addCompanyHeader(doc, logoDataUrl, {
+      name: settings?.company_name,
+      rif: settings?.company_rif,
+      phone: settings?.company_phone,
+      address: settings?.company_address
+    });
+
+    // --- Info de Cotización (Derecha superior) ---
     doc.setFontSize(10);
-    doc.text("PREMEZCLADOS MANZANILLO, C.A.", 14, y);
-    y += 5;
-    doc.text("R.IF.J-29762187-3", 14, y);
-    y += 5;
-    doc.text("0295-8726210", 14, y);
-    y += 5;
-    doc.text("AV. 31 DE JULIO, EDIF CANTERA MANZANILLO, C.A PISO P.8. OF. ADMINISTRACION SECTOR GUATAMARE", 14, y);
-    y += 5;
-    doc.text("ZONA POSTAL 6304", 14, y);
-    // y += 10; // This will be handled by the new lines
+    doc.setTextColor(0);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Cotización N°: ${budget.folio || budget.id.slice(-6).toUpperCase()}`, 196, 20, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Fecha: ${formatDate(budget.createdAt)}`, 196, 26, { align: 'right' });
 
-    // Add Cotización N° and Fecha to the right side of the header
-    // We need to reset y to an appropriate position for the right-aligned text
-    // Let's use a fixed y for these, relative to the top of the page,
-    // to align them with the company header lines.
-    let rightHeaderY = 15; // Start at the same y as the company name
-
-    doc.text(`Cotización N°: ${budget.folio || budget.id}`, 196, rightHeaderY, { align: 'right' });
-    rightHeaderY += 5;
-    doc.text(`Fecha: ${formatDate(budget.createdAt)}`, 196, rightHeaderY, { align: 'right' });
-    rightHeaderY += 5;
-
-    // Now, ensure the main 'y' for the rest of the document continues correctly.
-    // The maximum y from the left header is after "ZONA POSTAL 6304" which is current 'y'.
-    // The maximum y from the right header is 'rightHeaderY'.
-    // The separator line should start after the maximum of these two.
-    y = Math.max(y, rightHeaderY);
-    y += 5; // Add a small buffer
-
-    // --- Separator Line ---
-    doc.line(14, y, 196, y); // x1, y1, x2, y2
-    y += 10;
-
-    // --- Client / Quotation Details ---
+    // --- Detalles del Cliente ---
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text("DATOS DEL CLIENTE", 14, y);
+    y += 7;
+    
     doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
     doc.text(`Cliente: ${client?.name || budget.clientName || 'N/A'}`, 14, y);
     y += 5;
-    doc.text(`RIF: ${client?.rif || 'N/A'}`, 14, y); // Assuming client has a RIF property
+    doc.text(`RIF / C.I.: ${client?.rif || 'N/A'}`, 14, y);
     y += 5;
-
-    doc.text(`Atención: ${client?.contactPerson || 'JESUS VARELA'}`, 14, y); // Assuming client has contactPerson
+    doc.text(`Atención: ${client?.contactPerson || 'N/A'}`, 14, y);
     y += 10;
 
-    // --- Product Table ---
+    // --- DETALLES DE PRODUCTOS ---
     const tableColumn = ["Descripción", "Unidad", "Cantidad", "Precio Unitario", "Total"];
-      const tableRows = budget.items?.map(item => {
+    
+    // El backend usa 'products', el frontend a veces usa 'items'. Normalizamos:
+    const rawItems = budget.products || budget.items || [];
+    
+    const tableRows = rawItems.map(item => {
+      const productData = item.product || {};
       const description = item.tipoConcreto && item.resistencia
         ? `${item.tipoConcreto} ${item.resistencia}`
-        : item.description || 'N/A';
+        : (productData.name || item.description || 'N/A');
+        
       return [
         description,
-      item.unit || 'N/A',
-      ((item.volume || item.quantity) || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-      (item.unitPrice || 0).toLocaleString('es-VE', { style: 'currency', currency: 'USD' }), // Assuming USD
-      (item.total || 0).toLocaleString('es-VE', { style: 'currency', currency: 'USD' }), // Assuming USD
-    ]});
+        item.unit || productData.type || 'N/A',
+        (item.quantity || item.volume || 0).toLocaleString('es-VE', { minimumFractionDigits: 2 }),
+        formatPrice(item.unitPrice || 0),
+        formatPrice(item.totalPrice || item.total || 0),
+      ];
+    });
 
     autoTable(doc, {
       startY: y,
@@ -84,45 +83,62 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
       body: tableRows,
       theme: 'grid',
       styles: { fontSize: 9, cellPadding: 2, textColor: [0, 0, 0] },
-      headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold' },
+      headStyles: { fillColor: [22, 163, 74], textColor: [255, 255, 255], fontStyle: 'bold' },
       columnStyles: {
-        2: { halign: 'right' }, // Quantity
-        3: { halign: 'right' }, // Unit Price
-        4: { halign: 'right' }, // Total
+        2: { halign: 'right' },
+        3: { halign: 'right' },
+        4: { halign: 'right' },
       },
-      didDrawPage: function (data) {
-        y = data.cursor.y; // Update y position after table
-      }
+      didDrawPage: (data) => { y = data.cursor.y; }
     });
-    y += 10; // Add some space after the table
+    y += 10;
 
-    // --- Totals and Notes ---
-    doc.setFontSize(10);
-
-    // Totals table (aligned right)
+    // --- TOTALES ---
+    const ivaPercentage = parseFloat(settings?.company_iva || "16") / 100;
+    const igtfPercentage = parseFloat(settings?.company_igtf || "3") / 100;
+    
+    const calculatedSubtotal = rawItems.reduce((acc, item) => acc + (item.totalPrice || item.total || 0), 0);
+    const ivaAmount = calculatedSubtotal * ivaPercentage;
+    const totalWithIva = calculatedSubtotal + ivaAmount;
+    
     const totalsTableRows = [
-      ['Subtotal:', (budget.subtotal || 0).toLocaleString('es-VE', { style: 'currency', currency: 'USD' })],
-      ['Descuento Especial:', (budget.specialDiscount || 0).toLocaleString('es-VE', { style: 'currency', currency: 'USD' })],
-      ['Monto Descuento:', (budget.discountAmount || 0).toLocaleString('es-VE', { style: 'currency', currency: 'USD' })],
-      ['Total a Pagar:', (budget.total || 0).toLocaleString('es-VE', { style: 'currency', currency: 'USD' })],
+      ['Subtotal:', formatPrice(budget.subtotal || calculatedSubtotal)],
+      [`IVA (${settings?.company_iva || 16}%):`, formatPrice(budget.iva || ivaAmount)],
     ];
+
+    // Si hay IGTF configurado, mostrarlo como referencia
+    if (igtfPercentage > 0) {
+      const igtfAmount = totalWithIva * igtfPercentage;
+      totalsTableRows.push([`IGTF Aplicable (${settings?.company_igtf}%):`, formatPrice(igtfAmount)]);
+      totalsTableRows.push(['Total (inc. IVA + IGTF):', formatPrice(totalWithIva + igtfAmount)]);
+    } else {
+      totalsTableRows.push(['Total a Pagar:', formatPrice(budget.total || totalWithIva)]);
+    }
 
     autoTable(doc, {
       startY: y,
       body: totalsTableRows,
-      theme: 'plain', // No borders for totals table
+      theme: 'plain',
       styles: { fontSize: 10, cellPadding: 1, textColor: [0, 0, 0] },
       columnStyles: {
-        0: { fontStyle: 'bold' }, // Label column
-        1: { halign: 'right' }, // Value column
+        0: { fontStyle: 'bold', halign: 'right' },
+        1: { halign: 'right', fontStyle: 'bold' },
       },
-      margin: { left: 120 }, // Align to the right side of the page
-      tableWidth: 70, // Adjust width as needed
-      didDrawPage: function (data) {
-        y = data.cursor.y; // Update y position after totals table
-      }
+      margin: { left: 100 },
+      tableWidth: 90,
+      didDrawPage: (data) => { y = data.cursor.y; }
     });
-    y += 10;
+    y += 5;
+
+    // Si la moneda es Bolívares, mostrar la tasa de cambio de referencia
+    if (currency === 'VES' && exchangeRate) {
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(`Tasa de cambio de referencia (BCV): ${exchangeRate.toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs./USD`, 196, y, { align: 'right' });
+      y += 5;
+    }
+
+    y += 5;
 
     // Notes
     doc.setFontSize(9);
@@ -130,7 +146,9 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
     y += 5;
     doc.text("1. Todos los productos ofertados están sujetos a cambios de precio antes de realizada la venta.", 14, y);
     y += 4;
-    doc.text("2. La resistencia del concreto premezclado que suministra la empresa, al ser descargado del camión mezclador, estará", 14, y);
+    doc.text(`2. Los pagos en divisas (USD/Efectivo/Transferencia) están sujetos al IGTF (${settings?.company_igtf || 3}%) según ley vigente.`, 14, y);
+    y += 4;
+    doc.text("3. La resistencia del concreto premezclado que suministra la empresa, al ser descargado del camión mezclador, estará", 14, y);
     y += 4;
     doc.text("condicionada a que los cilindros de muestras en todo lo concerniente a su toma, curado, manipulación, ensayo e", 14, y);
     y += 4;

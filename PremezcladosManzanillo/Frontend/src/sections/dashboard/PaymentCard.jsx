@@ -24,8 +24,22 @@ const PaymentCard = ({ payment, onOpenValidationModal, onResend, onDownloadRecei
         </span>
       </div>
       <div className="mt-4">
-        <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{formatCurrency(payment.paidAmount)}</p>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Pendiente: {formatCurrency(payment.pending)}</p>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <p className="text-xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(payment.paidAmount)}</p>
+            {payment.igtfAmount > 0 && (
+              <span className="text-[10px] font-bold text-orange-600 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-full">
+                + IGTF: ${payment.igtfAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </span>
+            )}
+          </div>
+          {payment.currency === 'VES' && payment.amountInCurrency && (
+            <p className="text-xs text-gray-500 font-medium">
+              Equivalente de {payment.amountInCurrency.toLocaleString('es-VE')} Bs. (Tasa: {payment.exchangeRate?.toFixed(2)})
+            </p>
+          )}
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Pendiente: {formatCurrency(payment.pending)}</p>
         <p className="text-sm text-gray-600 dark:text-gray-400">Fecha Pago: {payment.date ? new Date(payment.date).toLocaleDateString() : 'N/A'}</p>
         <p className="text-sm text-gray-600 dark:text-gray-400">Método: {payment.method || "-"}</p>
         {payment.validator && (

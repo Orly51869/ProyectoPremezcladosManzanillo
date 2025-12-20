@@ -132,7 +132,7 @@ const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove })
                 <DollarSign size={16} /> Ver/Registrar Pagos
               </Link>
             )}
-            <BudgetPDF budget={budget} className="ml-1" />
+            <BudgetPDF budget={budget} client={budget.client} className="ml-1" />
             <button onClick={onClose} className="px-4 py-2 rounded-md bg-gray-100 dark:bg-dark-surface text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-sm">
               Cerrar
             </button>

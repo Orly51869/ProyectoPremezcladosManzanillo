@@ -124,7 +124,25 @@ const PaymentsList = ({
                   <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.id}</td>
                   <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.budget?.title || p.budgetId}</td>
                   <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.budget?.client?.name || 'N/A'}</td>
-                  <td className="p-2 text-sm text-gray-700 dark:text-gray-100 font-medium">{formatCurrency(p.paidAmount)}</td>
+                  <td className="p-2 text-sm">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-900 dark:text-gray-100 font-bold">{formatCurrency(p.paidAmount)}</span>
+                        {p.igtfAmount > 0 && (
+                          <span className="text-[9px] font-bold text-orange-600 bg-orange-100 dark:bg-orange-900/30 px-1.5 py-0.5 rounded-full" title="IGTF Aplicado">
+                            +IGTF
+                          </span>
+                        )}
+                      </div>
+                      {p.currency === 'VES' && p.amountInCurrency && (
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                          Original: {p.amountInCurrency.toLocaleString('es-VE')} Bs.
+                          <br />
+                          (Tasa: {p.exchangeRate?.toFixed(2)})
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="p-2 text-sm text-gray-700 dark:text-gray-100 font-medium">{formatCurrency(p.pending)}</td>
                   <td className="p-2 text-sm text-gray-700 dark:text-gray-300">
                     {p.date ? new Date(p.date).toLocaleDateString() : 'N/A'}

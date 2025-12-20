@@ -1,90 +1,105 @@
-# 📘 Guía de Usuario Detallada - Premezclado Manzanillo
+<p align="center">
+  <img src="../Frontend/public/assets/LOGO_PREMEZCLADOS.svg" alt="Logo Premezclado Manzanillo" width="200">
+</p>
 
-Esta guía proporciona una explicación exhaustiva de todas las herramientas disponibles en la plataforma de Premezclado Manzanillo, diseñada para optimizar la gestión comercial y técnica de la empresa.
+# 📘 Guía de Usuario - Premezclado Manzanillo
 
----
-
-## 1. Acceso y Configuración Inicial
-### Inicio de Sesión
-La plataforma utiliza **Auth0** para una seguridad de grado bancario. 
-1. Acceda a la URL principal.
-2. Haga clic en **"Iniciar Sesión"**. Será redirigido al portal seguro.
-3. Puede usar sus credenciales corporativas o registrarse. 
-   - *Nota:* Los nuevos usuarios registrados tendrán el rol de **Usuario** por defecto y permisos limitados hasta que un administrador los promueva.
-
-### Perfil de Usuario
-En la esquina superior derecha del Dashboard, encontrará su avatar circular. Al hacer clic, podrá ver su correo electrónico vinculado y cerrar la sesión de forma segura.
+Esta guía proporciona una explicación exhaustiva de todas las herramientas disponibles en la plataforma de Premezclado Manzanillo. Está diseñada para guiar tanto a nuevos administradores en la configuración inicial como al personal operativo en el día a día.
 
 ---
 
-## 2. Personalización de la Landing Page (Módulo Visual)
-*(Exclusivo para Administradores y Comerciales)*
+## 🚀 1. Guía de Puesta en Marcha (Orden Lógico)
+Si la base de datos está vacía (por ejemplo, después de una migración o instalación inicial), siga este orden exacto para asegurar que la información fluya correctamente:
 
-Este módulo permite que el equipo de ventas actualice la oferta visual del sitio público sin depender de desarrolladores.
+### Paso 1: Identidad Corporativa y Configuración Global
+Antes de emitir cualquier documento, debe definir quién emite.
+1.  Vaya a la sección **"Configuración"** en el menú lateral.
+2.  En el panel **"Identidad Corporativa"**, configure:
+    *   **Nombre de la Empresa, RIF, Teléfono y Dirección Física:** Datos obligatorios para el encabezado de los presupuestos.
+    *   **Tasa de IVA (%):** El porcentaje de impuesto general (ej: 16).
+    *   **Tasa de IGTF (%):** El impuesto aplicable a pagos en divisas (ej: 3).
+    *   **Logo de la Empresa:** Use el botón "Seleccionar archivo" para subir su logo. El sistema generará automáticamente la vista previa y la ruta para los PDFs.
+3.  Haga clic en **"Guardar Cambios Corporativos"**.
+4.  Vaya a **"Personalizar"** si desea configurar el **Carrusel (Hero)** o servicios visuales de la web.
 
-### Secciones Modificables:
-1.  **Banner Principal (Hero):**
-    *   **Imágenes:** Puede gestionar un carrusel dinámico. Se recomiendan imágenes de alta resolución (mínimo 1920x1080px) de la planta o proyectos terminados.
-    *   **Textos:** Cada imagen puede llevar una frase de impacto diferente.
-2.  **Catálogo Destacado (Home):** 
-    *   Permite seleccionar qué categorías de concreto (Estructural, Pavimentos, etc.) se muestran en la página de inicio para captar la atención del cliente.
-3.  **Servicios Destacados:** 
-    *   Actualización de descripciones e imágenes para servicios como "Bombeo de Concreto" o "Laboratorio".
+### Paso 2: Estructura del Catálogo (Productos y Precios)
+No se pueden crear presupuestos sin productos definidos. Puede hacerlo de dos formas:
+
+1.  **Carga Manual:**
+    *   Vaya a **"Productos"** para gestionar el inventario maestro.
+    *   Defina **Categorías** (ej: Concretos, Bombeo, Aditivos).
+    *   Agregue productos con su **Precio Base** y **Unidad de Medida**.
+
+2.  **Carga Masiva (Recomendado para inventarios grandes):**
+    *   Vaya a **"Configuración"** -> **"Importar Datos"**.
+    *   Prepare un archivo **CSV** con los siguientes encabezados obligatorios:
+        *   `nombre`: Nombre del producto.
+        *   `precio`: Monto en USD (use punto para decimales, ej: 150.50).
+        *   `unidad`: Unidad de medida (ej: m3, viaje, kg).
+        *   `categoria` (Opcional): Nombre de la categoría a la que pertenece.
+    *   Seleccione el archivo y haga clic en **"Procesar Archivo"**. El sistema creará automáticamente las categorías que no existan.
+
+### Paso 3: Registro de Clientes
+1.  Vaya a la sección **"Clientes"**.
+2.  Registre a sus clientes recurrentes o nuevos.
+    *   Es obligatorio el **RIF o Cédula** para la validez legal del presupuesto.
+    *   Asegúrese de escribir correctamente el correo para futuras notificaciones.
+
+### Paso 4: Ciclo de Venta (Presupuestos y Pagos)
+Una vez configurado lo anterior, el sistema está listo para operar:
+1.  Crear **Presupuesto** (Cotización).
+2.  **Aprobación:** Si es Administrador o Contable, revise y apruebe la cotización.
+3.  **Registro de Pago:** Registre el abono (en $ o Bs.).
+4.  **Facturación:** El sistema genera la Proforma tras validar el pago.
 
 ---
 
-## 3. Flujo de Ventas: De Cliente a Presupuesto
+## 2. Personalización de la Landing Page
+*(Módulo Visual)*
 
-### Gestión de Clientes
-Antes de generar un presupuesto, el cliente debe existir en la base de datos.
-- **RIF/Cédula:** El sistema valida que el formato sea correcto.
-- **Asignación:** Los clientes creados por un usuario son visibles para ese usuario, pero los Administradores tienen una visión global de toda la cartera.
-
-### Constructor de Presupuestos (El "Corazón" del Sistema)
-Es una herramienta interactiva donde se diseña la solución técnica para la obra:
-1.  **Configuración General:** Nombre del proyecto y fecha estimada de colado.
-2.  **Selección de Mezcla:** Elija el tipo de concreto (por ejemplo, C-210 o C-250).
-3.  **Servicios Adicionales:** Añada metros de tubería de bombeo o aditivos hidrófugos/fibras.
-4.  **Cálculo Automático:** El sistema calcula el precio de la mezcla y el total en tiempo real según los precios vigentes en el catálogo.
+Este módulo permite actualizar la oferta visual del sitio público.
+*   **Hero (Carrusel):** Ya no necesita escribir direcciones web. Simplemente haga clic en "Cambiar Imagen" y suba el archivo desde su computadora. Puede gestionar varios slides con textos personalizados.
+*   **Servicios y Categorías:** Personalice las imágenes y descripciones de lo que ofrece en la página de inicio.
 
 ---
 
-## 4. Gestión de Pagos y Comprobantes
-Los usuarios pueden reportar sus pagos directamente:
-1.  Seleccione el presupuesto aprobado.
-2.  Suba la imagen de la transferencia o depósito.
-3.  **Estados del Pago:**
-    - **Pendiente:** El pago ha sido reportado pero no validado.
-    - **Validado:** El departamento contable confirmó los fondos. El presupuesto se marca como "Pagado".
+## 3. Gestión Avanzada de Presupuestos (PDFs)
+El sistema genera PDFs profesionales de forma automática.
+*   **Soporte Multimoneda:** En el Dashboard, puede alternar entre **USD** y **VES**. Al generar el PDF, este adoptará la moneda seleccionada en pantalla.
+*   **Tasa BCV:** Si genera el PDF en Bolívares, se incluirá automáticamente una nota al pie con la tasa oficial del BCV utilizada.
 
 ---
 
-## 5. Matriz de Roles y Permisos (Detallada)
+## 4. Cobranza y Pagos Multimoneda
+Dada la realidad económica en Venezuela, el sistema permite un registro híbrido y transparente:
+1.  **Pagos en Dólares:** Registro directo del monto que reduce la deuda.
+2.  **Pagos en Bolívares (VES):** 
+    *   El sistema sincroniza automáticamente la tasa del BCV (o permite ajustarla manualmente).
+    *   Usted ingresa el monto en Bs. y el sistema calcula el equivalente en $ para abonar al presupuesto.
+3.  **Gestión de IGTF:**
+    *   Al registrar un pago (ya sea en $ o Bs.), verá la opción **"¿Aplica IGTF?"**.
+    *   Si se marca, el sistema calcula el impuesto adicional (ej: 3%) sobre el monto recibido.
+    *   **Nota Contable:** El monto del IGTF se registra como un cargo de impuesto adicional y **no resta** saldo de la deuda principal del presupuesto, manteniendo la precisión financiera.
+4.  **Registro Histórico:** El sistema "congela" la tasa y los impuestos aplicados el día del pago.
+
+---
+
+## 5. Matriz de Roles y Permisos
 
 | Funcionalidad | Administrador | Comercial | Contable | Usuario (Cliente) |
 | :--- | :---: | :---: | :---: | :---: |
+| Configurar Identidad | ✅ | ❌ | ❌ | ❌ |
 | Crear Clientes | ✅ | ✅ | ❌ | ❌ |
 | Crear Presupuestos | ✅ | ✅ | ✅ | ✅ |
 | Aprobar Presupuestos | ✅ | ❌ | ✅ | ❌ |
-| Modificar Precios | ✅ | ❌ | ✅ | ❌ |
-| Personalizar Web | ✅ | ✅ | ❌ | ❌ |
-| Gestionar Roles | ✅ | ❌ | ❌ | ❌ |
-| Eliminar Usuarios | ✅ | ❌ | ❌ | ❌ |
+| Gestionar Catálogo | ✅ | ❌ | ✅ | ❌ |
+| Validar Pagos | ✅ | ❌ | ✅ | ❌ |
 | Ver Auditoría | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
-## 6. Reportes y Estadísticas
-*(Solo Administradores y Contables)*
-El sistema genera visualizaciones de:
-- **Volumen de Ventas:** M3 de concreto proyectados vs. despachados.
-- **Estado de Cartera:** Montos pendientes por cobrar y pagos por validar.
-- **Actividad:** Seguimiento de cotizaciones generadas por cada vendedor.
-
----
-
-## 7. Soporte y FAQs
-- **¿Qué pasa si elimino a un usuario?** Se elimina su acceso de Auth0 y su registro local. Sus presupuestos y clientes creados NO se eliminan, pero quedan huérfanos para que un administrador los reasigne.
-- **¿Cómo actualizo los precios del concreto?** Debe ir a la sección "Productos" en el dashboard. Los cambios afectan a los presupuestos *nuevos*, los antiguos mantienen el precio de cuando fueron creados para respetar la oferta al cliente.
-- **Error de Carga de Comprobante:** Asegúrese de que el archivo sea menor a 5MB y en formato JPG, PNG o PDF.
+## 6. Soporte y Solución de Problemas
+*   **¿Por qué el PDF no muestra mi dirección o logo?** Asegúrese de haber llenado todos los campos en la sección **"Identidad Corporativa"** dentro de la página de **"Configuración"** y haber hecho clic en "Guardar Cambios Corporativos".
+*   **¿Puedo registrar un pago parcial?** Sí. El sistema calculará el saldo pendiente automáticamente y lo mostrará tanto en el dashboard como en los nuevos PDFs que genere.
+*   **Error de Tasa BCV:** Si por algún motivo el sistema no puede conectar con el BCV, usted puede ingresar la tasa manualmente en el formulario de pago.
 

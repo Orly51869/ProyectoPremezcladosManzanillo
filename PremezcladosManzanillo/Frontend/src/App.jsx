@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import { CurrencyProvider } from "./context/CurrencyContext";
+import { SettingsProvider } from "./context/SettingsContext";
 
 // Importación de páginas y componentes
 import HomepageNavbar from "./components/HomepageNavbar.jsx";
@@ -100,47 +101,49 @@ const App = () => {
   }
 
   return (
-    <CurrencyProvider>
-      <Router>
-        <ScrollToTop />
-        <ScrollToAnchor />
-        <ChatWidget />
-        <Routes>
-          {/* Rutas Públicas */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/productos" element={<ProductsCatalogPage />} />
-          <Route path="/productos/estructurales" element={<StructuralConcretesPage />} />
-          <Route path="/productos/pavimentos" element={<PavementConcretesPage />} />
-          <Route path="/productos/especiales" element={<SpecialConcretesPage />} />
-          <Route path="/productos/:productId" element={<ProductDetailPage />} />
-          <Route path="/servicios" element={<ServicesPage />} />
-          <Route path="/nosotros" element={<AboutPage />} />
-          <Route path="/contacto" element={<ContactPage />} />
-          <Route path="/proyectos" element={<ProjectsPage />} />
-          
-  
-          {/* Rutas Protegidas */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AuthenticatedApiProvider />}> {/* AuthenticatedApiProvider ahora renderiza un Outlet */}
-              <Route element={<DashboardLayout />}> {/* DashboardLayout envuelve las páginas del dashboard */}
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/clients" element={<ClientsPage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/budgets/*" element={<BudgetsPage />} />
-                <Route path="/dashboard/budgets/build/:id" element={<BudgetBuilderPage />} />
-                <Route path="/products-management" element={<ProductsPage />} />
-                <Route path="/payments" element={<PaymentsPage />} />
-                <Route path="/invoices" element={<InvoicesPage />} /> {/* Nueva ruta para la página de facturas */}
-                <Route path="/admin/roles" element={<AdminRolesPage />} />
-                <Route path="/customize" element={<CustomizationPage />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/settings" element={<Settings />} />
+    <SettingsProvider>
+      <CurrencyProvider>
+        <Router>
+          <ScrollToTop />
+          <ScrollToAnchor />
+          <ChatWidget />
+          <Routes>
+            {/* Rutas Públicas */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/productos" element={<ProductsCatalogPage />} />
+            <Route path="/productos/estructurales" element={<StructuralConcretesPage />} />
+            <Route path="/productos/pavimentos" element={<PavementConcretesPage />} />
+            <Route path="/productos/especiales" element={<SpecialConcretesPage />} />
+            <Route path="/productos/:productId" element={<ProductDetailPage />} />
+            <Route path="/servicios" element={<ServicesPage />} />
+            <Route path="/nosotros" element={<AboutPage />} />
+            <Route path="/contacto" element={<ContactPage />} />
+            <Route path="/proyectos" element={<ProjectsPage />} />
+            
+    
+            {/* Rutas Protegidas */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AuthenticatedApiProvider />}> {/* AuthenticatedApiProvider ahora renderiza un Outlet */}
+                <Route element={<DashboardLayout />}> {/* DashboardLayout envuelve las páginas del dashboard */}
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/clients" element={<ClientsPage />} />
+                  <Route path="/notifications" element={<NotificationsPage />} />
+                  <Route path="/budgets/*" element={<BudgetsPage />} />
+                  <Route path="/dashboard/budgets/build/:id" element={<BudgetBuilderPage />} />
+                  <Route path="/products-management" element={<ProductsPage />} />
+                  <Route path="/payments" element={<PaymentsPage />} />
+                  <Route path="/invoices" element={<InvoicesPage />} /> {/* Nueva ruta para la página de facturas */}
+                  <Route path="/admin/roles" element={<AdminRolesPage />} />
+                  <Route path="/customize" element={<CustomizationPage />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Route>
               </Route>
             </Route>
-          </Route>
-        </Routes>
-      </Router>
-    </CurrencyProvider>
+          </Routes>
+        </Router>
+      </CurrencyProvider>
+    </SettingsProvider>
   );
 };
 

@@ -1,6 +1,6 @@
-/********************************/
-/**      schema.prisma         **/
-/********************************/
+// ********************************
+// *      schema.prisma           *
+// ********************************
 // Arquitectura de la base de datos
 
 
@@ -96,6 +96,12 @@ model Payment {
   receiptUrl        String?   // URL to uploaded payment receipt
   status            String    @default("PENDING") // PENDING, VALIDATED, REJECTED
   observations      String?
+  
+  currency          String    @default("USD")     // USD o VES
+  exchangeRate      Float?                        // Tasa del BCV al momento del pago
+  amountInCurrency  Float?                        // Monto en la moneda original (ej: Bs.)
+  igtfAmount        Float?    @default(0)         // Monto del IGTF aplicado
+  
   validatorId       String?
   validator         User?     @relation("ValidatedPayments", fields: [validatorId], references: [id])
   validatedAt       DateTime?

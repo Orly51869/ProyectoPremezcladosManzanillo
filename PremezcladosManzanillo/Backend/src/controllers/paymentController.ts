@@ -4,13 +4,13 @@ import prisma from '../lib/prisma';
 
 // Crear un nuevo pago
 export const createPayment = async (req: Request, res: Response) => {
-  const { budgetId, paidAmount, method, reference, bankFrom, bankTo } = req.body;
+  const { budgetId, paidAmount, method, reference, bankFrom, bankTo, currency, exchangeRate, amountInCurrency, igtfAmount } = req.body;
   const authUserId = req.auth?.payload.sub as string;
   const userName = (req.auth?.payload as any)?.name || 'Usuario';
   const receiptFile = req.file as Express.Multer.File | undefined;
 
   if (!authUserId) return res.status(401).json({ error: 'No se encontró el ID del usuario autenticado.' });
-  if (!budgetId || !paidAmount || !method) return res.status(400).json({ error: 'Faltan campos requeridos.' });
+  if (!budgetId || !method) return res.status(400).json({ error: 'Faltan campos requeridos.' });
 
   try {
     const budget = await prisma.budget.findUnique({
@@ -22,18 +22,42 @@ export const createPayment = async (req: Request, res: Response) => {
     if (budget.status !== 'APPROVED') return res.status(400).json({ error: 'Solo se pueden registrar pagos para presupuestos APROBADOS.' });
 
     const currentPaidAmount = budget.payments.reduce((sum, p) => sum + p.paidAmount, 0);
-    const newAmount = parseFloat(paidAmount);
+    
+    // Calcular el monto en USD (que es la base de la contabilidad interna)
+    let newAmountInUSD = parseFloat(paidAmount);
+    
+    // Si se proporciona moneda y tasa, validamos/calculamos
+    if (currency === 'VES' && exchangeRate && amountInCurrency) {
+      // Si recibimos Bs, el equivalente en USD es montoBs / tasa
+      newAmountInUSD = parseFloat(amountInCurrency) / parseFloat(exchangeRate);
+    }
+
     const totalPending = budget.total - currentPaidAmount;
 
-    if (newAmount > totalPending) return res.status(400).json({ error: `Excede el saldo pendiente. Pendiente: ${totalPending.toFixed(2)}` });
+    // Permitir un pequeño margen de error por decimales (0.01)
+    if (newAmountInUSD > (totalPending + 0.01)) {
+      return res.status(400).json({ error: `Excede el saldo pendiente. Pendiente: ${totalPending.toFixed(2)} USD` });
+    }
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const fullReceiptUrl = receiptFile ? `${baseUrl}/${receiptFile.path.replace(/\\/g, '/')}` : undefined;
     
     const newPayment = await prisma.payment.create({
       data: {
-        budgetId, amount: budget.total, paidAmount: newAmount, pending: totalPending - newAmount,
-        method, reference, bankFrom, bankTo, receiptUrl: fullReceiptUrl, status: 'PENDING',
+        budgetId, 
+        amount: budget.total, 
+        paidAmount: newAmountInUSD, 
+        pending: Math.max(0, totalPending - newAmountInUSD),
+        method, 
+        reference, 
+        bankFrom, 
+        bankTo, 
+        receiptUrl: fullReceiptUrl, 
+        status: 'PENDING',
+        currency: currency || 'USD',
+        exchangeRate: exchangeRate ? parseFloat(exchangeRate) : undefined,
+        amountInCurrency: amountInCurrency ? parseFloat(amountInCurrency) : undefined,
+        igtfAmount: igtfAmount ? parseFloat(igtfAmount) : 0
       },
     });
 
@@ -43,7 +67,7 @@ export const createPayment = async (req: Request, res: Response) => {
       action: 'CREATE',
       entity: 'PAYMENT',
       entityId: newPayment.id,
-      details: `Pago registrado: ${budget.title} por ${newAmount}`
+      details: `Pago registrado (${currency || 'USD'}): ${budget.title} por ${amountInCurrency || paidAmount}`
     });
 
     res.status(201).json(newPayment);

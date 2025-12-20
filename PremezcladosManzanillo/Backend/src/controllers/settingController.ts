@@ -67,3 +67,21 @@ export const updateSetting = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al actualizar la configuración.' });
   }
 };
+
+// Subir un asset (imagen, logo, etc) y devolver la URL
+export const uploadSettingAsset = async (req: Request, res: Response) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'No se subió ningún archivo.' });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const fileUrl = `${baseUrl}/uploads/assets/${file.filename}`;
+
+    res.json({ url: fileUrl });
+  } catch (error) {
+    console.error('Error uploading asset:', error);
+    res.status(500).json({ error: 'Error al subir el archivo.' });
+  }
+};

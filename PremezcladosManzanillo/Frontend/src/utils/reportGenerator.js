@@ -1,68 +1,14 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatCurrency } from './helpers';
-
-// Helper to load image as Data URL
-const getLogoDataUrl = async () => {
-    try {
-        const response = await fetch('/assets/LOGO_PREMEZCLADOS.svg');
-        const svgText = await response.text();
-        
-        // Since jsPDF doesn't natively support SVG, we can try to use a canvas to rasterize it
-        // Or for simplicity in this specific environment without extra heavy libraries like canvg,
-        // we might fallback to text if this fails or just return null.
-        // However, let's try a simpler approach: assume we might have a PNG fallback or just use text.
-        // But the user requested "Personalized with Company Logo".
-        // Let's try to load it into an Image object and draw to canvas.
-        
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                resolve(canvas.toDataURL('image/png'));
-            };
-            img.onerror = (e) => {
-                 console.warn("Could not load logo for PDF", e);
-                 resolve(null);
-            };
-            img.src = '/assets/LOGO_PREMEZCLADOS.svg'; // Browser handles SVG in Image src usually
-        });
-    } catch (e) {
-        console.warn("Error fetching logo", e);
-        return null;
-    }
-};
+import { getLogoDataUrl, addCompanyHeader } from './pdfHelpers';
 
 export const generateReportPDF = async (data, stats, role, userName) => {
     const doc = new jsPDF();
     const logoDataUrl = await getLogoDataUrl();
     
-    let y = 15;
-
-    // --- Header ---
-    if (logoDataUrl) {
-        doc.addImage(logoDataUrl, 'PNG', 14, 10, 20, 20); // x, y, w, h
-        // Adjust text position next to logo
-        doc.setFontSize(16);
-        doc.setTextColor(22, 163, 74); // Brand Color (Green)
-        doc.text("PREMEZCLADOS MANZANILLO, C.A.", 40, 20);
-        
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text("R.IF.J-29762187-3 | Telf: 0295-8726210", 40, 26);
-        doc.text("Av. 31 de Julio, Edif Cantera Manzanillo, Sector Guatamare", 40, 31);
-        y = 40;
-    } else {
-        // Text fallback
-        doc.setFontSize(16);
-        doc.setTextColor(22, 163, 74);
-        doc.text("PREMEZCLADOS MANZANILLO, C.A.", 14, 20);
-        y = 30;
-    }
+    // --- Header Corporativo ---
+    let y = addCompanyHeader(doc, logoDataUrl);
 
     // --- Title ---
     doc.setDrawColor(200);
