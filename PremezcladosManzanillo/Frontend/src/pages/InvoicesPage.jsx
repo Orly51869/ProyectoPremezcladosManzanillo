@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../utils/api';
-import { FileText, Download, Upload, X } from 'lucide-react';
+import { FileText, Download, Upload, X, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import Modal from '../components/Modal';
 
@@ -156,30 +156,54 @@ const InvoicesPage = () => {
                       {format(new Date(invoice.proformaGeneratedAt), 'dd/MM/yyyy')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex flex-col gap-1 items-end">
                         {invoice.fiscalInvoiceUrl && (
-                          <a 
-                            href={invoice.fiscalInvoiceUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            download
-                            className="text-brand-mid hover:text-brand-primary dark:text-green-400 dark:hover:text-green-300 transition-colors"
-                            title="Descargar Factura Fiscal"
-                          >
-                            <Download className="w-5 h-5" />
-                          </a>
+                          <div className="flex items-center gap-2 group">
+                            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500">Factura</span>
+                            <div className="flex gap-1">
+                              <a 
+                                href={invoice.fiscalInvoiceUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                                title="Ver Factura Fiscal"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </a>
+                              <a 
+                                href={invoice.fiscalInvoiceUrl} 
+                                download
+                                className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
+                                title="Descargar Factura Fiscal"
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
+                            </div>
+                          </div>
                         )}
                         {invoice.deliveryOrderUrl && (
-                          <a 
-                            href={invoice.deliveryOrderUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            download
-                            className="text-brand-mid hover:text-brand-primary dark:text-green-400 dark:hover:text-green-300 transition-colors"
-                            title="Descargar Orden de Entrega"
-                          >
-                            <Download className="w-5 h-5" />
-                          </a>
+                          <div className="flex items-center gap-2 group">
+                            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500">Entrega</span>
+                            <div className="flex gap-1">
+                              <a 
+                                href={invoice.deliveryOrderUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                                title="Ver Orden de Entrega"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </a>
+                              <a 
+                                href={invoice.deliveryOrderUrl} 
+                                download
+                                className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
+                                title="Descargar Orden de Entrega"
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
+                            </div>
+                          </div>
                         )}
                         {/* Option to upload documents for Admin/Accountant - only show if status is PROFORMA or if documents are missing */}
                         {canUploadDocuments && (invoice.status === 'PROFORMA' || !invoice.fiscalInvoiceUrl || !invoice.deliveryOrderUrl) && (

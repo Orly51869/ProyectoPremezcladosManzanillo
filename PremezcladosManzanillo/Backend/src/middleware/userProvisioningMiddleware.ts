@@ -18,6 +18,7 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
     });
 
     const determinedRole = authRoles && authRoles.length > 0 ? authRoles[0] : 'Usuario';
+    const currentName = authName || 'Unnamed User';
 
     if (!user) {
       const userEmail = authEmail || `${authId}@placeholder.email`;
@@ -26,18 +27,26 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
         data: {
           id: authId,
           email: userEmail,
-          name: authName || 'Unnamed User',
-          role: determinedRole, // Use determined role
+          name: currentName,
+          role: determinedRole,
         },
       });
       console.log(`New user provisioned: ${user.email} with ID: ${user.id}, Role: ${user.role}`);
-    } else if (user.role !== determinedRole) {
-      // Update user's role if it has changed in Auth0
-      user = await prisma.user.update({
-        where: { id: authId },
-        data: { role: determinedRole },
-      });
-      console.log(`User role updated for ${user.email} to: ${user.role}`);
+    } else {
+      // Sincronizar nombre y rol si han cambiado o si el nombre era genérico
+      const nameNeedsUpdate = user.name === 'Unnamed User' && currentName !== 'Unnamed User';
+      const roleNeedsUpdate = user.role !== determinedRole;
+
+      if (nameNeedsUpdate || roleNeedsUpdate) {
+        user = await prisma.user.update({
+          where: { id: authId },
+          data: { 
+            role: determinedRole,
+            name: nameNeedsUpdate ? currentName : user.name
+          },
+        });
+        console.log(`User data synced for ${user.email}: Name=${user.name}, Role=${user.role}`);
+      }
     }
 
     (req as any).dbUser = user;

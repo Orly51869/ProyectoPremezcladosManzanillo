@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { formatCurrency } from "../../utils/helpers";
 import PaymentCard from "./PaymentCard.jsx";
 import PaymentValidationModal from "./PaymentValidationModal.jsx"; // Import the new modal
-import { Download } from "lucide-react"; // For document downloads
+import { Download, Eye } from "lucide-react"; // For document downloads
 
 const PaymentsList = ({
   payments = [],
@@ -166,11 +166,36 @@ const PaymentsList = ({
                     {p.validatedAt ? new Date(p.validatedAt).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="p-2 text-sm">
-                    <div className="flex flex-col gap-1">
-                      {p.receiptUrl && <a href={p.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-1"><Download size={14} /> Recibo</a>}
-                      {p.proFormaInvoiceUrl && <a href={p.proFormaInvoiceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-1"><Download size={14} /> Proforma</a>}
-                      {p.fiscalInvoiceUrl && <a href={p.fiscalInvoiceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-1"><Download size={14} /> Factura Fiscal</a>}
-                      {p.deliveryOrderUrl && <a href={p.deliveryOrderUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-1"><Download size={14} /> Orden Entrega</a>}
+                    <div className="flex flex-col gap-2">
+                      {[
+                        { url: p.receiptUrl, label: "Recibo" },
+                        { url: p.proFormaInvoiceUrl, label: "Proforma" },
+                        { url: p.fiscalInvoiceUrl, label: "F. Fiscal" },
+                        { url: p.deliveryOrderUrl, label: "O. Entrega" }
+                      ].filter(doc => doc.url).map((doc, idx) => (
+                        <div key={idx} className="flex items-center gap-2 group">
+                          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 w-16 truncate">{doc.label}</span>
+                          <div className="flex gap-1">
+                            <a 
+                              href={doc.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                              title={`Ver ${doc.label}`}
+                            >
+                              <Eye size={14} />
+                            </a>
+                            <a 
+                              href={doc.url} 
+                              download
+                              className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
+                              title={`Descargar ${doc.label}`}
+                            >
+                              <Download size={14} />
+                            </a>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </td>
                   <td className="p-2 text-sm">
