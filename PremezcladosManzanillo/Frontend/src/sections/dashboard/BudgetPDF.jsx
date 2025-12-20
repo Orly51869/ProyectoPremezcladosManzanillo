@@ -63,6 +63,24 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
     doc.text(`Atención: ${client?.contactPerson || 'N/A'}`, 14, y);
     y += 10;
 
+    // --- FICHA TÉCNICA DE OBRA (Operativo) ---
+    doc.setFillColor(240, 240, 240);
+    doc.rect(14, y, 182, 35, 'F');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text("FICHA TÉCNICA DE OBRA / DESPACHO", 18, y + 7);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Ubiciación: ${budget.address || 'No especificada'}`, 18, y + 14);
+    doc.text(`Tipo de Obra: ${budget.workType || 'No especificado'}`, 18, y + 19);
+    doc.text(`Resistencia (f'c): ${budget.resistance || 'N/A'} kg/cm²`, 18, y + 24);
+    doc.text(`Tipo Concreto: ${budget.concreteType || 'N/A'}`, 100, y + 24);
+    doc.text(`Volumen Est.: ${budget.volume || 0} m³`, 18, y + 29);
+    doc.text(`Fecha Colado: ${formatDate(budget.deliveryDate)}`, 100, y + 29);
+    
+    y += 45;
+
     // --- DETALLES DE PRODUCTOS ---
     const tableColumn = ["Descripción", "Unidad", "Cantidad", "Precio Unitario", "Total"];
     

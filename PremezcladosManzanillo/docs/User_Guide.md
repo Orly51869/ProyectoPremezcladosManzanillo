@@ -49,8 +49,10 @@ No se pueden crear presupuestos sin productos definidos. Puede hacerlo de dos fo
 Una vez configurado lo anterior, el sistema está listo para operar:
 1.  Crear **Presupuesto** (Cotización).
 2.  **Aprobación:** Si es Administrador o Contable, revise y apruebe la cotización.
-3.  **Registro de Pago:** Registre el abono (en $ o Bs.).
-4.  **Facturación:** El sistema genera la Proforma tras validar el pago.
+3.  **Vigencia:** El asesor define el tiempo de validez. Un presupuesto vencido bloquea automáticamente los pagos.
+4.  **Registro de Pago:** Registre el abono (en $ o Bs.).
+5.  **Facturación:** El sistema genera la Proforma tras validar el pago.
+6.  **Despacho (Operaciones):** El personal de planta visualiza el presupuesto pagado, prepara el concreto según la **Ficha Técnica** del PDF y sube la **Orden de Entrega** firmada.
 
 ---
 
@@ -86,15 +88,16 @@ Dada la realidad económica en Venezuela, el sistema permite un registro híbrid
 
 ## 5. Matriz de Roles y Permisos
 
-| Funcionalidad | Administrador | Comercial | Contable | Usuario (Cliente) |
-| :--- | :---: | :---: | :---: | :---: |
-| Configurar Identidad | ✅ | ❌ | ❌ | ❌ |
-| Crear Clientes | ✅ | ✅ | ❌ | ❌ |
-| Crear Presupuestos | ✅ | ✅ | ✅ | ✅ |
-| Aprobar Presupuestos | ✅ | ❌ | ✅ | ❌ |
-| Gestionar Catálogo | ✅ | ❌ | ✅ | ❌ |
-| Validar Pagos | ✅ | ❌ | ✅ | ❌ |
-| Ver Auditoría | ✅ | ❌ | ❌ | ❌ |
+| Funcionalidad | Administrador | Comercial | Contable | Operaciones | Usuario |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Configurar Identidad | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Crear Clientes | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Crear Presupuestos | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Aprobar Presupuestos | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Gestionar Catálogo | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Validar Pagos | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Cargar Orden Entrega | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Ver Auditoría | ✅ | ❌ | ❌ | ❌ | ❌ |
 
 ---
 

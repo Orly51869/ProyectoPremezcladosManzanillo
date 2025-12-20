@@ -12,7 +12,7 @@ export const getInvoices = async (req: Request, res: Response) => {
 
   try {
     let invoices;
-    if (roles.includes('Administrador') || roles.includes('Contable')) {
+    if (roles.includes('Administrador') || roles.includes('Contable') || roles.includes('Operaciones')) {
       // Admins and Accountants can see all invoices
       invoices = await prisma.invoice.findMany({
         include: {
@@ -94,9 +94,9 @@ export const getInvoiceById = async (req: Request, res: Response) => {
 
     // Comprobación de autorización
     const isOwner = invoice.payment.budget.creatorId === authUserId;
-    const isAdminOrAccountant = roles.includes('Administrador') || roles.includes('Contable');
+    const isAdminAccountantOrOps = roles.includes('Administrador') || roles.includes('Contable') || roles.includes('Operaciones');
 
-    if (!isOwner && !isAdminOrAccountant) {
+    if (!isOwner && !isAdminAccountantOrOps) {
       return res.status(403).json({ error: 'Forbidden: You do not have permission to view this invoice.' });
     }
 
@@ -112,9 +112,9 @@ export const updateInvoice = async (req: Request, res: Response) => {
   const { id } = req.params;
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
-  // Solo Admin o Contable pueden actualizar facturas (subir documentos)
-  if (!roles.includes('Administrador') && !roles.includes('Contable')) {
-    return res.status(403).json({ error: 'Forbidden: Solo los administradores y contables pueden actualizar facturas.' });
+  // Admin, Contable u Operaciones pueden actualizar facturas (subir documentos)
+  if (!roles.includes('Administrador') && !roles.includes('Contable') && !roles.includes('Operaciones')) {
+    return res.status(403).json({ error: 'Forbidden: Solo personal autorizado (Admin/Contable/Operaciones) puede actualizar documentos.' });
   }
 
   // Aserción de tipos para acceder a archivos desde multer
