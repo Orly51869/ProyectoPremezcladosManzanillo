@@ -73,12 +73,18 @@ const Settings = () => {
         for (const row of rows) {
           try {
             // Normalización de campos comunes
+            const rawType = (row.tipo || row.Tipo || row.type || row.Type || 'OTHER').toUpperCase();
+            let resolvedType = 'OTHER';
+            if (rawType.includes('CONCRE')) resolvedType = 'CONCRETE';
+            else if (rawType.includes('BLOQU') || rawType.includes('BLOCK')) resolvedType = 'BLOCK';
+            else if (rawType.includes('SERVIC')) resolvedType = 'SERVICE';
+
             const productData = {
               name: row.nombre || row.name || row.Nombre || row.Name,
               price: row.precio || row.price || row.Precio || row.Price,
-              type: row.tipo || row.Tipo || row.unidad || row.type || row.Unidad || row.Type || 'Unidad',
+              type: resolvedType,
               category: row.categoria || row.category || row.Categoria || row.Category,
-              description: row.descripcion || row.description || row.Descripcion || row.Description || ""
+              description: row.descripcion || row.description || row.Descripcion || row.Description || row.unidad || row.Unidad || ""
             };
 
             if (productData.name && productData.price) {
@@ -296,9 +302,9 @@ const Settings = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr><td className="border p-1">nombre</td><td className="border p-1">Ej: Concreto 250</td></tr>
+                     <tr><td className="border p-1">nombre</td><td className="border p-1">Ej: Concreto 250</td></tr>
                     <tr><td className="border p-1">precio</td><td className="border p-1">Ej: 145.50</td></tr>
-                    <tr><td className="border p-1">tipo</td><td className="border p-1">Unidad (m3, m2, kg, etc)</td></tr>
+                    <tr><td className="border p-1">tipo</td><td className="border p-1">Tipología (Concreto, Bloque, Servicio, Otro)</td></tr>
                     <tr><td className="border p-1">categoria</td><td className="border p-1">Ej: Estructurales</td></tr>
                   </tbody>
                 </table>

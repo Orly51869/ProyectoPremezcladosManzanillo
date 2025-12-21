@@ -27,16 +27,17 @@ No se pueden crear presupuestos sin productos definidos. Puede hacerlo de dos fo
 
 1.  **Carga Manual:**
     *   Vaya a **"Productos"** para gestionar el inventario maestro.
-    *   Defina **Categorías** (ej: Concretos, Bombeo, Aditivos).
-    *   Agregue productos con su **Precio Base** y **Unidad de Medida**.
+    *   Defina **Categorías** (ej: Aditivos, Especiales, Pavimentos).
+    *   Agregue productos especificando su **Precio Base** y su **Tipología** (Concreto, Bloque, Servicio u Otro).
+    *   *Sugerencia:* Incluya la unidad de medida (m3, saco, viaje) en el nombre o descripción para mayor claridad en el presupuesto.
 
 2.  **Carga Masiva (Recomendado para inventarios grandes):**
     *   Vaya a **"Configuración"** -> **"Importar Datos"**.
     *   Prepare un archivo **CSV** con los siguientes encabezados obligatorios:
         *   `nombre`: Nombre del producto.
         *   `precio`: Monto en USD (use punto para decimales, ej: 150.50).
-        *   `tipo`: Unidad de medida o tipo (ej: m3, viaje, kg). Este aparece como "TIPO" en la tabla.
-        *   `categoria`: Nombre de la categoría a la que pertenece (ej: Estructurales, Especiales).
+        *   `tipo`: Tipología del producto. El sistema reconoce: **Concreto, Bloque, Servicio, Otro**. Si usa otros términos o unidades aquí, el sistema los clasificará automáticamente como "Otro".
+        *   `categoria`: Nombre de la categoría (ej: Estructurales, Especiales).
     *   Seleccione el archivo y haga clic en **"Procesar Archivo"**. El sistema creará automáticamente las categorías que no existan.
 
 ### Paso 3: Registro de Clientes

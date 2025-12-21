@@ -12,11 +12,16 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
 
   useEffect(() => {
     if (product) {
+      // Normalizar tipo si viene de carga masiva con datos erróneos
+      const validTypes = ["CONCRETE", "BLOCK", "SERVICE", "OTHER"];
+      const currentType = product.type || "CONCRETE";
+      const normalizedType = validTypes.includes(currentType.toUpperCase()) ? currentType.toUpperCase() : "OTHER";
+
       setFormData({
         name: product.name || "",
         description: product.description || "",
         price: product.price || "",
-        type: product.type || "CONCRETE",
+        type: normalizedType,
         category: product.category?.name || product.category || "",
       });
     } else {
