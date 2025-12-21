@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../utils/api';
-import { UserCog, ShieldAlert, Trash2 } from 'lucide-react';
+import { UserCog, ShieldAlert, Trash2, FileDown } from 'lucide-react';
 
 const UserAvatar = ({ user }) => {
   const [imgError, setImgError] = useState(false);
@@ -119,6 +119,61 @@ const AdminRolesPage = () => {
     }
   };
 
+  const exportUsersCSV = () => {
+    const headers = ["ID", "Nombre", "Email", "Roles"];
+    const rows = users.map(u => [
+      u.user_id,
+      u.name || 'Sin nombre',
+      u.email,
+      (u.roles || []).join(' | ')
+    ]);
+    generateCSV(`reporte-usuarios-${new Date().toISOString().split('T')[0]}`, headers, rows);
+  };
+
+  const exportAuditCSV = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.action) params.append('action', filters.action);
+      if (filters.entity) params.append('entity', filters.entity);
+      if (filters.userName) params.append('userName', filters.userName);
+      params.append('all', 'true'); // Pedir todos los registros para el reporte
+      
+      const response = await api.get(`/api/audit?${params.toString()}`);
+      const logsToExport = response.data;
+
+      const headers = ["Fecha", "Usuario", "Acción", "Entidad", "Detalles"];
+      const rows = logsToExport.map(log => [
+        new Date(log.createdAt).toLocaleString(),
+        log.userName || 'Sistema',
+        log.action,
+        log.entity,
+        log.details || ''
+      ]);
+      generateCSV(`auditoria-${new Date().toISOString().split('T')[0]}`, headers, rows);
+    } catch (err) {
+      console.error('Error al exportar auditoría:', err);
+      alert('Error al generar el reporte de auditoría.');
+    }
+  };
+
+  const generateCSV = (filename, headers, rows) => {
+    const escape = (val) => `"${String(val).replace(/"/g, '""')}"`;
+    const csvContent = [
+      headers.map(escape).join(','),
+      ...rows.map(row => row.map(escape).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${filename}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) return <div className="p-8 text-center text-gray-600 dark:text-gray-300">Cargando usuarios...</div>;
 
   return (
@@ -130,6 +185,13 @@ const AdminRolesPage = () => {
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
           Gestión de Usuarios y Roles
         </h1>
+        <button 
+          onClick={exportUsersCSV}
+          className="ml-auto flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-primary transition-all shadow-sm"
+        >
+          <FileDown className="w-4 h-4 text-brand-primary" />
+          Reporte de Usuarios
+        </button>
       </div>
 
       {error && (
@@ -244,12 +306,21 @@ const AdminRolesPage = () => {
             <ShieldAlert className="w-6 h-6 text-brand-primary" />
             Historial de Actividad
           </h2>
-          <button 
-            onClick={() => { setFilters({ action: '', entity: '', userName: '' }); fetchAuditLogs(); }}
-            className="text-sm font-semibold text-brand-primary hover:underline"
-          >
-            Limpiar Filtros
-          </button>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={exportAuditCSV}
+              className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-xl text-sm font-bold hover:bg-brand-mid transition-all shadow-md"
+            >
+              <FileDown className="w-4 h-4" />
+              Exportar Auditoría
+            </button>
+            <button 
+              onClick={() => { setFilters({ action: '', entity: '', userName: '' }); fetchAuditLogs(); }}
+              className="text-sm font-semibold text-brand-primary hover:underline"
+            >
+              Limpiar Filtros
+            </button>
+          </div>
         </div>
 
         {/* Filters Section */}

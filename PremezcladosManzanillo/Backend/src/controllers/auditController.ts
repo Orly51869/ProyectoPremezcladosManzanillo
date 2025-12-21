@@ -25,10 +25,12 @@ export const getAuditLogs = async (req: Request, res: Response) => {
       };
     }
 
+    const limit = req.query.limit ? parseInt(String(req.query.limit)) : (req.query.all === 'true' ? undefined : 100);
+
     const logs = await prisma.auditLog.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      take: 100 
+      take: limit
     });
     res.json(logs);
   } catch (error) {
