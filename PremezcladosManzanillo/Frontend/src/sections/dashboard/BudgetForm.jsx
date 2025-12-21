@@ -359,28 +359,65 @@ const BudgetForm = ({
 
         <hr className="my-4 border-gray-300 dark:border-gray-600"/>
 
-        {/* Carrito de Productos */}
-        <div>
-          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Productos en Presupuesto</h3>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {productItems.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">Añade productos del catálogo</p>
-            ) : (
-              productItems.map(item => (
-                <div key={item.productId} className="flex items-center justify-between bg-gray-50 dark:bg-dark-surface p-2 rounded-lg">
-                  <div>
-                    <p className="font-semibold">{item.name}</p>
-                    {isPrivilegedEditor && <p className="text-sm text-gray-500">${item.unitPrice.toFixed(2)} c/u</p>}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input type="number" min="1" value={item.quantity} onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value, 10) || 1)} className="w-16 rounded-lg border-gray-300 dark:bg-dark-surface dark:border-gray-600 text-center"/>
-                    <button onClick={() => handleRemoveItem(item.productId)}><Trash2 className="h-5 w-5 text-red-500 hover:text-red-700"/></button>
-                  </div>
-                </div>
-              ))
-            )}
+        {/* Carrito de Productos - Tabla de Alta Densidad */}
+        <div className="bg-gray-50 dark:bg-dark-primary/30 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-dark-surface flex justify-between items-center">
+            <h3 className="text-xs font-black text-brand-primary uppercase tracking-widest">Ítems del Presupuesto</h3>
+            <span className="text-[10px] font-bold text-gray-400">{productItems.length} productos</span>
           </div>
-           {errors.items && <p className="text-sm text-red-500 mt-1">{errors.items}</p>}
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="text-[10px] uppercase font-black text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-dark-surface/50">
+                  <th className="px-4 py-2">Producto</th>
+                  <th className="px-2 py-2 text-center w-20">Cant.</th>
+                  {canViewPrices && <th className="px-2 py-2 text-right">Precio</th>}
+                  <th className="px-4 py-2 text-right w-10"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {productItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={canViewPrices ? 4 : 3} className="px-4 py-8 text-center text-[11px] text-gray-400 italic">
+                      No hay productos seleccionados. Usa el catálogo a la derecha.
+                    </td>
+                  </tr>
+                ) : (
+                  productItems.map(item => (
+                    <tr key={item.productId} className="hover:bg-white dark:hover:bg-dark-surface/30 transition-colors group">
+                      <td className="px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200">
+                        {item.name}
+                      </td>
+                      <td className="px-2 py-2">
+                        <input 
+                          type="number" 
+                          min="1" 
+                          value={item.quantity} 
+                          onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value, 10) || 1)} 
+                          className="w-full h-8 rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface text-center text-xs font-black text-brand-primary focus:ring-1 focus:ring-brand-primary"
+                        />
+                      </td>
+                      {canViewPrices && (
+                        <td className="px-2 py-2 text-right text-xs font-bold text-gray-500 dark:text-gray-400">
+                          ${item.unitPrice.toFixed(2)}
+                        </td>
+                      )}
+                      <td className="px-4 py-2 text-right">
+                        <button 
+                          onClick={() => handleRemoveItem(item.productId)}
+                          className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          {errors.items && <p className="text-[10px] text-red-500 font-bold px-4 py-2 bg-red-50 dark:bg-red-900/10 border-t border-red-100 dark:border-red-900/30">{errors.items}</p>}
         </div>
         
         {/* Total y Acciones */}
