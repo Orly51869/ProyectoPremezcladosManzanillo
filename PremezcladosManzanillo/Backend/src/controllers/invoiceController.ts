@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { logActivity } from '../utils/auditLogger';
 import prisma from '../lib/prisma';
 
 // Obtener todas las facturas para el usuario autenticado (o todas si es admin)
@@ -206,5 +207,38 @@ export const updateInvoice = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(`Error updating invoice with ID ${id}:`, error);
     res.status(500).json({ error: 'Error interno del servidor al actualizar la factura.' });
+  }
+};
+
+// Eliminar una factura (Solo Administradores)
+export const deleteInvoice = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
+  const authUserId = req.auth?.payload.sub as string;
+  const userName = (req.auth?.payload as any)?.name || 'Administrador';
+
+  if (!roles.includes('Administrador')) {
+    return res.status(403).json({ error: 'Acceso denegado: Solo administradores pueden eliminar facturas.' });
+  }
+
+  try {
+    const invoice = await prisma.invoice.findUnique({ where: { id } });
+    if (!invoice) return res.status(404).json({ error: 'Factura no encontrada.' });
+
+    await prisma.invoice.delete({ where: { id } });
+
+    await logActivity({
+      userId: authUserId,
+      userName,
+      action: 'DELETE',
+      entity: 'INVOICE',
+      entityId: id,
+      details: `FACTURA ELIMINADA: Número ${invoice.invoiceNumber}.`
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error(`Error deleting invoice ${id}:`, error);
+    res.status(500).json({ error: 'Error interno al intentar eliminar la factura.' });
   }
 };

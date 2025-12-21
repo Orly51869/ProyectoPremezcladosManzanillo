@@ -184,7 +184,7 @@ export const updatePayment = async (req: Request, res: Response) => {
   }
 };
 
-// Eliminar un pago
+// Eliminar un pago (Solo Administradores)
 export const deletePayment = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub as string;
@@ -192,13 +192,23 @@ export const deletePayment = async (req: Request, res: Response) => {
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) return res.status(401).json({ error: 'No autenticado.' });
-  if (!roles.includes('Administrador')) return res.status(403).json({ error: 'Solo administradores.' });
+  if (!roles.includes('Administrador')) return res.status(403).json({ error: 'Acceso denegado: Solo administradores pueden eliminar pagos.' });
 
   try {
-    const payment = await prisma.payment.findUnique({ where: { id }, include: { budget: true } });
+    const payment = await prisma.payment.findUnique({ 
+      where: { id }, 
+      include: { budget: true, invoice: true } 
+    });
+    
     if (!payment) return res.status(404).json({ error: 'Pago no encontrado.' });
 
-    await prisma.payment.delete({ where: { id } });
+    // Ejecutar en transacción para limpiar factura asociada si existe
+    await prisma.$transaction(async (tx) => {
+      if (payment.invoice) {
+        await tx.invoice.delete({ where: { id: payment.invoice.id } });
+      }
+      await tx.payment.delete({ where: { id } });
+    });
 
     await logActivity({
       userId: authUserId,
@@ -206,11 +216,12 @@ export const deletePayment = async (req: Request, res: Response) => {
       action: 'DELETE',
       entity: 'PAYMENT',
       entityId: id,
-      details: `Pago eliminado del presupuesto: ${payment.budget.title}`
+      details: `PAGO ELIMINADO: Presupuesto ${payment.budget.title}, Monto ${payment.paidAmount} USD. Se eliminó también la factura vinculada si existía.`
     });
 
     res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: 'Error interno del servidor.' });
+    console.error('Error deleting payment:', error);
+    res.status(500).json({ error: 'Error interno al intentar eliminar el pago.' });
   }
 };

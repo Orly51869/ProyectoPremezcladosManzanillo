@@ -4,8 +4,12 @@
 // Archivo de inicio del servidor
 
 import app from './app';
+import { startExpirationScheduler } from './lib/scheduler';
 
 const port = 3001;
+
+// Iniciar scheduler de vencimientos
+startExpirationScheduler();
 
 // Manejadores globales de errores
 process.on('unhandledRejection', (reason, promise) => {

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { formatCurrency } from "../../utils/helpers";
 import PaymentCard from "./PaymentCard.jsx";
 import PaymentValidationModal from "./PaymentValidationModal.jsx"; // Import the new modal
-import { Download, Eye } from "lucide-react"; // For document downloads
+import { Download, Eye, Trash2 } from "lucide-react"; // For document downloads
 
 const PaymentsList = ({
   payments = [],
@@ -199,34 +199,52 @@ const PaymentsList = ({
                     </div>
                   </td>
                   <td className="p-2 text-sm">
-                    <div className="flex gap-2">
-                      {canValidatePayment(p) && (
-                        <button
-                          onClick={() => handleOpenValidationModal(p)}
-                          title="Validar pago"
-                          className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
-                        >
-                          Validar
-                        </button>
-                      )}
-                      {p.status === "REJECTED" && (
-                        <button
-                          onClick={() => onResend(p.id)}
-                          className="px-2 py-1 bg-brand-primary text-white rounded-lg"
-                        >
-                          Reenviar
-                        </button>
-                      )}
-                      {budgetDebtMap[p.budgetId] > 0.01 && (
-                        <button
-                          onClick={() => onPayPending(p)}
-                          className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1"
-                          title="Registrar abono"
-                        >
-                           Abonar
-                        </button>
-                      )}
-                    </div>
+                      <div className="flex gap-2">
+                        {canValidatePayment(p) && (
+                          <button
+                            onClick={() => handleOpenValidationModal(p)}
+                            title="Validar pago"
+                            className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
+                          >
+                            Validar
+                          </button>
+                        )}
+                        {p.status === "REJECTED" && (
+                          <button
+                            onClick={() => onResend(p.id)}
+                            className="px-2 py-1 bg-brand-primary text-white rounded-lg"
+                          >
+                            Reenviar
+                          </button>
+                        )}
+                        {budgetDebtMap[p.budgetId] > 0.01 && (
+                          <button
+                            onClick={() => onPayPending(p)}
+                            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1"
+                            title="Registrar abono"
+                          >
+                             Abonar
+                          </button>
+                        )}
+                        {userRoles.includes('Administrador') && (
+                          <button
+                            onClick={async () => {
+                              if (window.confirm("¿Estás 100% seguro de ELIMINAR este pago? Esta acción es irreversible y también borrará la factura asociada.")) {
+                                try {
+                                  await api.delete(`/api/payments/${p.id}`);
+                                  window.location.reload(); // Recarga simple para ver cambios
+                                } catch (err) {
+                                  alert("Error al eliminar el pago.");
+                                }
+                              }
+                            }}
+                            className="p-1 px-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            title="ELIMINAR PAGO (Admin)"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
                   </td>
                 </tr>
               ))}

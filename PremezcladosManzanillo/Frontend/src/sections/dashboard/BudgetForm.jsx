@@ -237,10 +237,18 @@ const BudgetForm = ({
               <input
                 type="date"
                 name="validUntil"
-                value={formState.validUntil || format(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")}
+                value={formState.validUntil || format(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")}
                 onChange={handleFormChange}
-                className="mt-1 block w-full rounded-lg border border-red-200 dark:border-red-900 bg-red-50/30 dark:bg-red-900/10 px-3 py-2 focus:ring-2 focus:ring-red-200 dark:text-gray-200"
+                disabled={!isPrivilegedEditor}
+                className={`mt-1 block w-full rounded-lg border px-3 py-2 focus:ring-2 dark:text-gray-200 ${
+                  !isPrivilegedEditor 
+                    ? 'bg-gray-100 dark:bg-dark-surface/50 border-gray-200 text-gray-500 cursor-not-allowed' 
+                    : 'border-red-200 dark:border-red-900 bg-red-50/30 dark:bg-red-900/10 focus:ring-red-200'
+                }`}
               />
+              {!isPrivilegedEditor && (
+                <p className="text-[10px] text-gray-400 mt-1 italic">Solo Administradores pueden cambiar esta fecha.</p>
+              )}
             </div>
           </div>
 

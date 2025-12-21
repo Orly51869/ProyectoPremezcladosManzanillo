@@ -258,7 +258,7 @@ export const createBudget = async (req: Request, res: Response) => {
         title, address, deliveryDate: deliveryDate ? new Date(deliveryDate) : undefined,
         workType, resistance, concreteType, element, observations,
         volume: volume ? parseFloat(volume) : undefined,
-        validUntil: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 días de validez por defecto
+        validUntil: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 días de validez por defecto
         total, status: status || 'PENDING',
         creator: { connect: { id: creatorId } },
         client: { connect: { id: clientId } },

@@ -3,6 +3,7 @@ import {
   getInvoices,
   getInvoiceById,
   updateInvoice,
+  deleteInvoice,
 } from '../controllers/invoiceController';
 import { jwtCheck } from '../middleware/jwtCheck';
 import { userProvisioningMiddleware } from '../middleware/userProvisioningMiddleware';
@@ -22,5 +23,8 @@ router.get('/:id', getInvoiceById);
 // PATCH /api/invoices/:id - Actualizar una factura (p. ej., subir factura fiscal u orden de entrega)
 // Esta ruta usará un middleware multer específico para la carga de archivos
 router.patch('/:id', uploadInvoiceDocuments, updateInvoice);
+
+// DELETE /api/invoices/:id - Eliminar una factura (Solo Administradores)
+router.delete('/:id', deleteInvoice);
 
 export default router;

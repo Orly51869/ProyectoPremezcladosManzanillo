@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../utils/api';
-import { FileText, Download, Upload, X, Eye } from 'lucide-react';
+import { FileText, Download, Upload, X, Eye, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import Modal from '../components/Modal';
 
@@ -207,15 +207,35 @@ const InvoicesPage = () => {
                           </div>
                         )}
                         {/* Option to upload documents for Admin/Accountant - only show if status is PROFORMA or if documents are missing */}
-                        {canUploadDocuments && (invoice.status === 'PROFORMA' || !invoice.fiscalInvoiceUrl || !invoice.deliveryOrderUrl) && (
-                          <button
-                            onClick={() => handleOpenUploadModal(invoice)}
-                            className="text-brand-mid hover:text-brand-primary dark:text-green-400 dark:hover:text-green-300 transition-colors"
-                            title="Subir documentos"
-                          >
-                            <Upload className="w-5 h-5" />
-                          </button>
-                        )}
+                        <div className="flex gap-2 items-center mt-2">
+                          {canUploadDocuments && (invoice.status === 'PROFORMA' || !invoice.fiscalInvoiceUrl || !invoice.deliveryOrderUrl) && (
+                            <button
+                              onClick={() => handleOpenUploadModal(invoice)}
+                              className="text-brand-mid hover:text-brand-primary dark:text-green-400 dark:hover:text-green-300 transition-colors"
+                              title="Subir documentos"
+                            >
+                              <Upload className="w-5 h-5" />
+                            </button>
+                          )}
+                          {isAdminOrContable && (
+                            <button
+                              onClick={async () => {
+                                if (window.confirm("¿Estás seguro de eliminar esta factura? Solo el registro se borrará.")) {
+                                  try {
+                                    await api.delete(`/api/invoices/${invoice.id}`);
+                                    fetchInvoices();
+                                  } catch (err) {
+                                    alert("Error al eliminar la factura.");
+                                  }
+                                }
+                              }}
+                              className="text-red-500 hover:text-red-700 transition-colors p-1"
+                              title="Eliminar Factura (Admin)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>

@@ -99,8 +99,9 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
                                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
                                       budget.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900' :
                                       budget.status === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900' :
+                                      budget.status === 'EXPIRED' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900' :
                                       'bg-yellow-100 text-yellow-800 dark:bg-yellow-900'
-                                    }`}>{budget.status}</span>
+                                    }`}>{budget.status === 'EXPIRED' ? 'VENCIDO' : budget.status}</span>
                                 </div>
                                 <p className="text-sm text-brand-text dark:text-gray-400">{format(new Date(budget.createdAt), 'dd/MM/yyyy')}</p>
                                 {budget.processedBy && (

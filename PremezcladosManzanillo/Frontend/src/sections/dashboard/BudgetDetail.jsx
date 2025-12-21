@@ -95,14 +95,42 @@ const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove })
               </div>
             </div>
 
-            <div>
-              <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Especificaciones del concreto</h4>
-              <div className="space-y-2">
-                <div><span className="font-medium">Resistencia (f’c):</span> {project.resistencia || <span className="text-gray-400 italic">No especificada</span>}</div>
-                <div><span className="font-medium">Tipo de concreto:</span> {project.tipoConcreto || <span className="text-gray-400 italic">No especificado</span>}</div>
-                <div><span className="font-medium">Volumen (m³):</span> {project.volumen !== '' ? project.volumen : <span className="text-gray-400 italic">—</span>}</div>
-                <div><span className="font-medium">Elemento a colar:</span> {project.elemento || <span className="text-gray-400 italic">No especificado</span>}</div>
-                <div><span className="font-medium">Requiere bomba:</span> {project.requiereBomba || <span className="text-gray-400 italic">No especificado</span>}</div>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Especificaciones del concreto</h4>
+                <div className="space-y-2">
+                  <div><span className="font-medium">Resistencia (f’c):</span> {project.resistencia || <span className="text-gray-400 italic">No especificada</span>}</div>
+                  <div><span className="font-medium">Tipo de concreto:</span> {project.tipoConcreto || <span className="text-gray-400 italic">No especificado</span>}</div>
+                  <div><span className="font-medium">Volumen (m³):</span> {project.volumen !== '' ? project.volumen : <span className="text-gray-400 italic">—</span>}</div>
+                  <div><span className="font-medium">Elemento a colar:</span> {project.elemento || <span className="text-gray-400 italic">No especificado</span>}</div>
+                  <div><span className="font-medium">Requiere bomba:</span> {project.requiereBomba || <span className="text-gray-400 italic">No especificado</span>}</div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                <h4 className="font-medium text-red-700 dark:text-red-400 mb-2 flex items-center gap-1">Vencimiento</h4>
+                {canApprove && (budget.status === 'PENDING' || budget.status === 'APPROVED') ? (
+                  <div className="space-y-1">
+                    <input 
+                      type="date"
+                      defaultValue={budget.validUntil ? formatDate(budget.validUntil) : ''}
+                      onChange={async (e) => {
+                        try {
+                          await api.put(`/api/budgets/${budget.id}`, { validUntil: e.target.value });
+                          alert('Fecha de vencimiento actualizada correctamente.');
+                        } catch (err) {
+                          alert('Error al actualizar la fecha.');
+                        }
+                      }}
+                      className="w-full p-2 bg-red-50/50 dark:bg-red-900/10 border border-red-200 dark:border-red-900 rounded-md text-xs font-bold"
+                    />
+                    <p className="text-[10px] text-gray-500 italic">Ajuste opcional por gerencia.</p>
+                  </div>
+                ) : (
+                  <div className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                    {budget.validUntil ? format(new Date(budget.validUntil), 'dd/MM/yyyy') : 'No definida'}
+                  </div>
+                )}
               </div>
             </div>
           </div>
