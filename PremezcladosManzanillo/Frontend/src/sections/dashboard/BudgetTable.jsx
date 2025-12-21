@@ -66,10 +66,14 @@ const BudgetTable = ({ budgets, onEdit, onDelete, onApprove, onReject, onViewDet
             <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
               {(() => {
                 const name = budget.processedBy?.name?.trim();
+                const email = budget.processedBy?.email;
                 const isGeneric = !name || 
                                  name.toLowerCase() === 'unnamed user' || 
                                  name.toLowerCase() === 'usuario';
-                return isGeneric ? (budget.status !== 'PENDING' ? 'Sistema' : 'N/A') : name;
+                
+                if (!isGeneric) return name;
+                if (email) return email;
+                return budget.status !== 'PENDING' ? 'Sistema' : 'N/A';
               })()}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
