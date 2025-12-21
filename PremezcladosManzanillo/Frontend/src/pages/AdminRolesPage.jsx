@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../utils/api';
-import { UserCog, ShieldAlert, Trash2, FileDown } from 'lucide-react';
+import { UserCog, ShieldAlert, Trash2, FileDown, Edit2, Check, X } from 'lucide-react';
 
 const UserAvatar = ({ user }) => {
   const [imgError, setImgError] = useState(false);
@@ -35,6 +35,8 @@ const AdminRolesPage = () => {
   const [updating, setUpdating] = useState(null);
 
   const [filters, setFilters] = useState({ action: '', entity: '', userName: '' });
+  const [editingNameId, setEditingNameId] = useState(null);
+  const [newNameValue, setNewNameValue] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -114,6 +116,26 @@ const AdminRolesPage = () => {
     } catch (err) {
       console.error('Error deleting user:', err);
       setError(err.response?.data?.error || 'Error al eliminar el usuario.');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const handleUpdateName = async (userId) => {
+    if (!newNameValue.trim()) return;
+    try {
+      setUpdating(userId);
+      await api.put(`/api/users/${userId}`, { name: newNameValue });
+      
+      setUsers(prevUsers => prevUsers.map(u => 
+        u.user_id === userId ? { ...u, name: newNameValue } : u
+      ));
+      setSuccess('Nombre de usuario actualizado correctamente.');
+      setEditingNameId(null);
+      fetchAuditLogs();
+    } catch (err) {
+      console.error('Error updating name:', err);
+      setError('Error al actualizar el nombre.');
     } finally {
       setUpdating(null);
     }
@@ -235,8 +257,38 @@ const AdminRolesPage = () => {
                       <div className="flex-shrink-0 h-10 w-10">
                         <UserAvatar user={u} />
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-bold text-gray-900 dark:text-white">{u.name || 'Sin nombre'}</div>
+                      <div className="ml-4 flex items-center gap-2">
+                        {editingNameId === u.user_id ? (
+                          <>
+                            <input
+                              type="text"
+                              value={newNameValue}
+                              onChange={(e) => setNewNameValue(e.target.value)}
+                              className="text-sm font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-dark-primary border-b border-brand-primary focus:outline-none px-1"
+                              autoFocus
+                            />
+                            <button onClick={() => handleUpdateName(u.user_id)} className="text-green-600 hover:text-green-700">
+                              <Check size={16} />
+                            </button>
+                            <button onClick={() => setEditingNameId(null)} className="text-red-600 hover:text-red-700">
+                              <X size={16} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-sm font-bold text-gray-900 dark:text-white">{u.name || 'Sin nombre'}</div>
+                            <button 
+                              onClick={() => {
+                                setEditingNameId(u.user_id);
+                                setNewNameValue(u.name || '');
+                              }}
+                              className="text-gray-400 hover:text-brand-primary"
+                              title="Editar nombre"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </td>
