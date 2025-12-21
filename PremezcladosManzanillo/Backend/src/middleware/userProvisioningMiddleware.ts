@@ -4,7 +4,13 @@ import prisma from '../lib/prisma';
 export const userProvisioningMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const authId = req.auth?.payload.sub;
   const authEmail = req.auth?.payload.email as string | undefined;
-  const authName = req.auth?.payload.name as string | undefined;
+  
+  // Intentar obtener el nombre de varios campos comunes en OIDC/Auth0
+  const authName = (req.auth?.payload.name || 
+                    req.auth?.payload.nickname || 
+                    req.auth?.payload.preferred_username || 
+                    (authEmail ? authEmail.split('@')[0] : undefined)) as string | undefined;
+                    
   const authRoles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] | undefined;
 
   if (!authId) {
@@ -18,7 +24,7 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
     });
 
     const determinedRole = authRoles && authRoles.length > 0 ? authRoles[0] : 'Usuario';
-    const currentName = authName || 'Unnamed User';
+    const currentName = authName || 'Usuario';
 
     if (!user) {
       const userEmail = authEmail || `${authId}@placeholder.email`;
@@ -34,7 +40,8 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
       console.log(`New user provisioned: ${user.email} with ID: ${user.id}, Role: ${user.role}`);
     } else {
       // Sincronizar nombre y rol si han cambiado o si el nombre era genérico
-      const nameNeedsUpdate = user.name === 'Unnamed User' && currentName !== 'Unnamed User';
+      const isGenericName = !user.name || user.name === 'Unnamed User' || user.name === 'Usuario';
+      const nameNeedsUpdate = isGenericName && authName && authName !== user.name;
       const roleNeedsUpdate = user.role !== determinedRole;
 
       if (nameNeedsUpdate || roleNeedsUpdate) {

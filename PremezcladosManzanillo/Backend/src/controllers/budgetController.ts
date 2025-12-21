@@ -7,7 +7,10 @@ import { sendNotificationToRoles } from '../utils/notificationHelper';
 export const initBudget = async (req: Request, res: Response) => {
   const { title, clientId, address } = req.body;
   const creatorId = req.auth?.payload.sub;
-  const userName = (req.auth?.payload as any)?.name || 'Usuario';
+  const userName = (req.auth?.payload as any)?.name || 
+                   (req.auth?.payload as any)?.nickname || 
+                   (req.auth?.payload as any)?.email?.split('@')[0] || 
+                   'Usuario';
 
   if (!creatorId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
@@ -93,7 +96,10 @@ export const getBudgets = async (req: Request, res: Response) => {
 export const approveBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Administrador';
+  const userName = (req.auth?.payload as any)?.name || 
+                   (req.auth?.payload as any)?.nickname || 
+                   (req.auth?.payload as any)?.email?.split('@')[0] || 
+                   'Administrador';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) {
@@ -152,7 +158,10 @@ export const rejectBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { rejectionReason } = req.body;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Administrador';
+  const userName = (req.auth?.payload as any)?.name || 
+                   (req.auth?.payload as any)?.nickname || 
+                   (req.auth?.payload as any)?.email?.split('@')[0] || 
+                   'Administrador';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) return res.status(401).json({ error: 'Authenticated user ID not found.' });
@@ -240,7 +249,10 @@ const validateDeliveryDate = (deliveryDate: string | undefined) => {
 export const createBudget = async (req: Request, res: Response) => {
   const { title, clientId, status, products, address, deliveryDate, workType, resistance, concreteType, element, observations, volume } = req.body;
   const creatorId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Usuario';
+  const userName = (req.auth?.payload as any)?.name || 
+                   (req.auth?.payload as any)?.nickname || 
+                   (req.auth?.payload as any)?.email?.split('@')[0] || 
+                   'Usuario';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!creatorId) return res.status(401).json({ error: 'Authenticated user ID not found.' });

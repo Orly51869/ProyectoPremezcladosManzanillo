@@ -64,7 +64,7 @@ const BudgetTable = ({ budgets, onEdit, onDelete, onApprove, onReject, onViewDet
               </span>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
-              {budget.processedBy?.name || 'N/A'}
+              {budget.processedBy?.name || (budget.status !== 'PENDING' ? 'Sistema' : 'N/A')}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
               {budget.processedAt ? format(new Date(budget.processedAt), 'dd/MM/yyyy') : 'N/A'}
