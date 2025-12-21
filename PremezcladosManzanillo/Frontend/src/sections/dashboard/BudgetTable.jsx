@@ -64,7 +64,13 @@ const BudgetTable = ({ budgets, onEdit, onDelete, onApprove, onReject, onViewDet
               </span>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
-              {budget.processedBy?.name || (budget.status !== 'PENDING' ? 'Sistema' : 'N/A')}
+              {(() => {
+                const name = budget.processedBy?.name?.trim();
+                const isGeneric = !name || 
+                                 name.toLowerCase() === 'unnamed user' || 
+                                 name.toLowerCase() === 'usuario';
+                return isGeneric ? (budget.status !== 'PENDING' ? 'Sistema' : 'N/A') : name;
+              })()}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
               {budget.processedAt ? format(new Date(budget.processedAt), 'dd/MM/yyyy') : 'N/A'}

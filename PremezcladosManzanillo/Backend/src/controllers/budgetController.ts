@@ -137,6 +137,17 @@ export const approveBudget = async (req: Request, res: Response) => {
       },
     });
 
+    // Actualizar nombre en la DB si es genérico para este usuario específico
+    if (authUserId) {
+      const userToSync = await prisma.user.findUnique({ where: { id: authUserId } });
+      if (userToSync && (!userToSync.name || userToSync.name.toLowerCase() === 'unnamed user' || userToSync.name.toLowerCase() === 'usuario')) {
+        await prisma.user.update({
+          where: { id: authUserId },
+          data: { name: userName }
+        });
+      }
+    }
+
     await logActivity({
       userId: authUserId,
       userName,
@@ -195,6 +206,17 @@ export const rejectBudget = async (req: Request, res: Response) => {
         message: `Tu presupuesto "${rejectedBudget.title}" ha sido RECHAZADO. Motivo: ${rejectionReason.trim()}`,
       },
     });
+
+    // Actualizar nombre en la DB si es genérico
+    if (authUserId) {
+      const userToSync = await prisma.user.findUnique({ where: { id: authUserId } });
+      if (userToSync && (!userToSync.name || userToSync.name.toLowerCase() === 'unnamed user' || userToSync.name.toLowerCase() === 'usuario')) {
+        await prisma.user.update({
+          where: { id: authUserId },
+          data: { name: userName }
+        });
+      }
+    }
 
     await logActivity({
       userId: authUserId,
