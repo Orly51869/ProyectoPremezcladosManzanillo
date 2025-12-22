@@ -1,3 +1,9 @@
+/********************************/
+/**     currencyController.ts  **/
+/********************************/
+// Archivo que permite definir controladores para la gestión de monedas
+
+// Importaciones
 import { Request, Response } from 'express';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
@@ -8,6 +14,7 @@ let cachedRates: { [key: string]: number } | null = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hora
 
+// Función para obtener tasas de cambio
 export const getExchangeRates = async (req: Request, res: Response) => {
   try {
     const now = Date.now();
@@ -95,6 +102,7 @@ export const getExchangeRates = async (req: Request, res: Response) => {
 
     res.json(rates);
 
+    // Devolver tasas de cambio
   } catch (error: any) {
     console.error('Error fetching exchange rates:', error.message);
     // Si falla y tenemos caché antigua, la devolvemos como fallback
@@ -103,6 +111,7 @@ export const getExchangeRates = async (req: Request, res: Response) => {
         return res.json(cachedRates);
     }
     res.status(500).json({ error: 'Error al obtener tasas de cambio', details: error.message });
+    // Devolver error
   }
 };
 

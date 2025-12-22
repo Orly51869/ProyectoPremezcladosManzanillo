@@ -1,3 +1,9 @@
+/********************************/
+/**    invoiceController.ts    **/
+/********************************/
+// Archivo que permite definir controladores para la gestión de facturas
+
+// Importaciones
 import { Request, Response } from 'express';
 import { logActivity } from '../utils/auditLogger';
 import prisma from '../lib/prisma';
@@ -11,10 +17,11 @@ export const getInvoices = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
 
+  // Buscar facturas
   try {
     let invoices;
     if (roles.includes('Administrador') || roles.includes('Contable') || roles.includes('Operaciones')) {
-      // Admins and Accountants can see all invoices
+      // Administradores, Contables and Operaciones pueden ver todas las facturas
       invoices = await prisma.invoice.findMany({
         include: {
           payment: {
@@ -31,7 +38,7 @@ export const getInvoices = async (req: Request, res: Response) => {
         orderBy: { proformaGeneratedAt: 'desc' },
       });
     } else {
-      // Los usuarios regulares solo ven facturas relacionadas con sus presupuestos
+      // Usuarios pueden ver solo las facturas relacionadas con sus presupuestos
       invoices = await prisma.invoice.findMany({
         where: {
           payment: {
@@ -72,6 +79,7 @@ export const getInvoiceById = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
 
+  // Buscar factura
   try {
     const invoice = await prisma.invoice.findUnique({
       where: { id: id },
@@ -143,6 +151,7 @@ export const updateInvoice = async (req: Request, res: Response) => {
   const fullFiscalInvoiceUrl = fiscalInvoiceFile ? `${baseUrl}/${getRelativePath(fiscalInvoiceFile.path)}` : undefined;
   const fullDeliveryOrderUrl = deliveryOrderFile ? `${baseUrl}/${getRelativePath(deliveryOrderFile.path)}` : undefined;
 
+  // Buscar factura
   try {
     const existingInvoice = await prisma.invoice.findUnique({ where: { id: id } });
     if (!existingInvoice) {
@@ -194,7 +203,8 @@ export const updateInvoice = async (req: Request, res: Response) => {
       const documentsUploaded = [];
       if (fullFiscalInvoiceUrl) documentsUploaded.push('Factura Fiscal');
       if (fullDeliveryOrderUrl) documentsUploaded.push('Orden de Entrega');
-      
+
+      // Crear notificación
       await prisma.notification.create({
         data: {
           userId: updatedInvoice.payment.budget.creatorId,
@@ -221,6 +231,7 @@ export const deleteInvoice = async (req: Request, res: Response) => {
     return res.status(403).json({ error: 'Acceso denegado: Solo administradores pueden eliminar facturas.' });
   }
 
+  // Buscar factura
   try {
     const invoice = await prisma.invoice.findUnique({ where: { id } });
     if (!invoice) return res.status(404).json({ error: 'Factura no encontrada.' });
@@ -237,8 +248,10 @@ export const deleteInvoice = async (req: Request, res: Response) => {
     });
 
     res.status(204).send();
+    // Devolver notificación    
   } catch (error) {
     console.error(`Error deleting invoice ${id}:`, error);
     res.status(500).json({ error: 'Error interno al intentar eliminar la factura.' });
+    // Devolver error
   }
 };

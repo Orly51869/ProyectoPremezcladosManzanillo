@@ -1,3 +1,9 @@
+/********************************/
+/**    dashboardController.ts  **/
+/********************************/
+// Archivo que permite definir controladores para la gestión del dashboard
+
+// Importaciones
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 
@@ -68,7 +74,7 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
     // 2. Resumen del gráfico
     const approvedBudgets = await prisma.budget.count({ where: { ...budgetWhereClause, status: 'APPROVED' } });
     const totalPayments = await prisma.payment.count({ where: paymentWhereClause });
-    const pendingPaymentsCount = await prisma.payment.count({ where: { ...paymentWhereClause, pending: { gt: 0 } } }); // Corregido de pendingAmount a pending
+    const pendingPaymentsCount = await prisma.payment.count({ where: { ...paymentWhereClause, pending: { gt: 0 } } });
 
     console.log(`[DashboardStats] approvedBudgets: ${approvedBudgets}, totalPayments: ${totalPayments}, pendingPaymentsCount: ${pendingPaymentsCount}`);
 
@@ -99,7 +105,7 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
         });
 
         const pendingResult = await prisma.payment.aggregate({
-            _sum: { pending: true }, // Corregido de pendingAmount a pending
+            _sum: { pending: true },
             where: {
                 ...paymentWhereClause,
                 createdAt: {
@@ -115,7 +121,7 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
         return {
           month: monthDate.toLocaleString('es-ES', { month: 'short' }),
           income: incomeResult._sum.paidAmount ?? 0,
-          pending: pendingResult._sum.pending ?? 0, // Corregido de pendingAmount a pending
+          pending: pendingResult._sum.pending ?? 0,
         };
       })
     );
@@ -145,7 +151,7 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
   }
 };
 
-// Obtener actividad reciente
+// Función para obtener actividad reciente
 export const getRecentActivity = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const userId = req.dbUser?.id;
@@ -189,7 +195,7 @@ export const getRecentActivity = async (req: AuthenticatedRequest, res: Response
 
         console.log(`[RecentActivity] Found ${recentBudgets.length} recent budgets and ${recentPayments.length} recent payments.`);
 
-
+        // Crear actividad
         const activity = [];
 
         for (const budget of recentBudgets) {
@@ -215,8 +221,10 @@ export const getRecentActivity = async (req: AuthenticatedRequest, res: Response
 
         res.json(sortedActivity);
 
+      // Devolver actividad reciente
     } catch (error) {
-        console.error("Error fetching recent activity:", error);
-        res.status(500).json({ message: "Error al obtener la actividad reciente" });
+      console.error("Error fetching recent activity:", error);
+      res.status(500).json({ message: "Error al obtener la actividad reciente" });
+      // Devolver error
     }
 }

@@ -1,3 +1,9 @@
+/*************************************/
+/**    notificationController.ts    **/
+/*************************************/
+// Archivo que permite definir controladores para la gestión de notificaciones
+
+// Importaciones
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 
@@ -9,6 +15,7 @@ export const getNotifications = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
 
+  // Buscar notificaciones
   try {
     const notifications = await prisma.notification.findMany({
       where: { userId: authUserId },
@@ -29,6 +36,7 @@ export const getUnreadCount = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
 
+  // Buscar cuentas
   try {
     const count = await prisma.notification.count({
       where: { 
@@ -52,6 +60,7 @@ export const markNotificationAsRead = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
 
+  // Buscar notificaciones por ID
   try {
     const notification = await prisma.notification.findUnique({ where: { id } });
 
@@ -78,6 +87,7 @@ export const markAllNotificationsAsRead = async (req: Request, res: Response) =>
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
 
+  // Actualizar todas las notificaciones del usuario autenticado
   try {
     await prisma.notification.updateMany({
       where: { userId: authUserId, read: false },
@@ -99,6 +109,7 @@ export const deleteNotification = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
 
+  // Buscar notificación por ID
   try {
     const notification = await prisma.notification.findUnique({ where: { id } });
 
