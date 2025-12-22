@@ -1,23 +1,12 @@
-/********************************/
-/**     budgetController.ts    **/
-/********************************/
-// Archivo que permite definir controladores para la gestión de presupuestos
-
-// Importaciones
 import { Request, Response } from 'express';
 import { logActivity } from '../utils/auditLogger';
 import prisma from '../lib/prisma';
-import { sendNotificationToRoles } from '../utils/notificationHelper';
 
 // Inicializar un presupuesto (esqueleto)
 export const initBudget = async (req: Request, res: Response) => {
   const { title, clientId, address } = req.body;
   const creatorId = req.auth?.payload.sub;
-  const userName = (req as any).dbUser?.name || 
-                   (req.auth?.payload as any)?.name || 
-                   (req.auth?.payload as any)?.nickname || 
-                   (req.auth?.payload as any)?.email?.split('@')[0] || 
-                   'Usuario';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Usuario';
 
   if (!creatorId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
@@ -29,7 +18,6 @@ export const initBudget = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Title is required.' });
   }
 
-  // Crear el presupuesto
   try {
     const newBudget = await prisma.budget.create({
       data: {
@@ -104,11 +92,7 @@ export const getBudgets = async (req: Request, res: Response) => {
 export const approveBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req as any).dbUser?.name || 
-                   (req.auth?.payload as any)?.name || 
-                   (req.auth?.payload as any)?.nickname || 
-                   (req.auth?.payload as any)?.email?.split('@')[0] || 
-                   'Administrador';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) {
@@ -118,7 +102,6 @@ export const approveBudget = async (req: Request, res: Response) => {
     return res.status(403).json({ error: 'Forbidden: Only administrators or accountants can approve budgets.' });
   }
 
-  // Aprobar el presupuesto
   try {
     const existingBudget = await prisma.budget.findUnique({ where: { id } });
     if (!existingBudget) return res.status(404).json({ error: 'Budget not found.' });
@@ -140,7 +123,6 @@ export const approveBudget = async (req: Request, res: Response) => {
       },
     });
 
-    // Enviar notificación al creador del presupuesto
     await prisma.notification.create({
       data: {
         userId: approvedBudget.creatorId,
@@ -148,18 +130,6 @@ export const approveBudget = async (req: Request, res: Response) => {
       },
     });
 
-    // Actualizar nombre en la DB si es genérico para este usuario específico
-    if (authUserId) {
-      const userToSync = await prisma.user.findUnique({ where: { id: authUserId } });
-      if (userToSync && (!userToSync.name || userToSync.name.toLowerCase() === 'unnamed user' || userToSync.name.toLowerCase() === 'usuario')) {
-        await prisma.user.update({
-          where: { id: authUserId },
-          data: { name: userName }
-        });
-      }
-    }
-
-    // Registrar actividad
     await logActivity({
       userId: authUserId,
       userName,
@@ -181,18 +151,13 @@ export const rejectBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { rejectionReason } = req.body;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req as any).dbUser?.name || 
-                   (req.auth?.payload as any)?.name || 
-                   (req.auth?.payload as any)?.nickname || 
-                   (req.auth?.payload as any)?.email?.split('@')[0] || 
-                   'Administrador';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) return res.status(401).json({ error: 'Authenticated user ID not found.' });
   if (!roles.includes('Administrador')) return res.status(403).json({ error: 'Forbidden: Only administrators can reject budgets.' });
   if (!rejectionReason || rejectionReason.trim().length === 0) return res.status(400).json({ error: 'Rejection reason is required.' });
 
-  // Rechazar el presupuesto
   try {
     const existingBudget = await prisma.budget.findUnique({ where: { id } });
     if (!existingBudget) return res.status(404).json({ error: 'Budget not found.' });
@@ -214,7 +179,6 @@ export const rejectBudget = async (req: Request, res: Response) => {
       },
     });
 
-    // Enviar notificación al creador del presupuesto
     await prisma.notification.create({
       data: {
         userId: rejectedBudget.creatorId,
@@ -222,18 +186,6 @@ export const rejectBudget = async (req: Request, res: Response) => {
       },
     });
 
-    // Actualizar nombre en la DB si es genérico
-    if (authUserId) {
-      const userToSync = await prisma.user.findUnique({ where: { id: authUserId } });
-      if (userToSync && (!userToSync.name || userToSync.name.toLowerCase() === 'unnamed user' || userToSync.name.toLowerCase() === 'usuario')) {
-        await prisma.user.update({
-          where: { id: authUserId },
-          data: { name: userName }
-        });
-      }
-    }
-
-    // Registrar actividad
     await logActivity({
       userId: authUserId,
       userName,
@@ -253,8 +205,6 @@ export const rejectBudget = async (req: Request, res: Response) => {
 // Obtener un presupuesto por su ID
 export const getBudgetById = async (req: Request, res: Response) => {
   const { id } = req.params;
-  
-  // Obtener el presupuesto
   try {
     const budget = await prisma.budget.findUnique({
       where: { id },
@@ -266,11 +216,9 @@ export const getBudgetById = async (req: Request, res: Response) => {
     });
     if (budget) res.status(200).json(budget);
     else res.status(404).json({ error: 'Budget not found' });
-    // Devolver el presupuesto
   } catch (error) {
     console.error(`Error fetching budget ${id}:`, error);
     res.status(500).json({ error: 'Internal server error' });
-    // Devolver error
   }
 };
 
@@ -291,11 +239,7 @@ const validateDeliveryDate = (deliveryDate: string | undefined) => {
 export const createBudget = async (req: Request, res: Response) => {
   const { title, clientId, status, products, address, deliveryDate, workType, resistance, concreteType, element, observations, volume } = req.body;
   const creatorId = req.auth?.payload.sub as string;
-  const userName = (req as any).dbUser?.name || 
-                   (req.auth?.payload as any)?.name || 
-                   (req.auth?.payload as any)?.nickname || 
-                   (req.auth?.payload as any)?.email?.split('@')[0] || 
-                   'Usuario';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Usuario';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!creatorId) return res.status(401).json({ error: 'Authenticated user ID not found.' });
@@ -303,7 +247,6 @@ export const createBudget = async (req: Request, res: Response) => {
   if (!Array.isArray(products) || products.length === 0) return res.status(400).json({ error: 'At least one product is required.' });
   if (!observations || observations.trim() === '') return res.status(400).json({ error: 'Observations are required.' });
 
-  // Validar la fecha de entrega
   try {
     validateDeliveryDate(deliveryDate);
     const isPrivileged = roles.some(r => ['Administrador', 'Contable'].includes(r));
@@ -314,7 +257,6 @@ export const createBudget = async (req: Request, res: Response) => {
         title, address, deliveryDate: deliveryDate ? new Date(deliveryDate) : undefined,
         workType, resistance, concreteType, element, observations,
         volume: volume ? parseFloat(volume) : undefined,
-        validUntil: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 días de validez por defecto
         total, status: status || 'PENDING',
         creator: { connect: { id: creatorId } },
         client: { connect: { id: clientId } },
@@ -338,7 +280,6 @@ export const createBudget = async (req: Request, res: Response) => {
       include: { products: { include: { product: true } }, client: true },
     });
 
-    // Registrar actividad
     await logActivity({
       userId: creatorId,
       userName,
@@ -348,14 +289,7 @@ export const createBudget = async (req: Request, res: Response) => {
       details: `Presupuesto creado: ${newBudget.title}`
     });
 
-    // Notificar a administradores y contables sobre el nuevo presupuesto
-    await sendNotificationToRoles(
-      ['Administrador', 'Contable'], 
-      `Nuevo presupuesto pendiente: "${newBudget.title}" creado por ${userName}.`
-    );
-
     res.status(201).json(newBudget);
-    // Devolver el presupuesto
   } catch (error: any) {
     console.error('Error creating budget:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });
@@ -367,14 +301,11 @@ export const updateBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, clientId, status, products, address, deliveryDate, workType, resistance, concreteType, element, observations, volume } = req.body;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req as any).dbUser?.name || 
-                   (req.auth?.payload as any)?.name || 
-                   'Usuario';
+  const userName = (req.auth?.payload as any)?.name || 'Usuario';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!Array.isArray(products) || products.length === 0) return res.status(400).json({ error: 'At least one product is required.' });
 
-  // Validar la fecha de entrega
   try {
     const isPrivileged = roles.some(r => ['Administrador', 'Contable'].includes(r));
     validateDeliveryDate(deliveryDate);
@@ -388,7 +319,6 @@ export const updateBudget = async (req: Request, res: Response) => {
           title, address, deliveryDate: deliveryDate ? new Date(deliveryDate) : undefined,
           workType, resistance, concreteType, element, observations,
           volume: volume ? parseFloat(volume) : undefined,
-          validUntil: req.body.validUntil ? new Date(req.body.validUntil) : undefined,
           total, status,
           client: clientId ? { connect: { id: clientId } } : undefined,
           products: {
@@ -412,7 +342,6 @@ export const updateBudget = async (req: Request, res: Response) => {
       });
     });
 
-    // Registrar actividad
     await logActivity({
       userId: authUserId,
       userName,
@@ -423,11 +352,9 @@ export const updateBudget = async (req: Request, res: Response) => {
     });
 
     res.status(200).json(updatedBudget);
-    // Devolver el presupuesto actualizado
   } catch (error: any) {
     console.error(`Error updating budget ${id}:`, error);
     res.status(500).json({ error: error.message || 'Internal server error' });
-    // Devolver error
   }
 };
 
@@ -435,7 +362,7 @@ export const updateBudget = async (req: Request, res: Response) => {
 export const deleteBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Usuario';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Usuario';
   try {
     const budgetToDelete = await prisma.budget.findUnique({ where: { id } });
     if (!budgetToDelete) return res.status(404).json({ error: 'Budget not found' });
@@ -445,7 +372,6 @@ export const deleteBudget = async (req: Request, res: Response) => {
         await tx.budget.delete({ where: { id } });
     });
 
-    // Registro de actividad
     await logActivity({
       userId: authUserId,
       userName,

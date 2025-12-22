@@ -1,7 +1,7 @@
 {
-  "name": "better-auth-service",
+  "name": "backend-auth-service-database",
   "version": "1.0.0",
-  "description": "Backend service for Better Auth authentication.",
+  "description": "Backend service for Auth0 authentication and Data Base Prisma.",
   "main": "index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
