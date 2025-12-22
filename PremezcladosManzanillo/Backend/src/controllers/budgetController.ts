@@ -7,7 +7,8 @@ import { sendNotificationToRoles } from '../utils/notificationHelper';
 export const initBudget = async (req: Request, res: Response) => {
   const { title, clientId, address } = req.body;
   const creatorId = req.auth?.payload.sub;
-  const userName = (req.auth?.payload as any)?.name || 
+  const userName = (req as any).dbUser?.name || 
+                   (req.auth?.payload as any)?.name || 
                    (req.auth?.payload as any)?.nickname || 
                    (req.auth?.payload as any)?.email?.split('@')[0] || 
                    'Usuario';
@@ -96,7 +97,8 @@ export const getBudgets = async (req: Request, res: Response) => {
 export const approveBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 
+  const userName = (req as any).dbUser?.name || 
+                   (req.auth?.payload as any)?.name || 
                    (req.auth?.payload as any)?.nickname || 
                    (req.auth?.payload as any)?.email?.split('@')[0] || 
                    'Administrador';
@@ -169,7 +171,8 @@ export const rejectBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { rejectionReason } = req.body;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 
+  const userName = (req as any).dbUser?.name || 
+                   (req.auth?.payload as any)?.name || 
                    (req.auth?.payload as any)?.nickname || 
                    (req.auth?.payload as any)?.email?.split('@')[0] || 
                    'Administrador';
@@ -271,7 +274,8 @@ const validateDeliveryDate = (deliveryDate: string | undefined) => {
 export const createBudget = async (req: Request, res: Response) => {
   const { title, clientId, status, products, address, deliveryDate, workType, resistance, concreteType, element, observations, volume } = req.body;
   const creatorId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 
+  const userName = (req as any).dbUser?.name || 
+                   (req.auth?.payload as any)?.name || 
                    (req.auth?.payload as any)?.nickname || 
                    (req.auth?.payload as any)?.email?.split('@')[0] || 
                    'Usuario';

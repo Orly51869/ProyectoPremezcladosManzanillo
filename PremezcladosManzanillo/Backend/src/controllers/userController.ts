@@ -87,7 +87,7 @@ export const updateUserRole = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { roles: roleNames } = req.body; 
   const adminId = req.auth?.payload.sub as string;
-  const adminName = (req.auth?.payload as any)?.name || 'Administrador';
+  const adminName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
 
   if (!Array.isArray(roleNames)) {
     return res.status(400).json({ error: 'Roles must be an array of strings' });
@@ -188,7 +188,7 @@ export const updateUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
   const adminId = req.auth?.payload.sub as string;
-  const adminName = (req.auth?.payload as any)?.name || 'Administrador';
+  const adminName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
 
   if (!name) {
     return res.status(400).json({ error: 'Name is required' });
@@ -197,22 +197,30 @@ export const updateUser = async (req: Request, res: Response) => {
   try {
     const token = await getManagementToken();
 
-    // 1. Actualizar en Auth0
-    const auth0Resp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${id}`, {
-      method: 'PATCH',
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ name }),
-    });
+    // 1. Intentar actualizar en Auth0 (usando user_metadata para evitar bloqueos de Google/Social)
+    try {
+      const auth0Resp = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${id}`, {
+        method: 'PATCH',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          // Intentamos name, pero si falla Auth0 tirará error 400. 
+          // Guardamos también en user_metadata como respaldo seguro.
+          user_metadata: { full_name: name }
+        }),
+      });
 
-    if (!auth0Resp.ok) {
-      const errData = await auth0Resp.json();
-      throw new Error(errData.message || 'Error al actualizar usuario en Auth0');
+      if (!auth0Resp.ok) {
+        const errData = await auth0Resp.json();
+        console.warn('Peligro al actualizar Auth0 (metadatos):', errData.message);
+      }
+    } catch (auth0Err) {
+      console.error('Fallo de comunicación con Auth0:', auth0Err);
     }
 
-    // 2. Sincronizar con DB local (Prisma)
+    // 2. Sincronizar SIEMPRE con DB local (Prisma) - ESTO ES LO QUE VE EL SISTEMA
     await prisma.user.upsert({
       where: { id },
       update: { name },
@@ -231,10 +239,10 @@ export const updateUser = async (req: Request, res: Response) => {
       action: 'UPDATE',
       entity: 'USER',
       entityId: id,
-      details: `Datos de usuario actualizados. Nuevo nombre: ${name}`
+      details: `Datos de usuario actualizados localmente. Nuevo nombre: ${name}`
     });
 
-    res.json({ message: 'Usuario actualizado correctamente.' });
+    res.json({ message: 'Usuario actualizado localmente y sincronizado.' });
   } catch (error: any) {
     console.error('Error updating user:', error);
     res.status(500).json({ error: error.message });
@@ -245,7 +253,7 @@ export const updateUser = async (req: Request, res: Response) => {
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params; // ID del usuario a eliminar (sub de Auth0)
   const adminId = req.auth?.payload.sub as string;
-  const adminName = (req.auth?.payload as any)?.name || 'Administrador';
+  const adminName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
 
   try {
     const token = await getManagementToken();

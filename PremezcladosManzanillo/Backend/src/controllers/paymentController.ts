@@ -7,7 +7,7 @@ import { sendNotificationToRoles } from '../utils/notificationHelper';
 export const createPayment = async (req: Request, res: Response) => {
   const { budgetId, paidAmount, method, reference, bankFrom, bankTo, currency, exchangeRate, amountInCurrency, igtfAmount } = req.body;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Usuario';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Usuario';
   const receiptFile = req.file as Express.Multer.File | undefined;
 
   if (!authUserId) return res.status(401).json({ error: 'No se encontró el ID del usuario autenticado.' });
@@ -188,7 +188,7 @@ export const updatePayment = async (req: Request, res: Response) => {
 export const deletePayment = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Usuario';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Usuario';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) return res.status(401).json({ error: 'No autenticado.' });

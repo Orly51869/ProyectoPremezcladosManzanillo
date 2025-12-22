@@ -25,7 +25,7 @@ export const createProduct = async (req: Request, res: Response) => {
   try {
     const { name, description, price, type, category } = req.body;
     const authUserId = req.auth?.payload.sub as string;
-    const userName = (req.auth?.payload as any)?.name || 'Administrador';
+    const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
 
     if (!name || !price || !type) {
       return res.status(400).json({ error: "Name, price, and type are required." });

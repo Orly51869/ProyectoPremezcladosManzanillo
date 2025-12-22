@@ -215,7 +215,7 @@ export const deleteInvoice = async (req: Request, res: Response) => {
   const { id } = req.params;
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Administrador';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
 
   if (!roles.includes('Administrador')) {
     return res.status(403).json({ error: 'Acceso denegado: Solo administradores pueden eliminar facturas.' });

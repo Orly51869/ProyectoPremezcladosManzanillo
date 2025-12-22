@@ -33,7 +33,7 @@ export const getSettingByKey = async (req: Request, res: Response) => {
 export const updateSetting = async (req: Request, res: Response) => {
   const { key, value, type } = req.body;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Administrador';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   // Solo Administrador y Comercial pueden cambiar configuraciones visuales

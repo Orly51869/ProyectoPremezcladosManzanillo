@@ -8,6 +8,7 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
   // Intentar obtener el nombre de varios campos comunes en OIDC/Auth0
   const authName = (req.auth?.payload.name || 
                     req.auth?.payload.nickname || 
+                    (req.auth?.payload as any)?.user_metadata?.full_name ||
                     req.auth?.payload.preferred_username || 
                     (authEmail ? authEmail.split('@')[0] : undefined)) as string | undefined;
                     

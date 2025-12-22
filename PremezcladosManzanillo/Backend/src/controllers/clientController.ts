@@ -40,7 +40,7 @@ export const getClientsByOwner = async (req: Request, res: Response) => {
 // Crear un nuevo cliente
 export const createClient = async (req: Request, res: Response) => {
   const ownerId = req.auth?.payload.sub;
-  const userName = (req.auth?.payload as any)?.name || 'Usuario';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Usuario';
   if (!ownerId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
