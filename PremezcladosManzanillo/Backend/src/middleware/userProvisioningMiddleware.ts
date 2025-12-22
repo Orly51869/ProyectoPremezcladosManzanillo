@@ -38,7 +38,6 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
           role: determinedRole,
         },
       });
-      console.log(`New user provisioned: ${user.email} with ID: ${user.id}, Role: ${user.role}`);
     } else {
       // Sincronizar nombre y rol si han cambiado o si el nombre era genérico
       const isGenericName = !user.name || user.name === 'Unnamed User' || user.name === 'Usuario';
@@ -53,7 +52,6 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
             name: nameNeedsUpdate ? currentName : user.name
           },
         });
-        console.log(`User data synced for ${user.email}: Name=${user.name}, Role=${user.role}`);
       }
     }
 
