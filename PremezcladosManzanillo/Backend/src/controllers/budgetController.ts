@@ -347,7 +347,9 @@ export const updateBudget = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, clientId, status, products, address, deliveryDate, workType, resistance, concreteType, element, observations, volume } = req.body;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Usuario';
+  const userName = (req as any).dbUser?.name || 
+                   (req.auth?.payload as any)?.name || 
+                   'Usuario';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!Array.isArray(products) || products.length === 0) return res.status(400).json({ error: 'At least one product is required.' });
