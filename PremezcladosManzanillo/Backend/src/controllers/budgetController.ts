@@ -1,3 +1,9 @@
+/********************************/
+/**     budgetController.ts    **/
+/********************************/
+// Archivo que permite definir controladores para la gestión de presupuestos
+
+// Importaciones
 import { Request, Response } from 'express';
 import { logActivity } from '../utils/auditLogger';
 import prisma from '../lib/prisma';
@@ -23,6 +29,7 @@ export const initBudget = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Title is required.' });
   }
 
+  // Crear el presupuesto
   try {
     const newBudget = await prisma.budget.create({
       data: {
@@ -111,6 +118,7 @@ export const approveBudget = async (req: Request, res: Response) => {
     return res.status(403).json({ error: 'Forbidden: Only administrators or accountants can approve budgets.' });
   }
 
+  // Aprobar el presupuesto
   try {
     const existingBudget = await prisma.budget.findUnique({ where: { id } });
     if (!existingBudget) return res.status(404).json({ error: 'Budget not found.' });
@@ -132,6 +140,7 @@ export const approveBudget = async (req: Request, res: Response) => {
       },
     });
 
+    // Enviar notificación al creador del presupuesto
     await prisma.notification.create({
       data: {
         userId: approvedBudget.creatorId,
@@ -150,6 +159,7 @@ export const approveBudget = async (req: Request, res: Response) => {
       }
     }
 
+    // Registrar actividad
     await logActivity({
       userId: authUserId,
       userName,
@@ -182,6 +192,7 @@ export const rejectBudget = async (req: Request, res: Response) => {
   if (!roles.includes('Administrador')) return res.status(403).json({ error: 'Forbidden: Only administrators can reject budgets.' });
   if (!rejectionReason || rejectionReason.trim().length === 0) return res.status(400).json({ error: 'Rejection reason is required.' });
 
+  // Rechazar el presupuesto
   try {
     const existingBudget = await prisma.budget.findUnique({ where: { id } });
     if (!existingBudget) return res.status(404).json({ error: 'Budget not found.' });
@@ -203,6 +214,7 @@ export const rejectBudget = async (req: Request, res: Response) => {
       },
     });
 
+    // Enviar notificación al creador del presupuesto
     await prisma.notification.create({
       data: {
         userId: rejectedBudget.creatorId,
@@ -221,6 +233,7 @@ export const rejectBudget = async (req: Request, res: Response) => {
       }
     }
 
+    // Registrar actividad
     await logActivity({
       userId: authUserId,
       userName,
@@ -240,6 +253,8 @@ export const rejectBudget = async (req: Request, res: Response) => {
 // Obtener un presupuesto por su ID
 export const getBudgetById = async (req: Request, res: Response) => {
   const { id } = req.params;
+  
+  // Obtener el presupuesto
   try {
     const budget = await prisma.budget.findUnique({
       where: { id },
@@ -251,9 +266,11 @@ export const getBudgetById = async (req: Request, res: Response) => {
     });
     if (budget) res.status(200).json(budget);
     else res.status(404).json({ error: 'Budget not found' });
+    // Devolver el presupuesto
   } catch (error) {
     console.error(`Error fetching budget ${id}:`, error);
     res.status(500).json({ error: 'Internal server error' });
+    // Devolver error
   }
 };
 
@@ -286,6 +303,7 @@ export const createBudget = async (req: Request, res: Response) => {
   if (!Array.isArray(products) || products.length === 0) return res.status(400).json({ error: 'At least one product is required.' });
   if (!observations || observations.trim() === '') return res.status(400).json({ error: 'Observations are required.' });
 
+  // Validar la fecha de entrega
   try {
     validateDeliveryDate(deliveryDate);
     const isPrivileged = roles.some(r => ['Administrador', 'Contable'].includes(r));
@@ -320,6 +338,7 @@ export const createBudget = async (req: Request, res: Response) => {
       include: { products: { include: { product: true } }, client: true },
     });
 
+    // Registrar actividad
     await logActivity({
       userId: creatorId,
       userName,
@@ -336,6 +355,7 @@ export const createBudget = async (req: Request, res: Response) => {
     );
 
     res.status(201).json(newBudget);
+    // Devolver el presupuesto
   } catch (error: any) {
     console.error('Error creating budget:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });
@@ -354,6 +374,7 @@ export const updateBudget = async (req: Request, res: Response) => {
 
   if (!Array.isArray(products) || products.length === 0) return res.status(400).json({ error: 'At least one product is required.' });
 
+  // Validar la fecha de entrega
   try {
     const isPrivileged = roles.some(r => ['Administrador', 'Contable'].includes(r));
     validateDeliveryDate(deliveryDate);
@@ -391,6 +412,7 @@ export const updateBudget = async (req: Request, res: Response) => {
       });
     });
 
+    // Registrar actividad
     await logActivity({
       userId: authUserId,
       userName,
@@ -401,9 +423,11 @@ export const updateBudget = async (req: Request, res: Response) => {
     });
 
     res.status(200).json(updatedBudget);
+    // Devolver el presupuesto actualizado
   } catch (error: any) {
     console.error(`Error updating budget ${id}:`, error);
     res.status(500).json({ error: error.message || 'Internal server error' });
+    // Devolver error
   }
 };
 
@@ -421,6 +445,7 @@ export const deleteBudget = async (req: Request, res: Response) => {
         await tx.budget.delete({ where: { id } });
     });
 
+    // Registro de actividad
     await logActivity({
       userId: authUserId,
       userName,

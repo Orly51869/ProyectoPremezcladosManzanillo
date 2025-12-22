@@ -7,6 +7,7 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 
+// Controlador para obtener logs de auditoría
 export const getAuditLogs = async (req: Request, res: Response) => {
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
   const { action, entity, userName } = req.query;
@@ -15,6 +16,7 @@ export const getAuditLogs = async (req: Request, res: Response) => {
     return res.status(403).json({ error: 'Only administrators can access audit logs.' });
   }
 
+  // Extraer parámetros de la consulta
   try {
     const where: any = {};
     if (action) where.action = action;
@@ -33,6 +35,7 @@ export const getAuditLogs = async (req: Request, res: Response) => {
       take: limit
     });
     res.json(logs);
+    // Devolver logs
   } catch (error) {
     console.error('Error fetching audit logs:', error);
     res.status(500).json({ error: 'Internal server error' });

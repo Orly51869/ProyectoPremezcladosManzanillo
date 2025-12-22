@@ -1,3 +1,9 @@
+/********************************/
+/**     clientController.ts    **/
+/********************************/
+// Archivo que permite definir controladores para la gestión de clientes
+
+// Importaciones
 import { Request, Response } from 'express';
 import { logActivity } from '../utils/auditLogger';
 import prisma from '../lib/prisma';
@@ -11,6 +17,7 @@ export const getClientsByOwner = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
 
+  // Obtener clientes
   try {
     let clients;
     const includeArgs = {
@@ -31,9 +38,11 @@ export const getClientsByOwner = async (req: Request, res: Response) => {
       });
     }
     res.status(200).json(clients);
+    // Devolver clientes
   } catch (error) {
     console.error('Error fetching clients:', error);
     res.status(500).json({ error: 'Internal server error' });
+    // Devolver error
   }
 };
 
@@ -51,6 +60,7 @@ export const createClient = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Name and email are required to create a client.' });
   }
 
+  // Registro nuevo cliente
   try {
     const newClient = await prisma.client.create({
       data: {
@@ -63,6 +73,7 @@ export const createClient = async (req: Request, res: Response) => {
       },
     });
 
+    // Registro de actividad
     await logActivity({
       userId: ownerId,
       userName,
@@ -73,12 +84,14 @@ export const createClient = async (req: Request, res: Response) => {
     });
 
     res.status(201).json(newClient);
+    // Devolver nuevo cliente
   } catch (error: any) {
     if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
       return res.status(409).json({ error: 'Error: Ya existe un cliente con este correo electrónico.' });
     }
     console.error('Error creating client:', error);
     res.status(500).json({ error: 'Internal server error' });
+    // Devolver error
   }
 };
 
@@ -98,6 +111,7 @@ export const updateClient = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Name and email are required to update a client.' });
   }
 
+  // Buscar cliente existente
   try {
     const existingClient = await prisma.client.findUnique({
       where: { id: id },
@@ -145,6 +159,7 @@ export const updateClient = async (req: Request, res: Response) => {
       },
     });
 
+    // Registro de actividad
     await logActivity({
       userId: authUserId,
       userName,
@@ -155,9 +170,11 @@ export const updateClient = async (req: Request, res: Response) => {
     });
 
     res.status(200).json(updatedClient);
+    // Devolver cliente actualizado
   } catch (error) {
     console.error(`Error updating client with ID ${id}:`, error);
     res.status(500).json({ error: 'Internal server error' });
+    // Devolver error
   }
 };
 
@@ -172,6 +189,7 @@ export const deleteClient = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
 
+  // Encontrar cliente existente
   try {
     const existingClient = await prisma.client.findUnique({
       where: { id: id },
@@ -208,6 +226,7 @@ export const deleteClient = async (req: Request, res: Response) => {
     let authorized = false;
     let errorMessage = 'No tienes permiso para eliminar este cliente.';
 
+    // Autorización
     if (isAdmin || isContable) {
       // Admin y Contable pueden eliminar sin restricciones
       authorized = true;
@@ -262,6 +281,7 @@ export const deleteClient = async (req: Request, res: Response) => {
       });
     });
 
+    // Registro de actividad
     await logActivity({
       userId: authUserId as string,
       userName: userName,
@@ -271,18 +291,19 @@ export const deleteClient = async (req: Request, res: Response) => {
       details: `Cliente eliminado: ${existingClient.name}`
     });
 
-    res.status(204).send(); // No content for successful deletion
+    res.status(204).send();
+    // Devolver estado 204
   } catch (error: any) {
     console.error(`Error deleting client with ID ${id}:`, error);
     
-    // Handle Prisma foreign key constraint errors
+    // Manejar errores de clave foránea de Prisma
     if (error.code === 'P2003') {
       return res.status(400).json({ 
         error: 'No se puede eliminar el cliente porque tiene registros relacionados (presupuestos, pagos, etc.). Por favor, contacta a un administrador.' 
       });
     }
     
-    // Handle other Prisma errors
+    // Manejar otros errores de Prisma
     if (error.code && error.code.startsWith('P')) {
       return res.status(400).json({ 
         error: `Error al eliminar el cliente: ${error.message || 'Error de base de datos'}` 
