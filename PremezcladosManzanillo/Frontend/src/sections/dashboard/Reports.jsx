@@ -9,7 +9,8 @@ import {
   Users, 
   ShoppingBag,
   MapPin,
-  Calendar
+  Calendar,
+  Clock
 } from 'lucide-react';
 import { Pie, Bar } from 'react-chartjs-2';
 import {
