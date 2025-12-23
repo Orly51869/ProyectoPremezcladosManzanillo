@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom'; // Importar Link
 import { DollarSign } from 'lucide-react'; // Importar icono
+import { format } from 'date-fns';
 import BudgetPDF from './BudgetPDF.jsx';
 
 const formatDate = (value) => {
