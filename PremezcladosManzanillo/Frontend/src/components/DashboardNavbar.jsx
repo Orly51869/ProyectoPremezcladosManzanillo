@@ -2,21 +2,21 @@ import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from '../utils/api';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileSpreadsheet, 
-  Package, 
-  CreditCard, 
-  Receipt, 
-  PieChart, 
-  UserCog, 
-  Settings, 
-  Menu, 
-  X, 
-  Sun, 
-  Moon, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  Users,
+  FileSpreadsheet,
+  Package,
+  CreditCard,
+  Receipt,
+  PieChart,
+  UserCog,
+  Settings,
+  Menu,
+  X,
+  Sun,
+  Moon,
+  LogOut,
   Bell,
   ChevronDown,
   Palette
@@ -28,16 +28,13 @@ const DashboardNavbar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [hasClients, setHasClients] = useState(true);
-  const [hasPayments, setHasPayments] = useState(true);
-  const [hasInvoices, setHasInvoices] = useState(true);
   const [imgError, setImgError] = useState(false);
 
   // Obtener roles del usuario desde Auth0
   const userRoles = (user?.['https://premezcladomanzanillo.com/roles'] || []).map(r => r.toLowerCase());
   const isOnlyUsuario = userRoles.includes('usuario') && !userRoles.includes('administrador') && !userRoles.includes('comercial') && !userRoles.includes('contable') && !userRoles.includes('operaciones');
 
-  // Polling para notificaciones y check de registros
+  // Polling para notificaciones
   useEffect(() => {
     const fetchNavbarData = async () => {
       if (!user) return;
@@ -45,27 +42,15 @@ const DashboardNavbar = () => {
         // Conteo de notificaciones
         const notifResp = await api.get('/api/notifications/unread-count');
         setUnreadCount(notifResp.data.count || 0);
-
-        // Si es Rol Usuario puro, verificar posesión de registros para limpiar interfaz
-        if (isOnlyUsuario) {
-          const [clientsResp, paymentsResp, invoicesResp] = await Promise.all([
-            api.get('/api/clients'),
-            api.get('/api/payments'),
-            api.get('/api/invoices')
-          ]);
-          setHasClients(clientsResp.data.length > 0);
-          setHasPayments(paymentsResp.data.length > 0);
-          setHasInvoices(invoicesResp.data.length > 0);
-        }
       } catch (error) {
         console.error("Error al obtener datos del Navbar:", error);
       }
     };
 
     fetchNavbarData();
-    const interval = setInterval(fetchNavbarData, 30000); 
+    const interval = setInterval(fetchNavbarData, 30000);
     return () => clearInterval(interval);
-  }, [user, isOnlyUsuario]);
+  }, [user]);
 
   // Logic para modo oscuro
   const [theme, setTheme] = useState(
@@ -97,17 +82,10 @@ const DashboardNavbar = () => {
 
   const availableNavItems = navItems.filter(item => {
     // 1. Filtrado básico por rol
-    const hasRole = !item.requiredRoles || item.requiredRoles.length === 0 || 
-                    userRoles.some(userRole => item.requiredRoles.map(r => r.toLowerCase()).includes(userRole));
-    
-    if (!hasRole) return false;
+    const hasRole = !item.requiredRoles || item.requiredRoles.length === 0 ||
+      userRoles.some(userRole => item.requiredRoles.map(r => r.toLowerCase()).includes(userRole));
 
-    // 2. Lógica especial para el rol Usuario (Navegación Progresiva)
-    if (isOnlyUsuario) {
-      if (item.path === "/clients" && !hasClients) return false;
-      if (item.path === "/payments" && !hasPayments) return false;
-      if (item.path === "/invoices" && !hasInvoices) return false;
-    }
+    if (!hasRole) return false;
 
     return true;
   });
@@ -120,7 +98,7 @@ const DashboardNavbar = () => {
     >
       <div className="max-w-[1920px] mx-auto px-4 lg:px-6">
         <div className="flex items-center h-20 justify-between">
-          
+
           {/* Logo */}
           <Link to="/" className="flex items-center flex-shrink-0 mr-4">
             <img
@@ -143,11 +121,10 @@ const DashboardNavbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${
-                    isActive 
-                      ? "bg-brand-primary text-white dark:bg-dark-btn dark:text-white" 
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${isActive
+                      ? "bg-brand-primary text-white dark:bg-dark-btn dark:text-white"
                       : "text-gray-600 dark:text-gray-300 hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn"
-                  }`}
+                    }`}
                   title={item.label}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
@@ -159,7 +136,7 @@ const DashboardNavbar = () => {
 
           {/* Utilidades (Derecha) */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            
+
             {/* Dark Mode */}
             <button
               onClick={toggleTheme}
@@ -184,9 +161,9 @@ const DashboardNavbar = () => {
                   {/* Foto de Perfil / Avatar con FIX */}
                   <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-brand-light flex items-center justify-center shadow-sm">
                     {user.picture && !imgError ? (
-                      <img 
-                        src={user.picture} 
-                        alt="" 
+                      <img
+                        src={user.picture}
+                        alt=""
                         className="w-full h-full object-cover"
                         onError={() => setImgError(true)}
                       />
@@ -205,7 +182,7 @@ const DashboardNavbar = () => {
 
                 {/* Dropdown Box */}
                 <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-dark-surface rounded-xl shadow-2xl border border-gray-100 dark:border-gray-800 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-50">
-                  
+
                   <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 mb-1">
                     <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
@@ -258,7 +235,7 @@ const DashboardNavbar = () => {
         {/* Mobile Menu Overlay */}
         <AnimatePresence>
           {isOpen && (
-            <motion.div 
+            <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
