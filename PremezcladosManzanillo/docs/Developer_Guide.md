@@ -60,7 +60,8 @@ El sistema es multi-moneda de forma visual pero opera sobre una base única.
 
 ## 6. Procedimientos de Despliegue y Base de Datos
 -   **Generar esquemas:** `npx prisma generate` después de cualquier cambio en `schema.prisma`.
--   **Sincronización:** En desarrollo, usar `npx prisma db push`. En producción, usar `npx prisma migrate deploy`.
+-   **Sincronización:** En desarrollo, usar `pnpm exec prisma migrate dev`. En producción, usar `npx prisma migrate deploy`.
+-   **Prevenir conflictos binarios:** El archivo `dev.db` debe estar en el `.gitignore` para evitar conflictos de mezcla (merge conflicts) entre desarrolladores. La estructura se sincroniza vía migraciones.
 -   **M2M Credentials:** Asegure que el servidor tenga acceso a las variables `AUTH0_M2M_CLIENT_ID` y `SECRET` para que la eliminación de usuarios y gestión de roles funcione.
 
 ---
@@ -71,9 +72,11 @@ El sistema es multi-moneda de forma visual pero opera sobre una base única.
     - `settingController.ts`: Maneja las configuraciones dinámicas de la landing (Hero, Productos, Servicios).
     - `userController.ts`: Incluye `deleteUser` que limpia datos en Auth0 y DB.
     - `auditController.ts`: Consulta los logs de actividad.
+    - `reportsController.ts`: Motor de agregación de datos para el BI.
 - `src/routes/`:
     - `settings.ts`: Endpoints para lectura pública y escritura protegida de configuraciones.
     - `audit.ts`: Acceso restringido a logs de auditoría.
+    - `reports.ts`: Rutas para los tres motores de reportes (Comercial, Contabilidad, Operaciones).
 - `prisma/schema.prisma`:
     - Modelo `Setting`: Almacena claves/valores para la personalización.
     - Modelo `AuditLog`: Registro histórico de acciones.
@@ -85,6 +88,8 @@ El sistema es multi-moneda de forma visual pero opera sobre una base única.
 - `src/pages/`:
     - `CustomizationPage.jsx`: Interfaz de administración para el rol Comercial.
     - `AdminRolesPage.jsx`: Gestión de usuarios y eliminación definitiva.
+- `src/sections/dashboard/`:
+    - `Reports.jsx`: Centro de Inteligencia con lógica de pestañas reactivas y gráficos de ChartJS.
 - `src/sections/home/`:
     - `HeroSection.jsx`, `ProductsSection.jsx`, `ServicesSection.jsx`: Ahora cargan sus datos dinámicamente desde `/api/settings`.
 - `src/components/ContentCard.jsx`: Estandarizado con altura `h-80` para simetría visual.

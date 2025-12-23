@@ -95,15 +95,36 @@ Dada la realidad económica en Venezuela, el sistema permite un registro híbrid
 | Crear Clientes | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Crear Presupuestos | ✅ | ✅ | ✅ | ❌ | ✅ |
 | Aprobar Presupuestos | ✅ | ❌ | ✅ | ❌ | ❌ |
-| Gestionar Catálogo | ✅ | ❌ | ✅ | ❌ | ❌ |
 | Validar Pagos | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Gestionar Catálogo | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Ver Reportes | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Cargar Orden Entrega | ✅ | ❌ | ✅ | ✅ | ❌ |
 | Ver Auditoría | ✅ | ❌ | ❌ | ❌ | ❌ |
 
 ---
 
-## 6. Soporte y Solución de Problemas
+## 6. Centro de Inteligencia (Reportes)
+El sistema cuenta con un motor de análisis que transforma los datos operativos en información estratégica.
+
+### Vistas Especializadas por Rol:
+Al entrar a la sección de **"Reportes"**, el sistema detectará su rol y le mostrará la información más relevante por defecto:
+
+1.  **Módulo Comercial (Gerencia y Ventas):**
+    *   **Top de Ventas:** Visualización de cuáles son los productos más solicitados de su catálogo.
+    *   **Ranking de Clientes:** Listado de los clientes con mayor volumen de compra en el periodo actual.
+2.  **Módulo Contable (Administración):**
+    *   **Distribución de Ingresos:** Gráficos circulares que muestran qué tipo de concreto genera más ingresos reales (pagos liquidados).
+    *   **Análisis de Mora (Cartera):** Clasificación de deudas pendientes en tres niveles: *Al día*, *Vencido* y *Crítico* (más de 30 días).
+3.  **Módulo Operacional (Planta y Logística):**
+    *   **Cronograma de Despachos:** Tabla organizada de las próximas entregas aprobadas y pagadas.
+    *   **Concentración por Zonas:** Gráfico de impacto geográfico que indica hacia qué zonas de Manzanillo se están moviendo las obras, útil para optimizar rutas de camiones.
+
+### Exportación de Datos:
+Todos los reportes pueden ser descargados en formato **PDF** para presentaciones o **Excel** para análisis manual profundo.
+
+---
+
+## 7. Soporte y Solución de Problemas
 *   **¿Por qué el PDF no muestra mi dirección o logo?** Asegúrese de haber llenado todos los campos en la sección **"Identidad Corporativa"** dentro de la página de **"Configuración"** y haber hecho clic en "Guardar Cambios Corporativos".
 *   **¿Puedo registrar un pago parcial?** Sí. El sistema calculará el saldo pendiente automáticamente y lo mostrará tanto en el dashboard como en los nuevos PDFs que genere.
 *   **Error de Tasa BCV:** Si por algún motivo el sistema no puede conectar con el BCV, usted puede ingresar la tasa manualmente en el formulario de pago.
-

@@ -40,9 +40,11 @@ erDiagram
     }
     BUDGET {
         string id PK
-        string folio
+        string title
         string status
-        float totalAmount
+        float total
+        float volume
+        datetime deliveryDate
         string clientId FK
         string processedById FK
     }
@@ -55,6 +57,9 @@ erDiagram
     PAYMENT {
         string id PK
         float amount
+        float paidAmount
+        float pending
+        float igtfAmount
         string status
         string budgetId FK
     }
