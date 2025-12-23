@@ -21,6 +21,7 @@ import usersRouter from './routes/users';
 import currencyRoutes from './routes/currency';
 import auditRouter from './routes/audit';
 import settingsRouter from './routes/settings';
+import reportsRouter from './routes/reports';
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.use('/api/invoices', jwtCheck, userProvisioningMiddleware, invoicesRouter);
 app.use('/api/dashboard', jwtCheck, userProvisioningMiddleware, dashboardRouter);
 app.use('/api/users', jwtCheck, userProvisioningMiddleware, usersRouter);
 app.use('/api/audit', jwtCheck, userProvisioningMiddleware, auditRouter);
+app.use('/api/reports', jwtCheck, userProvisioningMiddleware, reportsRouter);
 
 // Rutas públicas o con protección interna
 app.use('/api/settings', settingsRouter);

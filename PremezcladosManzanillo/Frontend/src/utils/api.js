@@ -68,4 +68,19 @@ export const getExchangeRates = async () => {
   }
 };
 
+export const getCommercialReports = async () => {
+  const response = await api.get("/api/reports/commercial");
+  return response.data;
+};
+
+export const getAccountingReports = async () => {
+  const response = await api.get("/api/reports/accounting");
+  return response.data;
+};
+
+export const getOperationalReports = async () => {
+  const response = await api.get("/api/reports/operational");
+  return response.data;
+};
+
 export default api;

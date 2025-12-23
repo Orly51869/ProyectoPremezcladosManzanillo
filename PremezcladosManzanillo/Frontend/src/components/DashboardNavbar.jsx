@@ -91,7 +91,7 @@ const DashboardNavbar = () => {
     { path: "/payments", icon: CreditCard, label: "Comprobantes", requiredRoles: ["Administrador", "Contable", "Usuario"] },
     { path: "/invoices", icon: Receipt, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Operaciones", "Usuario"] },
     { path: "/customize", icon: Palette, label: "Personalizar", requiredRoles: ["Administrador", "Comercial"] },
-    { path: "/reports", icon: PieChart, label: "Reportes", requiredRoles: ["Administrador", "Contable"] },
+    { path: "/reports", icon: PieChart, label: "Reportes", requiredRoles: ["Administrador", "Contable", "Comercial", "Operaciones"] },
     { path: "/admin/roles", icon: UserCog, label: "Roles", requiredRoles: ["Administrador"] },
   ];
 
