@@ -8,6 +8,15 @@ Esta guía proporciona una explicación exhaustiva de todas las herramientas dis
 
 ---
 
+## 🗺️ Mapa de Ruta Operativo (Flujo de Trabajo)
+El siguiente diagrama resume el ciclo de vida de una venta dentro de la plataforma, desde la captación del cliente hasta el análisis gerencial:
+
+<p align="center">
+  <img src="./Decision Path Option-2025-12-24-002826.png" alt="Decision Path Diagram" width="500">
+</p>
+
+---
+
 ## 🚀 1. Guía de Puesta en Marcha (Orden Lógico)
 Si la base de datos está vacía (por ejemplo, después de una migración o instalación inicial), siga este orden exacto para asegurar que la información fluya correctamente:
 
@@ -33,12 +42,20 @@ No se pueden crear presupuestos sin productos definidos. Puede hacerlo de dos fo
 
 2.  **Carga Masiva (Recomendado para inventarios grandes):**
     *   Vaya a **"Configuración"** -> **"Importar Datos"**.
-    *   Prepare un archivo **CSV** con los siguientes encabezados obligatorios:
-        *   `nombre`: Nombre del producto.
-        *   `precio`: Monto en USD (use punto para decimales, ej: 150.50).
-        *   `tipo`: Tipología del producto. El sistema reconoce: **Concreto, Bloque, Servicio, Otro**. Si usa otros términos o unidades aquí, el sistema los clasificará automáticamente como "Otro".
-        *   `categoria`: Nombre de la categoría (ej: Estructurales, Especiales).
-    *   Seleccione el archivo y haga clic en **"Procesar Archivo"**. El sistema creará automáticamente las categorías que no existan.
+    *   **Preparación del archivo CSV:** El archivo debe guardarse con codificación UTF-8 y usar comas como separadores.
+    *   **Estructura Técnica del CSV:**
+        | Columna | Descripción | Ejemplo |
+        | :--- | :--- | :--- |
+        | `nombre` | Nombre descriptivo del producto. | Concreto 3500 PSI |
+        | `precio` | Valor numérico sin símbolos de moneda. | 145.50 |
+        | `tipo` | Clasificación (CONCRETO, BLOQUE, SERVICIO, OTRO). | CONCRETO |
+        | `categoria` | Nombre del grupo de productos. | Estructurales |
+        | `descripcion`| (Opcional) Detalles técnicos adicionales. | Mezcla con aditivo |
+    *   **Lógica de Importación:**
+        *   Si la **Categoría** no existe, el sistema la creará automáticamente.
+        *   Los precios se asumen siempre en **Dólares (USD)**.
+        *   Si un producto ya existe con el mismo nombre, el sistema intentará actualizarlo o dará error dependiendo de la integridad de los datos.
+        *   **Consejo:** Descargue la plantilla de ejemplo desde el panel de configuración (si está disponible) antes de subir sus datos reales.
 
 ### Paso 3: Registro de Clientes
 1.  Vaya a la sección **"Clientes"**.
@@ -48,12 +65,12 @@ No se pueden crear presupuestos sin productos definidos. Puede hacerlo de dos fo
 
 ### Paso 4: Ciclo de Venta (Presupuestos y Pagos)
 Una vez configurado lo anterior, el sistema está listo para operar:
-1.  Crear **Presupuesto** (Cotización).
-2.  **Aprobación:** Si es Administrador o Contable, revise y apruebe la cotización.
-3.  **Vigencia:** El asesor define el tiempo de validez. Un presupuesto vencido bloquea automáticamente los pagos.
-4.  **Registro de Pago:** Registre el abono (en $ o Bs.).
-5.  **Facturación:** El sistema genera la Proforma tras validar el pago.
-6.  **Despacho (Operaciones):** El personal de planta visualiza el presupuesto pagado, prepara el concreto según la **Ficha Técnica** del PDF y sube la **Orden de Entrega** firmada.
+1.  **Crear Presupuesto:** El asesor comercial selecciona al cliente y los productos. El sistema calcula automáticamente el IVA y el IGTF proyectado.
+2.  **Aprobación Gerencial:** Un presupuesto en estado "PENDING" no permite pagos. Debe ser revisado por un Administrador o Contable quien, tras verificar la viabilidad, cambia el estado a "APPROVED".
+3.  **Gestión de Vigencia:** Los presupuestos tienen una fecha de vencimiento. Si esta fecha pasa, el botón de pago se desactiva. La gerencia puede extender la vigencia desde el panel de detalle.
+4.  **Registro de Pago:** Una vez aprobado, el cliente puede abonar. Se admiten múltiples pagos hasta completar el `Total`.
+5.  **Facturación y Proforma:** Al completar el pago (o según política interna de crédito), se genera el documento final con sello de "PAGADO" o "CRÉDITO".
+6.  **Despacho y Ejecución:** Operaciones recibe la orden, prepara la mezcla basándose en los parámetros técnicos definidos y, tras la entrega en obra, carga la fotografía de la guía firmada para cerrar el ciclo.
 
 ---
 

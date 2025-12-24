@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../Frontend/public/assets/LOGO_PREMEZCLADOS.svg" alt="Logo Premezclado Manzanillo" width="200">
+</p>
+
 # 🛠️ Guía Técnica para Desarrolladores - Premezclado Manzanillo
 
 Esta guía detalla la arquitectura técnica y los estándares de desarrollo para la plataforma.
@@ -63,6 +67,38 @@ El sistema es multi-moneda de forma visual pero opera sobre una base única.
 -   **Sincronización:** En desarrollo, usar `pnpm exec prisma migrate dev`. En producción, usar `npx prisma migrate deploy`.
 -   **Prevenir conflictos binarios:** El archivo `dev.db` debe estar en el `.gitignore` para evitar conflictos de mezcla (merge conflicts) entre desarrolladores. La estructura se sincroniza vía migraciones.
 -   **M2M Credentials:** Asegure que el servidor tenga acceso a las variables `AUTH0_M2M_CLIENT_ID` y `SECRET` para que la eliminación de usuarios y gestión de roles funcione.
+
+---
+
+## 7. Módulo de Reportes (Business Intelligence)
+El sistema utiliza un controlador especializado (`reportsController.ts`) para realizar agregaciones complejas que no pueden hacerse vía Prisma simple:
+
+-   **Backend:** Utiliza `Promise.all` para lanzar múltiples consultas paralelas (Ventas, Cartera, Operaciones) optimizando el tiempo de respuesta. 
+-   **Agregación de Revenue:** El sistema calcula el ingreso por tipo de producto distribuyendo el monto pagado de cada factura proporcionalmente entre los productos del presupuesto original.
+-   **Frontend:** Implementa una visualización basada en `ChartJS` (Bar y Pie charts) con estados de carga animados vía `framer-motion`. Los datos se limpian y formatean usando los `helpers.js` para asegurar coherencia visual.
+
+---
+
+## 8. Procesamiento de Carga Masiva (CSV)
+El sistema de importación de productos está diseñado para manejar fallos parciales sin detener el proceso completo, permitiendo corregir solo las filas fallidas.
+
+**Arquitectura del Proceso:**
+1.  **Lado Cliente (`Settings.jsx`):** 
+    *   Usa `PapaParse` para el streaming del archivo.
+    *   Realiza un "mapeo inteligente": si el CSV tiene columnas como "Price", "Precio" o "Monto", las identifica automáticamente.
+2.  **Transacción por Fila:** El cliente envía una petición `POST` individual por cada producto. Esto permite mostrar un reporte de éxito/error fila por fila en tiempo real.
+3.  **Normalización del Backend:** 
+    *   **Tipos de Producto:** El sistema normaliza entradas de texto libre a los tipos soportados: `CONCRETE`, `BLOCK`, `SERVICE`, `OTHER`.
+    *   **Categorías Dinámicas:** Si una fila especifica una categoría que no existe, el controlador la crea al vuelo antes de insertar el producto.
+
+---
+
+## 9. Sistema de Notificaciones
+Las notificaciones permiten el seguimiento en tiempo real de eventos críticos del ciclo de venta.
+
+-   **Modelo de Datos:** Cada notificación tiene un `userId` (propietario), un `message` y un estado `read`.
+-   **Disparadores:** Se generan automáticamente desde los controladores de `Budget` y `Payment`.
+-   **Sincronización:** El frontend utiliza un mecanismo de **Polling** de 30 segundos (`DashboardNavbar.jsx`) para mantener el contador de mensajes no leídos actualizado sin sobrecargar el servidor con WebSockets innecesarios para esta etapa del proyecto.
 
 ---
 
