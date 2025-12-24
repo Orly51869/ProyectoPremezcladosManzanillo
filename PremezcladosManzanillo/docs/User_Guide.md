@@ -12,7 +12,7 @@ Esta guía proporciona una explicación exhaustiva de todas las herramientas dis
 El siguiente diagrama resume el ciclo de vida de una venta dentro de la plataforma, desde la captación del cliente hasta el análisis gerencial:
 
 <p align="center">
-  <img src="./Decision Path Option-2025-12-24-002826.png" alt="Decision Path Diagram" width="500">
+  <img src="./Decision Path Option-2025-12-24-010340.png" alt="Decision Path Diagram" width="500">
 </p>
 
 ---
