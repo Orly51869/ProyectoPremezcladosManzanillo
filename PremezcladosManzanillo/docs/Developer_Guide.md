@@ -84,7 +84,7 @@ El sistema de importación de productos está diseñado para manejar fallos parc
 
 **Arquitectura del Proceso:**
 1.  **Lado Cliente (`Settings.jsx`):** 
-    *   Usa `PapaParse` para el streaming del archivo.
+    *   Usa `PapaParse` para procesar el archivo fila por fila de manera eficiente, evitando sobrecargar la memoria del navegador.
     *   Realiza un "mapeo inteligente": si el CSV tiene columnas como "Price", "Precio" o "Monto", las identifica automáticamente.
 2.  **Transacción por Fila:** El cliente envía una petición `POST` individual por cada producto. Esto permite mostrar un reporte de éxito/error fila por fila en tiempo real.
 3.  **Normalización del Backend:** 
