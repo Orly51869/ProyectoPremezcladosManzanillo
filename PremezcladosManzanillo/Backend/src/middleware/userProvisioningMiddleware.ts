@@ -4,14 +4,14 @@ import prisma from '../lib/prisma';
 export const userProvisioningMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const authId = req.auth?.payload.sub;
   const authEmail = req.auth?.payload.email as string | undefined;
-  
+
   // Intentar obtener el nombre de varios campos comunes en OIDC/Auth0
-  const authName = (req.auth?.payload.name || 
-                    req.auth?.payload.nickname || 
-                    (req.auth?.payload as any)?.user_metadata?.full_name ||
-                    req.auth?.payload.preferred_username || 
-                    (authEmail ? authEmail.split('@')[0] : undefined)) as string | undefined;
-                    
+  const authName = (req.auth?.payload.name ||
+    req.auth?.payload.nickname ||
+    (req.auth?.payload as any)?.user_metadata?.full_name ||
+    req.auth?.payload.preferred_username ||
+    (authEmail ? authEmail.split('@')[0] : undefined)) as string | undefined;
+
   const authRoles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] | undefined;
 
   if (!authId) {
@@ -24,7 +24,14 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
       where: { id: authId },
     });
 
-    const determinedRole = authRoles && authRoles.length > 0 ? authRoles[0] : 'Usuario';
+    // Determine role from Auth0, but fallback to existing DB role if Auth0 roles are empty/undefined
+    // This prevents accidental downgrade if the token is just missing the claim
+    let determinedRole = authRoles && authRoles.length > 0 ? authRoles[0] : 'Usuario';
+
+    if (user && user.role === 'Administrador' && (!authRoles || authRoles.length === 0)) {
+      console.log(`Preserving 'Administrador' role for user ${user.id} despite missing Auth0 claim.`);
+      determinedRole = 'Administrador';
+    }
     const currentName = authName || 'Usuario';
 
     if (!user) {
@@ -43,7 +50,7 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
           try {
             await prisma.$transaction(async (tx) => {
               const oldUserId = existingUserByEmail.id;
-              
+
               // 1. Create a new user with the NEW authId.
               const newUser = await tx.user.create({
                 data: {
@@ -76,7 +83,7 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
           }
         }
       }
-      
+
       // If we are here, no conflict was found. Create the new user.
       user = await prisma.user.create({
         data: {
@@ -111,18 +118,18 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
           });
 
           if (conflictingUser) {
-             console.error(`Conflict: Cannot update email for user ${user.id} to ${authEmail} because it's already in use by user ${conflictingUser.id}.`);
+            console.error(`Conflict: Cannot update email for user ${user.id} to ${authEmail} because it's already in use by user ${conflictingUser.id}.`);
           } else {
-             updateData.email = authEmail;
+            updateData.email = authEmail;
           }
         }
-        
+
         if (Object.keys(updateData).length > 2 || nameNeedsUpdate || roleNeedsUpdate) {
-            user = await prisma.user.update({
-              where: { id: authId },
-              data: updateData,
-            });
-            console.log(`User data synced for ${user.email}: Name=${user.name}, Role=${user.role}, Email updated: ${!!updateData.email}`);
+          user = await prisma.user.update({
+            where: { id: authId },
+            data: updateData,
+          });
+          console.log(`User data synced for ${user.email}: Name=${user.name}, Role=${user.role}, Email updated: ${!!updateData.email}`);
         }
       }
     }
@@ -132,7 +139,7 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
   } catch (error) {
     console.error('Error in user provisioning middleware:', error);
     if ((error as any).code === 'P2002' && (error as any).meta?.target?.includes('email')) {
-      return res.status(409).json({ 
+      return res.status(409).json({
         error: 'A user with this email already exists.',
         code: 'EMAIL_CONFLICT'
       });

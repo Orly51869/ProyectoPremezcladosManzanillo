@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useSettings } from "../../context/SettingsContext";
+import { useAuth0 } from "@auth0/auth0-react";
 
-const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets = [], initialValues = null }) => {
+const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudgets = [], initialValues = null }) => {
   const { exchangeRate: currentExchangeRate } = useCurrency();
   const { settings } = useSettings();
+  const { user } = useAuth0();
   const [budgetId, setBudgetId] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
   const [paidAmount, setPaidAmount] = useState(""); // Este será el equivalente en USD
@@ -12,7 +14,13 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
   const [applyIgtf, setApplyIgtf] = useState(false);
   const [amountInCurrency, setAmountInCurrency] = useState(""); // Monto en VES si aplica
   const [exchangeRate, setExchangeRate] = useState(currentExchangeRate || "");
-  
+  const [igtfRate, setIgtfRate] = useState(settings?.company_igtf || 3);
+
+  // Update effect to sync with settings if they load later, but respect manual changes if implemented logic allowed (here simple sync)
+  useEffect(() => {
+    if (settings?.company_igtf) setIgtfRate(settings.company_igtf);
+  }, [settings]);
+
   const [method, setMethod] = useState("Transferencia");
   const [reference, setReference] = useState("");
   const [bankFrom, setBankFrom] = useState("");
@@ -32,14 +40,14 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
   const validateForm = () => {
     const errors = {};
     if (!budgetId) errors.budgetId = "Debe seleccionar un presupuesto.";
-    
+
     if (currency === 'USD') {
       if (!paidAmount || parseFloat(paidAmount) <= 0) errors.paidAmount = "El monto pagado debe ser mayor a 0.";
     } else {
       if (!amountInCurrency || parseFloat(amountInCurrency) <= 0) errors.amountInCurrency = "El monto en Bs. debe ser mayor a 0.";
       if (!exchangeRate || parseFloat(exchangeRate) <= 0) errors.exchangeRate = "La tasa de cambio debe ser válida.";
     }
-    
+
     if (!method) errors.method = "Debe seleccionar un método de pago.";
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -55,11 +63,16 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
 
   // Efecto para "Pre-llenar" los Bs. si ya hay un monto en USD y se cambia a VES
   useEffect(() => {
-    if (currency === 'VES' && paidAmount && !amountInCurrency && exchangeRate) {
-      const vesValue = (parseFloat(paidAmount) * parseFloat(exchangeRate)).toFixed(2);
-      setAmountInCurrency(vesValue);
+    if (currency === 'VES') {
+      if (paidAmount && !amountInCurrency && exchangeRate) {
+        const vesValue = (parseFloat(paidAmount) * parseFloat(exchangeRate)).toFixed(2);
+        setAmountInCurrency(vesValue);
+      }
+      setApplyIgtf(false); // Nunca aplica en VES
+    } else {
+      setApplyIgtf(true); // Siempre aplica en USD
     }
-  }, [currency]);
+  }, [currency, paidAmount, exchangeRate]);
 
   // Helper para formatear siempre en USD
   const formatPriceUSD = (val) => {
@@ -82,10 +95,10 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
       formData.append('exchangeRate', exchangeRate);
       formData.append('amountInCurrency', amountInCurrency);
     }
-    
+
     // En Venezuela, el IGTF es el 3% (o lo configurado) sobre el monto pagado
     if (applyIgtf) {
-      const igtfCalculated = parseFloat(paidAmount || 0) * (parseFloat(settings?.company_igtf || 3) / 100);
+      const igtfCalculated = parseFloat(paidAmount || 0) * (parseFloat(igtfRate || 0) / 100);
       formData.append('igtfAmount', igtfCalculated.toFixed(2));
     }
     if (reference) formData.append('reference', reference);
@@ -139,7 +152,7 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
           <div className="flex gap-2">
             <div className="flex-1">
               <label className="block text-sm text-brand-text dark:text-gray-300 mb-1">Moneda del Pago</label>
-              <select 
+              <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
                 className="w-full p-3 border border-brand-light dark:border-gray-600 bg-white dark:bg-dark-surface dark:text-gray-200 rounded-lg"
@@ -165,34 +178,26 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
             </div>
           </div>
 
-          {/* Sección de IGTF */}
-          <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
-            <div className="flex items-center justify-between mb-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={applyIgtf} 
-                  onChange={(e) => setApplyIgtf(e.target.checked)}
-                  className="rounded text-orange-600 focus:ring-orange-500"
-                />
-                <span className="text-sm font-bold text-orange-800 dark:text-orange-300">¿Aplica IGTF? ({settings?.company_igtf || 3}%)</span>
-              </label>
-              {applyIgtf && (
+          {/* Sección de IGTF - Solo visible en USD */}
+          {currency === 'USD' && (
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-orange-800 dark:text-orange-300">
+                    IGTF ({igtfRate}%)
+                  </span>
+                </div>
+
                 <div className="text-right">
                   <span className="block text-sm font-bold text-orange-700 dark:text-orange-400">
-                    + {formatPriceUSD(parseFloat(paidAmount || 0) * (parseFloat(settings?.company_igtf || 3) / 100))}
+                    + {formatPriceUSD(parseFloat(paidAmount || 0) * (parseFloat(igtfRate || 0) / 100))}
                   </span>
-                  {currency === 'VES' && exchangeRate && (
-                    <span className="text-[10px] text-orange-600 dark:text-orange-400">
-                      ≈ {((parseFloat(paidAmount || 0) * (parseFloat(settings?.company_igtf || 3) / 100)) * parseFloat(exchangeRate)).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs.
-                    </span>
-                  )}
                 </div>
-              )}
+              </div>
+              <p className="text-[10px] text-orange-600 dark:text-orange-400">El IGTF es un impuesto adicional y no se resta del saldo pendiente del presupuesto.</p>
             </div>
-            <p className="text-[10px] text-orange-600 dark:text-orange-400">El IGTF es un impuesto adicional y no se resta del saldo pendiente del presupuesto.</p>
-          </div>
-          
+          )}
+
           {currency === 'VES' && (
             <div className="flex gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
               <div className="flex-1">
@@ -209,7 +214,7 @@ const PaymentForm = ({ onSubmit = () => {}, onCancel = () => {}, approvedBudgets
               <div className="flex-[1.5] flex flex-col justify-center">
                 <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Equivalente a abonar:</span>
                 <span className="text-lg font-bold text-blue-800 dark:text-blue-200">
-                   {paidAmount ? `$ ${parseFloat(paidAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '$ 0.00'}
+                  {paidAmount ? `$ ${parseFloat(paidAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '$ 0.00'}
                 </span>
               </div>
             </div>

@@ -66,10 +66,10 @@ const FeaturedProjectsSection = () => {
           </h2>
           <p className="mt-4 text-gray-500 dark:text-gray-400">Descubre cómo hemos ayudado a construir el futuro de Colima.</p>
         </div>
-        
+
         {projects.length > 0 ? (
           <div className="relative">
-            <div className="relative h-auto md:h-[480px] overflow-hidden">
+            <div className="relative h-[400px] overflow-hidden">
               <AnimatePresence initial={false} custom={direction}>
                 <motion.div
                   key={index}
@@ -82,11 +82,11 @@ const FeaturedProjectsSection = () => {
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 }
                   }}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-8 px-2 py-4"
+                  className="absolute top-0 left-0 w-full grid grid-cols-1 md:grid-cols-3 gap-8 px-2 py-4"
                 >
                   {projectChunks[index]?.map((project) => (
-                    <FeaturedProjectCard 
-                      key={project.id} 
+                    <FeaturedProjectCard
+                      key={project.id}
                       title={project.title}
                       description={project.description}
                       imgSrc={project.imageUrl || '/assets/Hero.png'}
@@ -99,14 +99,16 @@ const FeaturedProjectsSection = () => {
               {projectChunks.length > 1 && (
                 <div className="hidden md:block">
                   <button
+                    type="button"
                     onClick={() => paginate(-1)}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-10 p-3 rounded-full bg-white dark:bg-dark-primary text-gray-800 dark:text-white shadow-xl hover:bg-brand-primary hover:text-white transition-all transform hover:scale-110"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/90 dark:bg-dark-primary/90 text-gray-800 dark:text-white shadow-lg hover:bg-brand-primary hover:text-white transition-all transform hover:scale-110 backdrop-blur-sm"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => paginate(1)}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-10 p-3 rounded-full bg-white dark:bg-dark-primary text-gray-800 dark:text-white shadow-xl hover:bg-brand-primary hover:text-white transition-all transform hover:scale-110"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/90 dark:bg-dark-primary/90 text-gray-800 dark:text-white shadow-lg hover:bg-brand-primary hover:text-white transition-all transform hover:scale-110 backdrop-blur-sm"
                   >
                     <ChevronRight className="w-6 h-6" />
                   </button>
@@ -121,8 +123,8 @@ const FeaturedProjectsSection = () => {
                   <button
                     key={i}
                     onClick={() => {
-                        setDirection(i > index ? 1 : -1);
-                        setIndex(i);
+                      setDirection(i > index ? 1 : -1);
+                      setIndex(i);
                     }}
                     className={`h-2 rounded-full transition-all duration-300 ${i === index ? 'w-8 bg-brand-primary' : 'w-2 bg-gray-300 dark:bg-gray-700'}`}
                   />
@@ -132,8 +134,8 @@ const FeaturedProjectsSection = () => {
           </div>
         ) : (
           <div className="text-center py-10 opacity-50">
-             <Building className="mx-auto w-12 h-12 text-gray-400 mb-2" />
-             <p className="text-gray-500">Pronto verás nuestros proyectos aquí.</p>
+            <Building className="mx-auto w-12 h-12 text-gray-400 mb-2" />
+            <p className="text-gray-500">Pronto verás nuestros proyectos aquí.</p>
           </div>
         )}
 

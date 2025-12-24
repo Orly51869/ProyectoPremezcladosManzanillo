@@ -15,7 +15,7 @@ import clientsRouter from './routes/clients';
 import productsRouter from './routes/products';
 import paymentsRouter from './routes/payments';
 import notificationsRouter from './routes/notifications';
-import invoicesRouter from './routes/invoices'; 
+import invoicesRouter from './routes/invoices';
 import dashboardRouter from './routes/dashboard';
 import usersRouter from './routes/users';
 import currencyRoutes from './routes/currency';
@@ -29,7 +29,7 @@ dotenv.config();
 const app = express();
 
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
 };
 
@@ -117,27 +117,27 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   // Errores de Auth0 (express-oauth2-jwt-bearer)
   // Si no hay token, la librería suele lanzar InvalidRequestError o status 401/400
   if (
-    err.status === 401 || 
-    err.name === 'UnauthorizedError' || 
+    err.status === 401 ||
+    err.name === 'UnauthorizedError' ||
     err.name === 'InvalidRequestError' || // Capturar el error que vimos en los logs
     err.code === 'invalid_token' ||
     err.code === 'credentials_required'
   ) {
-    return res.status(401).json({ 
-      error: 'No autorizado', 
-      message: err.message || 'Token de autenticación faltante o inválido' 
+    return res.status(401).json({
+      error: 'No autorizado',
+      message: err.message || 'Token de autenticación faltante o inválido'
     });
   }
-  
+
   // Errores de solicitud incorrecta genéricos
   if (err.status === 400 || err.name === 'BadRequestError') {
     return res.status(400).json({ error: 'Solicitud incorrecta', message: err.message });
   }
 
   console.error('Error no manejado:', err);
-  res.status(err.status || 500).json({ 
-    error: 'Error interno del servidor', 
-    message: err.message || 'Ocurrió un error inesperado' 
+  res.status(err.status || 500).json({
+    error: 'Error interno del servidor',
+    message: err.message || 'Ocurrió un error inesperado'
   });
 });
 

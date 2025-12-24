@@ -50,12 +50,10 @@ const ScrollToAnchor = () => {
   useEffect(() => {
     if (location.hash) {
       const id = location.hash.substring(1);
-      setTimeout(() => {
-        const element = document.getElementById(id);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'auto' });
+      }
     }
   }, [location]);
   return null;
@@ -119,8 +117,8 @@ const App = () => {
             <Route path="/nosotros" element={<AboutPage />} />
             <Route path="/contacto" element={<ContactPage />} />
             <Route path="/proyectos" element={<ProjectsPage />} />
-            
-    
+
+
             {/* Rutas Protegidas */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AuthenticatedApiProvider />}> {/* AuthenticatedApiProvider ahora renderiza un Outlet */}

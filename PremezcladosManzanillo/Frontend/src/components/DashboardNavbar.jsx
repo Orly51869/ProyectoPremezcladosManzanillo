@@ -77,6 +77,7 @@ const DashboardNavbar = () => {
     { path: "/invoices", icon: Receipt, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Operaciones", "Usuario"] },
     { path: "/customize", icon: Palette, label: "Personalizar", requiredRoles: ["Administrador", "Comercial"] },
     { path: "/reports", icon: PieChart, label: "Reportes", requiredRoles: ["Administrador", "Contable", "Comercial", "Operaciones"] },
+    { path: "/settings", icon: Settings, label: "Configuración", requiredRoles: ["Administrador"] },
     { path: "/admin/roles", icon: UserCog, label: "Roles", requiredRoles: ["Administrador"] },
   ];
 
@@ -122,8 +123,8 @@ const DashboardNavbar = () => {
                   key={item.path}
                   to={item.path}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${isActive
-                      ? "bg-brand-primary text-white dark:bg-dark-btn dark:text-white"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn"
+                    ? "bg-brand-primary text-white dark:bg-dark-btn dark:text-white"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn"
                     }`}
                   title={item.label}
                 >

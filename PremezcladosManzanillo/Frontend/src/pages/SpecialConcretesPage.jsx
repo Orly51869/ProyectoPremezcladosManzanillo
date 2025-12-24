@@ -18,7 +18,7 @@ const iconMap = {
 // Nuevo Componente para listar Aditivos/Servicios
 const FeatureListItem = ({ item }) => {
     const IconComponent = iconMap[item.icon] || iconMap['default'];
-    
+
     return (
         <div className="flex items-start space-x-4 p-4 dark:bg-dark-secondary rounded-lg">
             <IconComponent size={24} className="text-brand-primary dark:text-green-400 flex-shrink-0 mt-1" />
@@ -45,14 +45,16 @@ const CategorySection = ({ category }) => (
             </div>
         </div>
 
-        {/* Hero Image Section - Full Width */}
-        <div
-            className="w-full bg-cover bg-center"
-            style={{ 
-                height: '400px',
-                backgroundImage: `url(${category.heroImageSrc || "/assets/HERO.png"})` 
-            }}
-        />
+        {/* Hero Image Section - Centered */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+            <div
+                className="w-full bg-cover bg-center rounded-2xl shadow-lg"
+                style={{
+                    height: '400px',
+                    backgroundImage: `url(${category.heroImageSrc || "/assets/HERO.png"})`
+                }}
+            />
+        </div>
 
         {/* Content Section - Constrained Width */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -98,7 +100,7 @@ const SpecialConcretesPage = () => {
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching products:', err);
-                setError('Error al cargar los productos.');
+                // Fallback to mock data on error
                 setLoading(false);
             }
         };
@@ -106,8 +108,8 @@ const SpecialConcretesPage = () => {
     }, []);
 
     const specialCategory = useMemo(() => {
-        const specialProducts = allProducts.filter(p => 
-            p.category === 'Especial' || 
+        const specialProducts = allProducts.filter(p =>
+            p.category === 'Especial' ||
             (p.category && typeof p.category === 'object' && p.category.name === 'Especial')
         );
 
@@ -118,7 +120,7 @@ const SpecialConcretesPage = () => {
                 description: p.description,
                 f_c: p.resistance,
                 imageSrc: p.image || '/assets/Bloques.png'
-              }))
+            }))
             : [
                 { id: 'relleno-fluido-10', title: 'Relleno Fluido 10 kg/cm²', description: 'Ideal para relleno de ductos, zanjas o huecos.', f_c: '10 kg/cm²', imageSrc: '/assets/Bloques.png' },
                 { id: 'relleno-fluido-20', title: 'Relleno Fluido 20 kg/cm²', description: 'Mayor resistencia para rellenos estructurales o áreas de difícil acceso.', f_c: '20 kg/cm²', imageSrc: '/assets/Bloques.png' },
@@ -145,17 +147,7 @@ const SpecialConcretesPage = () => {
         ]
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-white dark:bg-dark-primary pt-16">
-                <HomepageNavbar />
-                <div className="max-w-7xl mx-auto py-12 px-4 text-center">
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Cargando productos...</h1>
-                </div>
-                <Footer />
-            </div>
-        );
-    }
+
 
     if (error) {
         return (

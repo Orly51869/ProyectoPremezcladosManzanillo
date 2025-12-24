@@ -83,18 +83,18 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
     const err = {};
     if (!form.name || form.name.trim().length < 3) err.name = 'El nombre del cliente es requerido (mínimo 3 caracteres).';
     if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) err.email = 'El correo electrónico es requerido y debe ser válido.';
-    
+
     if (!rifNumber.trim()) {
       err.rif = 'El número de RIF/Cédula es requerido.';
     } else {
       const rifLen = rifNumber.trim().length;
       if ((rifPrefix === 'J' || rifPrefix === 'G') && rifLen !== 9) {
         err.rif = `El RIF para ${rifPrefix === 'J' ? 'persona jurídica' : 'ente gubernamental'} debe tener exactamente 9 dígitos.`;
-      } else if ((rifPrefix === 'V' || rifPrefix === 'E') && rifLen !== 8) {
-        err.rif = `La cédula de ${rifPrefix === 'V' ? 'venezolano' : 'extranjero'} debe tener exactamente 8 dígitos.`;
+      } else if ((rifPrefix === 'V' || rifPrefix === 'E') && (rifLen < 7 || rifLen > 8)) {
+        err.rif = `La cédula de ${rifPrefix === 'V' ? 'venezolano' : 'extranjero'} debe tener entre 7 y 8 dígitos.`;
       }
     }
-    
+
     if (phoneNumber && phoneNumber.length < 7) {
       err.phone = 'Número de teléfono demasiado corto (mínimo 7 dígitos).';
     }
@@ -123,7 +123,7 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
             <span className="block sm:inline">{apiError} Por favor, corrige los errores para continuar.</span>
           </div>
         )}
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">RIF / Cédula</label>
           <div className="mt-1 flex rounded-lg shadow-sm">
@@ -173,7 +173,7 @@ const ClientFormModal = ({ initialValues = {}, onSave, onCancel, isEditing, serv
           />
           {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono (Opcional)</label>
           <div className="mt-1 flex rounded-lg shadow-sm">

@@ -73,7 +73,9 @@ export const uploadInvoiceDocuments = multer({
 // Configure multer for assets (logos, hero images, etc.)
 const assetStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../../uploads/assets');
+    // Save to Frontend/public/uploads/assets to be strictly part of the project structure
+    // Path: Backend/src/middleware -> ../../../Frontend/public/uploads/assets
+    const uploadPath = path.join(__dirname, '../../../Frontend/public/uploads/assets');
     fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
   },

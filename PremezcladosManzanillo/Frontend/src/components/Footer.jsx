@@ -1,8 +1,10 @@
 import React from 'react';
 import { Instagram, Mail, Phone, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSettings } from '../context/SettingsContext';
 
 const Footer = () => {
+    const { settings } = useSettings();
     const currentYear = new Date().getFullYear();
 
     return (
@@ -37,11 +39,11 @@ const Footer = () => {
                         <ul className="space-y-2">
                             <li className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                 <MapPin className="w-4 h-4 mr-2 text-brand-primary" />
-                                Sector Guatamare, Av. 31 de Julio, Edif. Cantera Manzanillo.
+                                {settings?.company_address || "Sector Guatamare, Av. 31 de Julio, Edif. Cantera Manzanillo."}
                             </li>
                             <li className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                 <Phone className="w-4 h-4 mr-2 text-brand-primary" />
-                                0295-287.14.22 / 0295-287.08.45
+                                {settings?.company_phone || "0295-287.14.22 / 0295-287.08.45"}
                             </li>
                             <li className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                 <Mail className="w-4 h-4 mr-2 text-brand-primary" />

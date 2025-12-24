@@ -22,14 +22,16 @@ const CategorySection = ({ category }) => (
             </div>
         </div>
 
-        {/* Hero Image Section - Full Width */}
-        <div
-            className="w-full bg-cover bg-center"
-            style={{ 
-                height: '400px',
-                backgroundImage: `url(${category.heroImageSrc || "/assets/HERO.png"})` 
-            }}
-        />
+        {/* Hero Image Section - Centered */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+            <div
+                className="w-full bg-cover bg-center rounded-2xl shadow-lg"
+                style={{
+                    height: '400px',
+                    backgroundImage: `url(${category.heroImageSrc || "/assets/HERO.png"})`
+                }}
+            />
+        </div>
 
         {/* Content Section - Constrained Width */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -58,7 +60,7 @@ const StructuralConcretesPage = () => {
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching products:', err);
-                setError('Error al cargar los productos.');
+                // Fallback to mock data on error by not setting global error state
                 setLoading(false);
             }
         };
@@ -66,20 +68,20 @@ const StructuralConcretesPage = () => {
     }, []);
 
     const structuralCategory = useMemo(() => {
-        const structuralProducts = allProducts.filter(p => 
-            p.category === 'Estructural' || 
+        const structuralProducts = allProducts.filter(p =>
+            p.category === 'Estructural' ||
             (p.category && typeof p.category === 'object' && p.category.name === 'Estructural')
         );
 
         // Fallback al mock data si no hay productos en la DB aún
-        const displayProducts = structuralProducts.length > 0 
+        const displayProducts = structuralProducts.length > 0
             ? structuralProducts.map(p => ({
                 id: p.id,
                 title: p.name,
                 description: p.description,
                 f_c: p.resistance,
                 imageSrc: p.image || '/assets/Concreto.png'
-              }))
+            }))
             : [
                 { id: 'c-100', title: 'Concreto 100 kg/cm²', description: 'Ideal para obras livianas o no estructurales.', f_c: '100 kg/cm²', imageSrc: '/assets/Concreto.png' },
                 { id: 'c-120', title: 'Concreto 120 kg/cm²', description: 'Para cimentaciones o pisos de baja carga.', f_c: '120 kg/cm²', imageSrc: '/assets/Concreto.png' },
@@ -101,17 +103,7 @@ const StructuralConcretesPage = () => {
         };
     }, [allProducts]);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-white dark:bg-dark-primary pt-16">
-                <HomepageNavbar />
-                <div className="max-w-7xl mx-auto py-12 px-4 text-center">
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Cargando productos...</h1>
-                </div>
-                <Footer />
-            </div>
-        );
-    }
+
 
     if (error) {
         return (

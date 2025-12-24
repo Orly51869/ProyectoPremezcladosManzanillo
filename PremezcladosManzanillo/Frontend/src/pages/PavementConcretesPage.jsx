@@ -22,14 +22,16 @@ const CategorySection = ({ category }) => (
             </div>
         </div>
 
-        {/* Hero Image Section - Full Width */}
-        <div
-            className="w-full bg-cover bg-center"
-            style={{ 
-                height: '400px',
-                backgroundImage: `url(${category.heroImageSrc || "/assets/HERO.png"})` 
-            }}
-        />
+        {/* Hero Image Section - Centered */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+            <div
+                className="w-full bg-cover bg-center rounded-2xl shadow-lg"
+                style={{
+                    height: '400px',
+                    backgroundImage: `url(${category.heroImageSrc || "/assets/HERO.png"})`
+                }}
+            />
+        </div>
 
         {/* Content Section - Constrained Width */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -58,7 +60,7 @@ const PavementConcretesPage = () => {
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching products:', err);
-                setError('Error al cargar los productos.');
+                // Fallback to mock data on error
                 setLoading(false);
             }
         };
@@ -66,8 +68,8 @@ const PavementConcretesPage = () => {
     }, []);
 
     const pavementCategory = useMemo(() => {
-        const pavementProducts = allProducts.filter(p => 
-            p.category === 'Pavimento' || 
+        const pavementProducts = allProducts.filter(p =>
+            p.category === 'Pavimento' ||
             (p.category && typeof p.category === 'object' && p.category.name === 'Pavimento')
         );
 
@@ -78,7 +80,7 @@ const PavementConcretesPage = () => {
                 description: p.description,
                 f_c: p.resistance,
                 imageSrc: p.image || '/assets/Carretera.png'
-              }))
+            }))
             : [
                 { id: 'pavi-vial-40', title: 'PAVI-VIAL 40', description: 'Pavimentos de tráfico ligero.', f_c: null, imageSrc: '/assets/Carretera.png' },
                 { id: 'pavi-vial-45', title: 'PAVI-VIAL 45', description: 'Calles urbanas o estacionamientos.', f_c: null, imageSrc: '/assets/Carretera.png' },
@@ -96,17 +98,7 @@ const PavementConcretesPage = () => {
         };
     }, [allProducts]);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-white dark:bg-dark-primary pt-16">
-                <HomepageNavbar />
-                <div className="max-w-7xl mx-auto py-12 px-4 text-center">
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Cargando productos...</h1>
-                </div>
-                <Footer />
-            </div>
-        );
-    }
+
 
     if (error) {
         return (

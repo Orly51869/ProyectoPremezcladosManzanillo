@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Image as ImageIcon, Layout, Save, Plus, Trash2, RefreshCcw } from 'lucide-react';
+import { Image as ImageIcon, Layout, Save, Plus, Trash2, RefreshCcw, Pencil } from 'lucide-react';
 import api from '../utils/api';
 import { useSettings } from '../context/SettingsContext';
 
@@ -12,19 +12,19 @@ const CustomizationPage = () => {
   const [message, setMessage] = useState(null);
 
   // States for configs
-  const [heroConfig, setHeroConfig] = useState({ 
+  const [heroConfig, setHeroConfig] = useState({
     images: [
       '/assets/Hero.png',
       '/assets/Toma frontal Planta.jpeg',
       '/assets/Toma araña Planta.jpeg',
       '/assets/Toma aerea Planta.jpeg'
-    ], 
+    ],
     texts: [
       "Calidad y resistencia para los proyectos que construyen nuestro futuro.",
       "Tu obra, nuestra prioridad. Concreto premezclado entregado a tiempo.",
       "Innovación en cada mezcla. Soluciones de concreto para desafíos modernos.",
       "Construye con confianza. La base de tu proyecto comienza con nosotros."
-    ] 
+    ]
   });
 
   const [productsConfig, setProductsConfig] = useState([
@@ -63,7 +63,7 @@ const CustomizationPage = () => {
       if (data.hero_config) setHeroConfig(JSON.parse(data.hero_config));
       if (data.products_config) setProductsConfig(JSON.parse(data.products_config));
       if (data.services_config) setServicesConfig(JSON.parse(data.services_config));
-      
+
       const projectsData = await api.get('/api/projects');
       setProjects(projectsData.data);
     } catch (error) {
@@ -105,26 +105,26 @@ const CustomizationPage = () => {
 
   // Handlers for Hero
   const handleHeroImageUpload = async (index, file) => {
-     setLoading(true);
-     const url = await handleFileUpload(file);
-     if (url) {
-       const newImages = [...heroConfig.images];
-       newImages[index] = url;
-       setHeroConfig({ ...heroConfig, images: newImages });
-     }
-     setLoading(false);
+    setLoading(true);
+    const url = await handleFileUpload(file);
+    if (url) {
+      const newImages = [...heroConfig.images];
+      newImages[index] = url;
+      setHeroConfig({ ...heroConfig, images: newImages });
+    }
+    setLoading(false);
   };
 
   const addHeroSlide = () => {
-     setHeroConfig({ 
-       images: [...heroConfig.images, ''], 
-       texts: [...heroConfig.texts, 'Nuevo texto para el banner'] 
-     });
+    setHeroConfig({
+      images: [...heroConfig.images, ''],
+      texts: [...heroConfig.texts, 'Nuevo texto para el banner']
+    });
   };
   const removeHeroSlide = (index) => {
-     const newImages = heroConfig.images.filter((_, i) => i !== index);
-     const newTexts = heroConfig.texts.filter((_, i) => i !== index);
-     setHeroConfig({ images: newImages, texts: newTexts });
+    const newImages = heroConfig.images.filter((_, i) => i !== index);
+    const newTexts = heroConfig.texts.filter((_, i) => i !== index);
+    setHeroConfig({ images: newImages, texts: newTexts });
   };
 
   // Projects Handlers
@@ -180,7 +180,7 @@ const CustomizationPage = () => {
           <p className="text-gray-500 dark:text-gray-400">Modifica el contenido de la landing page en tiempo real.</p>
         </div>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={fetchCurrentSettings}
             className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
             title="Recargar"
@@ -198,25 +198,25 @@ const CustomizationPage = () => {
 
       {/* Tabs */}
       <div className="flex space-x-1 bg-gray-100 dark:bg-dark-surface p-1 rounded-xl mb-8 w-fit">
-        <button 
+        <button
           onClick={() => setActiveTab('hero')}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'hero' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
           Carrusel Hero
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('products')}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'products' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
           Sección Productos
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('services')}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'services' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
           Sección Servicios
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('projects')}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'projects' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
@@ -231,7 +231,7 @@ const CustomizationPage = () => {
           <div className="space-y-8">
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-bold dark:text-white">Imágenes y Textos del Banner Principal</h3>
-              <button 
+              <button
                 onClick={addHeroSlide}
                 className="flex items-center gap-2 bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
               >
@@ -254,7 +254,7 @@ const CustomizationPage = () => {
                   <div className="flex-1 space-y-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cambiar Imagen del Slide</label>
-                      <input 
+                      <input
                         type="file"
                         accept="image/*"
                         onChange={(e) => handleHeroImageUpload(idx, e.target.files[0])}
@@ -264,7 +264,7 @@ const CustomizationPage = () => {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Frase del Banner</label>
-                      <textarea 
+                      <textarea
                         value={heroConfig.texts[idx]}
                         onChange={(e) => {
                           const newTexts = [...heroConfig.texts];
@@ -276,7 +276,7 @@ const CustomizationPage = () => {
                       />
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => removeHeroSlide(idx)}
                     className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg self-start"
                   >
@@ -287,7 +287,7 @@ const CustomizationPage = () => {
             </div>
 
             <div className="flex justify-end pt-6 border-t dark:border-gray-700">
-              <button 
+              <button
                 onClick={() => saveSetting('hero_config', heroConfig)}
                 disabled={saving}
                 className="flex items-center gap-2 bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg disabled:opacity-50"
@@ -301,7 +301,7 @@ const CustomizationPage = () => {
 
         {activeTab === 'products' && (
           <div className="space-y-8">
-             <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center">
               <h3 className="text-xl font-bold dark:text-white">Productos Destacados (Landing)</h3>
               <p className="text-sm text-gray-500">Estas son las 3 categorías principales que aparecen en el inicio.</p>
             </div>
@@ -314,7 +314,7 @@ const CustomizationPage = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título</label>
-                    <input 
+                    <input
                       type="text"
                       value={prod.title}
                       onChange={(e) => {
@@ -327,7 +327,7 @@ const CustomizationPage = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
-                    <textarea 
+                    <textarea
                       value={prod.description}
                       onChange={(e) => {
                         const newProds = [...productsConfig];
@@ -339,7 +339,7 @@ const CustomizationPage = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cambiar Imagen de Categoría</label>
-                    <input 
+                    <input
                       type="file"
                       accept="image/*"
                       onChange={async (e) => {
@@ -360,7 +360,7 @@ const CustomizationPage = () => {
             </div>
 
             <div className="flex justify-end pt-6 border-t dark:border-gray-700">
-              <button 
+              <button
                 onClick={() => saveSetting('products_config', productsConfig)}
                 disabled={saving}
                 className="flex items-center gap-2 bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg"
@@ -374,7 +374,7 @@ const CustomizationPage = () => {
 
         {activeTab === 'services' && (
           <div className="space-y-8">
-             <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center">
               <h3 className="text-xl font-bold dark:text-white">Servicios de la Landing</h3>
               <p className="text-sm text-gray-500">Ajusta los 3 servicios principales mostrados.</p>
             </div>
@@ -387,7 +387,7 @@ const CustomizationPage = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título</label>
-                    <input 
+                    <input
                       type="text"
                       value={srv.title}
                       onChange={(e) => {
@@ -400,7 +400,7 @@ const CustomizationPage = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
-                    <textarea 
+                    <textarea
                       value={srv.description}
                       onChange={(e) => {
                         const newSrvs = [...servicesConfig];
@@ -412,7 +412,7 @@ const CustomizationPage = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cambiar Imagen del Servicio</label>
-                    <input 
+                    <input
                       type="file"
                       accept="image/*"
                       onChange={async (e) => {
@@ -433,7 +433,7 @@ const CustomizationPage = () => {
             </div>
 
             <div className="flex justify-end pt-6 border-t dark:border-gray-700">
-              <button 
+              <button
                 onClick={() => saveSetting('services_config', servicesConfig)}
                 disabled={saving}
                 className="flex items-center gap-2 bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg"
@@ -454,59 +454,59 @@ const CustomizationPage = () => {
 
             <form onSubmit={handleProjectSubmit} className="bg-gray-50 dark:bg-dark-primary/30 p-6 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Título del Proyecto"
                   value={projectForm.title}
-                  onChange={e => setProjectForm({...projectForm, title: e.target.value})}
+                  onChange={e => setProjectForm({ ...projectForm, title: e.target.value })}
                   className="rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm"
                   required
                 />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Ubicación (ej: Manzanillo, Colima)"
                   value={projectForm.location}
-                  onChange={e => setProjectForm({...projectForm, location: e.target.value})}
+                  onChange={e => setProjectForm({ ...projectForm, location: e.target.value })}
                   className="rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm"
                 />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Categoría (ej: Residencial, Vialidad)"
                   value={projectForm.category}
-                  onChange={e => setProjectForm({...projectForm, category: e.target.value})}
+                  onChange={e => setProjectForm({ ...projectForm, category: e.target.value })}
                   className="rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm"
                 />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Año o Estado (ej: 2024 o En curso)"
                   value={projectForm.date}
-                  onChange={e => setProjectForm({...projectForm, date: e.target.value})}
+                  onChange={e => setProjectForm({ ...projectForm, date: e.target.value })}
                   className="rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm"
                 />
                 <div className="flex gap-2">
-                  <input 
+                  <input
                     type="file"
                     accept="image/*"
                     onChange={async (e) => {
                       const url = await handleFileUpload(e.target.files[0]);
-                      if (url) setProjectForm({...projectForm, imageUrl: url});
+                      if (url) setProjectForm({ ...projectForm, imageUrl: url });
                     }}
                     className="flex-1 text-xs file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-gray-200 dark:file:bg-gray-700 dark:file:text-gray-200 dark:text-gray-400"
                   />
                   {projectForm.imageUrl && <span className="text-[10px] text-green-500 self-center">✓ Cargada</span>}
                 </div>
-                <textarea 
+                <textarea
                   placeholder="Descripción del proyecto..."
                   value={projectForm.description}
-                  onChange={e => setProjectForm({...projectForm, description: e.target.value})}
+                  onChange={e => setProjectForm({ ...projectForm, description: e.target.value })}
                   className="md:col-span-2 rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm h-20"
                 />
                 <div className="flex items-center gap-2">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     id="project-active"
                     checked={projectForm.active}
-                    onChange={e => setProjectForm({...projectForm, active: e.target.checked})}
+                    onChange={e => setProjectForm({ ...projectForm, active: e.target.checked })}
                     className="rounded text-brand-primary"
                   />
                   <label htmlFor="project-active" className="text-sm text-gray-600 dark:text-gray-400">Mostrar en la web (Activo)</label>
@@ -514,7 +514,7 @@ const CustomizationPage = () => {
               </div>
               <div className="mt-4 flex justify-end gap-2">
                 {editingProject && (
-                  <button 
+                  <button
                     type="button"
                     onClick={resetProjectForm}
                     className="px-4 py-2 text-gray-500 hover:text-gray-700 text-sm font-bold"
@@ -522,7 +522,7 @@ const CustomizationPage = () => {
                     Cancelar
                   </button>
                 )}
-                <button 
+                <button
                   type="submit"
                   disabled={saving}
                   className="bg-brand-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition flex items-center gap-2"
@@ -543,20 +543,20 @@ const CustomizationPage = () => {
                       <div className="w-full h-full flex items-center justify-center text-gray-400"><ImageIcon /></div>
                     )}
                     <div className="absolute top-2 left-2">
-                       {!proj.active && (
-                          <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded-full font-bold shadow-sm border border-yellow-200">
-                             BORRADOR
-                          </span>
-                       )}
+                      {!proj.active && (
+                        <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded-full font-bold shadow-sm border border-yellow-200">
+                          BORRADOR
+                        </span>
+                      )}
                     </div>
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                      <button 
+                      <button
                         onClick={() => { setEditingProject(proj); setProjectForm(proj); }}
                         className="p-2 bg-white rounded-full text-blue-500 shadow-lg hover:scale-110 transition"
                       >
-                        <Save size={14} />
+                        <Pencil size={14} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDeleteProject(proj.id)}
                         className="p-2 bg-white rounded-full text-red-500 shadow-lg hover:scale-110 transition"
                       >

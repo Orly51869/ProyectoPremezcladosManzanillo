@@ -6,18 +6,21 @@ import Footer from '../components/Footer.jsx';
 // Datos de los servicios
 const services = [
     {
+        id: 'asesoria',
         title: 'Asesoría Técnica Personalizada',
         description: 'Ofrecemos un acompañamiento completo desde la concepción de tu proyecto. Nuestro equipo de expertos te ayuda a seleccionar el tipo de concreto ideal según tus necesidades estructurales, las condiciones del sitio y tu presupuesto, garantizando la máxima eficiencia y durabilidad.',
         imageSrc: '/assets/Asesoria.png',
         imageAlt: 'Ingenieros revisando planos de construcción',
     },
     {
+        id: 'entrega',
         title: 'Soluciones en Cada Entrega',
         description: 'No solo entregamos concreto; entregamos tranquilidad. Cada envío es supervisado para cumplir con los más altos estándares de calidad y puntualidad. Coordinamos la logística para adaptarnos al ritmo de tu obra, asegurando que el material llegue en el momento y lugar precisos.',
         imageSrc: '/assets/Entrega.png',
         imageAlt: 'Camión de premezclado en una obra',
     },
     {
+        id: 'bombeo',
         title: 'Servicio de Bomba de Concreto',
         description: 'Facilitamos la colocación del concreto en lugares de difícil acceso, como edificios de gran altura o estructuras complejas. Nuestro servicio de bombeo es seguro, rápido y reduce la necesidad de mano de obra, optimizando el tiempo y los costos de tu proyecto.',
         imageSrc: '/assets/Bombeo.png',
@@ -27,7 +30,7 @@ const services = [
 
 // Componente para una sección de servicio individual
 const ServiceSection = ({ service, reverseLayout }) => (
-    <div className={`flex flex-col ${reverseLayout ? 'md:flex-row-reverse' : 'md:flex-row'} items-center bg-white shadow-lg rounded-lg overflow-hidden mb-12`}>
+    <div id={service.id} className={`flex flex-col ${reverseLayout ? 'md:flex-row-reverse' : 'md:flex-row'} items-center bg-white shadow-lg rounded-lg overflow-hidden mb-12`}>
         <div className="w-full md:w-1/2">
             <img src={service.imageSrc} alt={service.imageAlt} className="w-full h-64 md:h-full object-cover" />
         </div>
@@ -48,8 +51,8 @@ const ServicesPage = () => {
             <main className="pt-24 pb-16">
                 {/* Encabezado de la página */}
                 <div className="relative h-96 flex items-center justify-center text-white mb-16 shadow-xl overflow-hidden">
-                    <img 
-                        src="/assets/Carretera.png" 
+                    <img
+                        src="/assets/Carretera.png"
                         alt="Fondo de servicios de construcción"
                         className="absolute inset-0 w-full h-full object-cover"
                     />

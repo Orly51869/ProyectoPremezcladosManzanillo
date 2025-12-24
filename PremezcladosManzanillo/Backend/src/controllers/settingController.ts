@@ -77,7 +77,8 @@ export const uploadSettingAsset = async (req: Request, res: Response) => {
     }
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const fileUrl = `${baseUrl}/uploads/assets/${file.filename}`;
+    // Return path relative to public folder (served by frontend)
+    const fileUrl = `/uploads/assets/${file.filename}`;
 
     res.json({ url: fileUrl });
   } catch (error) {
