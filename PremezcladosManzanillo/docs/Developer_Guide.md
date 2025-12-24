@@ -102,6 +102,15 @@ Las notificaciones permiten el seguimiento en tiempo real de eventos críticos d
 
 ---
 
+## 10. Módulo de Portafolio (Proyectos)
+A diferencia de las configuraciones dinámicas (settings) que se guardan como JSON, el portafolio utiliza una entidad dedicada (`Project`) para permitir búsquedas y filtrados eficientes.
+
+-   **Modelo Prisma:** `Project` incluye campos como `active` para control de visibilidad y `date` (String) para soportar rangos temporales flexibles.
+-   **Seguridad:** Las rutas de escritura (`POST`, `PUT`, `DELETE` en `/api/projects`) están protegidas por el middleware de autenticación compartido, asegurando que solo el personal autorizado pueda modificar la galería.
+-   **Integración de Auditoría:** Todas las acciones CRUD emiten un registro en `AuditLog`, permitiendo rastrear quién agregó o eliminó una obra del portafolio.
+
+---
+
 ## 📂 Estructura del Backend
 
 - `src/controllers/`:
@@ -109,13 +118,16 @@ Las notificaciones permiten el seguimiento en tiempo real de eventos críticos d
     - `userController.ts`: Incluye `deleteUser` que limpia datos en Auth0 y DB.
     - `auditController.ts`: Consulta los logs de actividad.
     - `reportsController.ts`: Motor de agregación de datos para el BI.
+    - `projectController.ts`: Gestión CRUD del portafolio/proyectos.
 - `src/routes/`:
     - `settings.ts`: Endpoints para lectura pública y escritura protegida de configuraciones.
     - `audit.ts`: Acceso restringido a logs de auditoría.
     - `reports.ts`: Rutas para los tres motores de reportes (Comercial, Contabilidad, Operaciones).
+    - `projects.ts`: Endpoints para la gestión de la galería pública.
 - `prisma/schema.prisma`:
     - Modelo `Setting`: Almacena claves/valores para la personalización.
     - Modelo `AuditLog`: Registro histórico de acciones.
+    - Modelo `Project`: Almacena las obras finalizadas para el portafolio.
 
 ---
 
@@ -124,6 +136,7 @@ Las notificaciones permiten el seguimiento en tiempo real de eventos críticos d
 - `src/pages/`:
     - `CustomizationPage.jsx`: Interfaz de administración para el rol Comercial.
     - `AdminRolesPage.jsx`: Gestión de usuarios y eliminación definitiva.
+    - `ProjectsPage.jsx`: Vista pública dinámica de las obras realizadas.
 - `src/sections/dashboard/`:
     - `Reports.jsx`: Centro de Inteligencia con lógica de pestañas reactivas y gráficos de ChartJS.
 - `src/sections/home/`:

@@ -83,4 +83,25 @@ export const getOperationalReports = async () => {
   return response.data;
 };
 
+// Portfolio/Projects API
+export const getProjects = async () => {
+  const response = await api.get("/api/projects");
+  return response.data;
+};
+
+export const createProject = async (data) => {
+  const response = await api.post("/api/projects", data);
+  return response.data;
+};
+
+export const updateProject = async (id, data) => {
+  const response = await api.put(`/api/projects/${id}`, data);
+  return response.data;
+};
+
+export const deleteProject = async (id) => {
+  const response = await api.delete(`/api/projects/${id}`);
+  return response.data;
+};
+
 export default api;

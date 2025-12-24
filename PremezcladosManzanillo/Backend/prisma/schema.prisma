@@ -237,3 +237,17 @@ model Setting {
   type      String   @default("text") // text, image, color, etc.
   updatedAt DateTime @updatedAt
 }
+
+// Modelo para la galería de proyectos/obras finalizadas (Portfolio)
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String?
+  location    String?
+  date        String?   // Cambiado a String para soportar "2024", "En curso", etc.
+  category    String? // e.g., "Industrial", "Residencial", "Vialidad"
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

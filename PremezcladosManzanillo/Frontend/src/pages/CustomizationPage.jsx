@@ -39,6 +39,19 @@ const CustomizationPage = () => {
     { title: "Entrega Express", description: "Garantizamos tu concreto a tiempo.", imgSrc: "/assets/Entrega.png" }
   ]);
 
+  // Projects (Portfolio) State
+  const [projects, setProjects] = useState([]);
+  const [editingProject, setEditingProject] = useState(null);
+  const [projectForm, setProjectForm] = useState({
+    title: '',
+    description: '',
+    imageUrl: '',
+    location: '',
+    category: '',
+    date: '', // Nuevo campo para año o fecha
+    active: true
+  });
+
   useEffect(() => {
     fetchCurrentSettings();
   }, []);
@@ -50,6 +63,9 @@ const CustomizationPage = () => {
       if (data.hero_config) setHeroConfig(JSON.parse(data.hero_config));
       if (data.products_config) setProductsConfig(JSON.parse(data.products_config));
       if (data.services_config) setServicesConfig(JSON.parse(data.services_config));
+      
+      const projectsData = await api.get('/api/projects');
+      setProjects(projectsData.data);
     } catch (error) {
       console.error("Error fetching settings", error);
     } finally {
@@ -111,6 +127,48 @@ const CustomizationPage = () => {
      setHeroConfig({ images: newImages, texts: newTexts });
   };
 
+  // Projects Handlers
+  const handleProjectSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      if (editingProject) {
+        await api.put(`/api/projects/${editingProject.id}`, projectForm);
+        setMessage({ type: 'success', text: 'Proyecto actualizado con éxito.' });
+      } else {
+        await api.post('/api/projects', projectForm);
+        setMessage({ type: 'success', text: 'Proyecto creado con éxito.' });
+      }
+      setProjectForm({ title: '', description: '', imageUrl: '', location: '', category: '', date: '', active: true });
+      setEditingProject(null);
+      const { data } = await api.get('/api/projects');
+      setProjects(data);
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Error al procesar el proyecto.' });
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const handleDeleteProject = async (id) => {
+    if (!window.confirm('¿Estás seguro de eliminar este proyecto?')) return;
+    try {
+      await api.delete(`/api/projects/${id}`);
+      setMessage({ type: 'success', text: 'Proyecto eliminado.' });
+      setProjects(projects.filter(p => p.id !== id));
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Error al eliminar.' });
+    } finally {
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const resetProjectForm = () => {
+    setEditingProject(null);
+    setProjectForm({ title: '', description: '', imageUrl: '', location: '', category: '', date: '', active: true });
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto dark:bg-dark-primary min-h-screen">
       <div className="flex items-center justify-between mb-8">
@@ -157,6 +215,12 @@ const CustomizationPage = () => {
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'services' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
           Sección Servicios
+        </button>
+        <button 
+          onClick={() => setActiveTab('projects')}
+          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'projects' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          Galería de Proyectos
         </button>
       </div>
 
@@ -258,7 +322,7 @@ const CustomizationPage = () => {
                         newProds[idx].title = e.target.value;
                         setProductsConfig(newProds);
                       }}
-                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 text-sm font-bold"
+                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm font-bold"
                     />
                   </div>
                   <div>
@@ -270,7 +334,7 @@ const CustomizationPage = () => {
                         newProds[idx].description = e.target.value;
                         setProductsConfig(newProds);
                       }}
-                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 text-sm h-24"
+                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm h-24"
                     />
                   </div>
                   <div>
@@ -331,7 +395,7 @@ const CustomizationPage = () => {
                         newSrvs[idx].title = e.target.value;
                         setServicesConfig(newSrvs);
                       }}
-                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 text-sm font-bold"
+                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm font-bold"
                     />
                   </div>
                   <div>
@@ -343,7 +407,7 @@ const CustomizationPage = () => {
                         newSrvs[idx].description = e.target.value;
                         setServicesConfig(newSrvs);
                       }}
-                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 text-sm h-24"
+                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm h-24"
                     />
                   </div>
                   <div>
@@ -377,6 +441,140 @@ const CustomizationPage = () => {
                 <Save size={20} />
                 {saving ? 'Guardando...' : 'Guardar Cambios Servicios'}
               </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'projects' && (
+          <div className="space-y-8">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-bold dark:text-white">Gestión de Galería (Obras Finalizadas)</h3>
+              <p className="text-sm text-gray-500">Administra los proyectos que aparecen en la sección /proyectos.</p>
+            </div>
+
+            <form onSubmit={handleProjectSubmit} className="bg-gray-50 dark:bg-dark-primary/30 p-6 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input 
+                  type="text" 
+                  placeholder="Título del Proyecto"
+                  value={projectForm.title}
+                  onChange={e => setProjectForm({...projectForm, title: e.target.value})}
+                  className="rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm"
+                  required
+                />
+                <input 
+                  type="text" 
+                  placeholder="Ubicación (ej: Manzanillo, Colima)"
+                  value={projectForm.location}
+                  onChange={e => setProjectForm({...projectForm, location: e.target.value})}
+                  className="rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm"
+                />
+                <input 
+                  type="text" 
+                  placeholder="Categoría (ej: Residencial, Vialidad)"
+                  value={projectForm.category}
+                  onChange={e => setProjectForm({...projectForm, category: e.target.value})}
+                  className="rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm"
+                />
+                <input 
+                  type="text" 
+                  placeholder="Año o Estado (ej: 2024 o En curso)"
+                  value={projectForm.date}
+                  onChange={e => setProjectForm({...projectForm, date: e.target.value})}
+                  className="rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm"
+                />
+                <div className="flex gap-2">
+                  <input 
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const url = await handleFileUpload(e.target.files[0]);
+                      if (url) setProjectForm({...projectForm, imageUrl: url});
+                    }}
+                    className="flex-1 text-xs file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-gray-200 dark:file:bg-gray-700 dark:file:text-gray-200 dark:text-gray-400"
+                  />
+                  {projectForm.imageUrl && <span className="text-[10px] text-green-500 self-center">✓ Cargada</span>}
+                </div>
+                <textarea 
+                  placeholder="Descripción del proyecto..."
+                  value={projectForm.description}
+                  onChange={e => setProjectForm({...projectForm, description: e.target.value})}
+                  className="md:col-span-2 rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm h-20"
+                />
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="checkbox" 
+                    id="project-active"
+                    checked={projectForm.active}
+                    onChange={e => setProjectForm({...projectForm, active: e.target.checked})}
+                    className="rounded text-brand-primary"
+                  />
+                  <label htmlFor="project-active" className="text-sm text-gray-600 dark:text-gray-400">Mostrar en la web (Activo)</label>
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                {editingProject && (
+                  <button 
+                    type="button"
+                    onClick={resetProjectForm}
+                    className="px-4 py-2 text-gray-500 hover:text-gray-700 text-sm font-bold"
+                  >
+                    Cancelar
+                  </button>
+                )}
+                <button 
+                  type="submit"
+                  disabled={saving}
+                  className="bg-brand-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition flex items-center gap-2"
+                >
+                  <Save size={18} />
+                  {editingProject ? 'Actualizar Proyecto' : 'Crear Proyecto'}
+                </button>
+              </div>
+            </form>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+              {projects.map(proj => (
+                <div key={proj.id} className="bg-white dark:bg-dark-primary/50 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition group">
+                  <div className="h-40 bg-gray-100 relative">
+                    {proj.imageUrl ? (
+                      <img src={proj.imageUrl} alt={proj.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400"><ImageIcon /></div>
+                    )}
+                    <div className="absolute top-2 left-2">
+                       {!proj.active && (
+                          <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded-full font-bold shadow-sm border border-yellow-200">
+                             BORRADOR
+                          </span>
+                       )}
+                    </div>
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                      <button 
+                        onClick={() => { setEditingProject(proj); setProjectForm(proj); }}
+                        className="p-2 bg-white rounded-full text-blue-500 shadow-lg hover:scale-110 transition"
+                      >
+                        <Save size={14} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteProject(proj.id)}
+                        className="p-2 bg-white rounded-full text-red-500 shadow-lg hover:scale-110 transition"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <span className="text-[10px] uppercase font-bold text-brand-primary">{proj.category || 'General'}</span>
+                    <h4 className="font-bold text-gray-800 dark:text-white truncate">{proj.title}</h4>
+                    <p className="text-xs text-gray-500 line-clamp-2 mt-1">{proj.description}</p>
+                    <div className="mt-3 text-[10px] text-gray-400 flex items-center justify-between font-medium">
+                      <span>{proj.location}</span>
+                      <span className="bg-gray-100 dark:bg-dark-surface px-2 py-0.5 rounded">{proj.date || 'S/D'}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

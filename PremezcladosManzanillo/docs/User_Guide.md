@@ -80,8 +80,16 @@ Una vez configurado lo anterior, el sistema está listo para operar:
 Este módulo permite actualizar la oferta visual del sitio público.
 *   **Hero (Carrusel):** Ya no necesita escribir direcciones web. Simplemente haga clic en "Cambiar Imagen" y suba el archivo desde su computadora. Puede gestionar varios slides con textos personalizados.
 *   **Servicios y Categorías:** Personalice las imágenes y descripciones de lo que ofrece en la página de inicio.
+*   **Galería de Proyectos:** Gestione el portafolio de obras terminadas. Puede definir el año, la ubicación y si el proyecto es un "Borrador" (oculto) o "Activo" (visible).
 
 ---
+
+## 3. Gestión de Portafolio (Proyectos)
+En la pestaña **"Galería de Proyectos"** dentro de **"Personalizar"**, los roles autorizados pueden mantener el catálogo de obras emblemáticas:
+1.  **Creación:** Complete el título, ubicación (ej: Manzanillo), categoría y el **Año o Estado** (ej: "2024" o "En curso").
+2.  **Imágenes:** Puede subir una fotografía real de la obra terminada para generar confianza en nuevos clientes.
+3.  **Estado Activo/Borrador:** Use el checkbox "Mostrar en la web" para controlar la visibilidad sin necesidad de borrar el registro.
+4.  **Visualización Automática:** Al cargar más de 3 proyectos, el sitio público activará automáticamente el sistema de navegación (flechas y puntos) en la página de inicio.
 
 ## 3. Gestión Avanzada de Presupuestos (PDFs)
 El sistema genera PDFs profesionales de forma automática.
@@ -117,6 +125,7 @@ Dada la realidad económica en Venezuela, el sistema permite un registro híbrid
 | Ver Reportes | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Cargar Orden Entrega | ✅ | ❌ | ✅ | ✅ | ❌ |
 | Ver Auditoría | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Gestionar Proyectos | ✅ | ✅ | ❌ | ❌ | ❌ |
 
 ---
 

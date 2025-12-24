@@ -73,6 +73,16 @@ erDiagram
         string value
         string type
     }
+    PROJECT {
+        string id PK
+        string title
+        string description
+        string imageUrl
+        string location
+        string date
+        string category
+        boolean active
+    }
 ```
 
 ## Instrucciones para Visualizar el Diagrama
