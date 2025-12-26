@@ -100,7 +100,7 @@ export const updateClient = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name, email, phone, address } = req.body;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Usuario';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Usuario';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) {
@@ -183,7 +183,7 @@ export const deleteClient = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub;
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
-  const userName = (req.auth?.payload as any)?.name || 'Usuario';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Usuario';
 
   if (!authUserId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });

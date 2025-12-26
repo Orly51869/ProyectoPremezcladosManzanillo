@@ -130,7 +130,7 @@ export const updatePayment = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status, observations } = req.body;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Administrador';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) return res.status(401).json({ error: 'No autenticado.' });

@@ -87,7 +87,7 @@ export const updateUserRole = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { roles: roleNames } = req.body; 
   const adminId = req.auth?.payload.sub as string;
-  const adminName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
+  const adminName = (req as any).dbUser?.name || 'Administrador';
 
   if (!Array.isArray(roleNames)) {
     return res.status(400).json({ error: 'Roles must be an array of strings' });
@@ -188,7 +188,8 @@ export const updateUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
   const adminId = req.auth?.payload.sub as string;
-  const adminName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
+  const adminName = (req as any).dbUser?.name || 'Administrador';
+
 
   if (!name) {
     return res.status(400).json({ error: 'Name is required' });
@@ -253,7 +254,8 @@ export const updateUser = async (req: Request, res: Response) => {
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params; // ID del usuario a eliminar (sub de Auth0)
   const adminId = req.auth?.payload.sub as string;
-  const adminName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
+  const adminName = (req as any).dbUser?.name || 'Administrador';
+
 
   try {
     const token = await getManagementToken();

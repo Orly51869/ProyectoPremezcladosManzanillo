@@ -65,7 +65,7 @@ export const createProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Administrador';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
   try {
     const { name, description, price, type, category } = req.body;
 
@@ -104,7 +104,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 export const deleteProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub as string;
-  const userName = (req.auth?.payload as any)?.name || 'Administrador';
+  const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
   try {
     const productToDelete = await prisma.product.findUnique({ where: { id } });
     await prisma.product.delete({ where: { id } });

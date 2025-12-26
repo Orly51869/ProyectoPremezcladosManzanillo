@@ -114,7 +114,7 @@ const DashboardNavbar = () => {
           </Link>
 
           {/* Nav Items */}
-          <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
+          <div className="hidden md:flex items-center gap-0.5 flex-1 justify-center px-2 overflow-hidden">
             {availableNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -122,14 +122,14 @@ const DashboardNavbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${isActive
+                  className={`flex items-center gap-1.5 px-2 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${isActive
                     ? "bg-brand-primary text-white dark:bg-dark-btn dark:text-white"
                     : "text-gray-600 dark:text-gray-300 hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn"
                     }`}
                   title={item.label}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm font-semibold whitespace-nowrap">{item.label}</span>
+                  <span className="text-xs font-semibold whitespace-nowrap hidden xl:inline">{item.label}</span>
                 </Link>
               );
             })}
