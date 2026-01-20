@@ -32,7 +32,7 @@ const BudgetForm = ({
     validUntil: initialValues.validUntil ? format(new Date(initialValues.validUntil), "yyyy-MM-dd") : "",
     pumpRequired: initialValues.pumpRequired === true ? "true" : "false",
   });
-  
+
   const [productItems, setProductItems] = useState(
     initialValues.products?.map((item) => ({
       productId: item.product.id,
@@ -46,7 +46,7 @@ const BudgetForm = ({
   // Role / status based helpers
   const status = initialValues.status || "";
   const isApproved = status === "APPROVED";
-  const isPrivilegedEditor = userRoles.includes("Contable") || userRoles.includes("Administrador");
+  const isPrivilegedEditor = userRoles.includes("Contable") || userRoles.includes("Administrador") || userRoles.includes("Comercial");
   const canViewPrices = isApproved || isPrivilegedEditor || userRoles.includes("Comercial");
 
   const fetchData = async () => {
@@ -61,7 +61,7 @@ const BudgetForm = ({
   useEffect(() => {
     fetchData();
   }, []);
-  
+
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormState(prev => ({ ...prev, [name]: value }));
@@ -145,7 +145,7 @@ const BudgetForm = ({
     };
     onSave(budgetData);
   };
-  
+
   // Client modal handlers
   const handleOpenClientFormModal = () => { setShowClientFormModal(true); setServerError(null); };
   const handleCloseClientFormModal = () => { setShowClientFormModal(false); setServerError(null); };
@@ -155,7 +155,7 @@ const BudgetForm = ({
       const response = await api.post("/api/clients", formData);
       handleCloseClientFormModal();
       await fetchData();
-      setFormState(prev => ({...prev, clientId: response.data.id}));
+      setFormState(prev => ({ ...prev, clientId: response.data.id }));
     } catch (err) {
       setServerError(err.response?.data?.error || "Error al crear el cliente.");
     }
@@ -187,7 +187,7 @@ const BudgetForm = ({
                   className="p-2 bg-green-700 hover:bg-green-600 text-white rounded-lg transition-colors"
                   title="Crear Nuevo Cliente"
                 >
-                  <PlusCircle size={20}/>
+                  <PlusCircle size={20} />
                 </button>
               </div>
               {errors.clientId && <p className="text-sm text-red-600 mt-1">{errors.clientId}</p>}
@@ -240,11 +240,10 @@ const BudgetForm = ({
                 value={formState.validUntil || format(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")}
                 onChange={handleFormChange}
                 disabled={!isPrivilegedEditor}
-                className={`mt-1 block w-full rounded-lg border px-3 py-2 focus:ring-2 dark:text-gray-200 ${
-                  !isPrivilegedEditor 
-                    ? 'bg-gray-100 dark:bg-dark-surface/50 border-gray-200 text-gray-500 cursor-not-allowed' 
+                className={`mt-1 block w-full rounded-lg border px-3 py-2 focus:ring-2 dark:text-gray-200 ${!isPrivilegedEditor
+                    ? 'bg-gray-100 dark:bg-dark-surface/50 border-gray-200 text-gray-500 cursor-not-allowed'
                     : 'border-red-200 dark:border-red-900 bg-red-50/30 dark:bg-red-900/10 focus:ring-red-200'
-                }`}
+                  }`}
               />
               {!isPrivilegedEditor && (
                 <p className="text-[10px] text-gray-400 mt-1 italic">Solo Administradores pueden cambiar esta fecha.</p>
@@ -262,23 +261,23 @@ const BudgetForm = ({
                 onChange={handleFormChange}
                 className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
               >
-                  <option value="vivienda">Vivienda</option>
-                  <option value="edificio">Edificio</option>
-                  <option value="comercial">Comercial</option>
-                  <option value="pavimento">Pavimento</option>
-                  <option value="otro">Otro</option>
+                <option value="vivienda">Vivienda</option>
+                <option value="edificio">Edificio</option>
+                <option value="comercial">Comercial</option>
+                <option value="pavimento">Pavimento</option>
+                <option value="otro">Otro</option>
               </select>
             </div>
             <div>
-               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Elemento</label>
-               <input
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Elemento</label>
+              <input
                 type="text"
                 name="element"
                 value={formState.element}
                 onChange={handleFormChange}
                 className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
                 placeholder="Ej. Losa PB, Columnas"
-               />
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Resistencia (kg/cm²)</label>
@@ -288,18 +287,18 @@ const BudgetForm = ({
                 onChange={handleFormChange}
                 className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
               >
-                  <option value="150">150</option>
-                  <option value="180">180</option>
-                  <option value="200">200</option>
-                  <option value="210">210</option>
-                  <option value="250">250</option>
-                  <option value="280">280</option>
-                  <option value="300">300</option>
-                  <option value="350">350</option>
-                  <option value="otro">Otro</option>
+                <option value="150">150</option>
+                <option value="180">180</option>
+                <option value="200">200</option>
+                <option value="210">210</option>
+                <option value="250">250</option>
+                <option value="280">280</option>
+                <option value="300">300</option>
+                <option value="350">350</option>
+                <option value="otro">Otro</option>
               </select>
             </div>
-             <div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo Concreto</label>
               <select
                 name="concreteType"
@@ -307,18 +306,18 @@ const BudgetForm = ({
                 onChange={handleFormChange}
                 className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
               >
-                  <option value="convencional">Convencional</option>
-                  <option value="bombeable">Bombeable</option>
-                  <option value="mr">MR (Pavimento)</option>
-                  <option value="fino">Fino</option>
+                <option value="convencional">Convencional</option>
+                <option value="bombeable">Bombeable</option>
+                <option value="mr">MR (Pavimento)</option>
+                <option value="fino">Fino</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-             <div>
-               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Volumen Estimado (m³)</label>
-               <input
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Volumen Estimado (m³)</label>
+              <input
                 type="number"
                 step="0.01"
                 min="0"
@@ -327,9 +326,9 @@ const BudgetForm = ({
                 onChange={handleFormChange}
                 className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
                 placeholder="0.00"
-               />
-             </div>
-             <div>
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Servicio de Bomba</label>
               <select
                 name="pumpRequired"
@@ -337,8 +336,8 @@ const BudgetForm = ({
                 onChange={handleFormChange}
                 className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
               >
-                  <option value="false">No requiere</option>
-                  <option value="true">Sí requiere</option>
+                <option value="false">No requiere</option>
+                <option value="true">Sí requiere</option>
               </select>
             </div>
           </div>
@@ -357,7 +356,7 @@ const BudgetForm = ({
           </div>
         </form>
 
-        <hr className="my-4 border-gray-300 dark:border-gray-600"/>
+        <hr className="my-4 border-gray-300 dark:border-gray-600" />
 
         {/* Carrito de Productos - Tabla de Alta Densidad */}
         <div className="bg-gray-50 dark:bg-dark-primary/30 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
@@ -365,7 +364,7 @@ const BudgetForm = ({
             <h3 className="text-xs font-black text-brand-primary uppercase tracking-widest">Ítems del Presupuesto</h3>
             <span className="text-[10px] font-bold text-gray-400">{productItems.length} productos</span>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -390,11 +389,11 @@ const BudgetForm = ({
                         {item.name}
                       </td>
                       <td className="px-2 py-2">
-                        <input 
-                          type="number" 
-                          min="1" 
-                          value={item.quantity} 
-                          onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value, 10) || 1)} 
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value, 10) || 1)}
                           className="w-full h-8 rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface text-center text-xs font-black text-brand-primary focus:ring-1 focus:ring-brand-primary"
                         />
                       </td>
@@ -404,7 +403,7 @@ const BudgetForm = ({
                         </td>
                       )}
                       <td className="px-4 py-2 text-right">
-                        <button 
+                        <button
                           onClick={() => handleRemoveItem(item.productId)}
                           className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all"
                         >
@@ -419,7 +418,7 @@ const BudgetForm = ({
           </div>
           {errors.items && <p className="text-[10px] text-red-500 font-bold px-4 py-2 bg-red-50 dark:bg-red-900/10 border-t border-red-100 dark:border-red-900/30">{errors.items}</p>}
         </div>
-        
+
         {/* Total y Acciones */}
         <div className="pt-4 space-y-4">
           {canViewPrices && productItems.length > 0 && (

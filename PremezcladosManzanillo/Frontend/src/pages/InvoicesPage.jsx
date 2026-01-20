@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../utils/api';
-import { FileText, Download, Upload, X, Eye, Trash2 } from 'lucide-react';
+import { FileText, Download, Upload, X, Eye, Trash2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import Modal from '../components/Modal';
 
@@ -55,6 +55,11 @@ const InvoicesPage = () => {
     setFiscalInvoiceFile(null);
     setDeliveryOrderFile(null);
     setUploadError(null);
+  };
+
+  const handleGenerateInvoice = () => {
+    // Placeholder function for generating an invoice
+    alert("Funcionalidad de generar factura en desarrollo.");
   };
 
   const handleUploadDocuments = async () => {
@@ -115,6 +120,13 @@ const InvoicesPage = () => {
           <FileText className="w-8 h-8 text-black dark:text-green-400" />
           <h1 className="text-3xl font-bold text-brand-primary dark:text-white">Facturas</h1>
         </div>
+        <button
+          onClick={handleGenerateInvoice}
+          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-mid transition-colors dark:bg-green-600 dark:hover:bg-green-700"
+        >
+          <Plus className="w-5 h-5" />
+          Generar Factura
+        </button>
       </div>
 
       <div className="bg-white dark:bg-dark-primary rounded-2xl shadow-lg border border-brand-light dark:border-dark-surface mb-6">
@@ -146,10 +158,9 @@ const InvoicesPage = () => {
                       {invoice.payment?.budget?.client?.name || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        invoice.status === 'FISCAL_ISSUED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${invoice.status === 'FISCAL_ISSUED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
                         'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                      }`}>
+                        }`}>
                         {invoice.status === 'PROFORMA' ? 'Proforma' : 'Fiscal Emitida'}
                       </span>
                     </td>
@@ -162,17 +173,17 @@ const InvoicesPage = () => {
                           <div className="flex items-center gap-2 group">
                             <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500">Factura</span>
                             <div className="flex gap-1">
-                              <a 
-                                href={invoice.fiscalInvoiceUrl} 
-                                target="_blank" 
+                              <a
+                                href={invoice.fiscalInvoiceUrl}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
                                 title="Ver Factura Fiscal"
                               >
                                 <Eye className="w-4 h-4" />
                               </a>
-                              <a 
-                                href={invoice.fiscalInvoiceUrl} 
+                              <a
+                                href={invoice.fiscalInvoiceUrl}
                                 download
                                 className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
                                 title="Descargar Factura Fiscal"
@@ -186,17 +197,17 @@ const InvoicesPage = () => {
                           <div className="flex items-center gap-2 group">
                             <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500">Entrega</span>
                             <div className="flex gap-1">
-                              <a 
-                                href={invoice.deliveryOrderUrl} 
-                                target="_blank" 
+                              <a
+                                href={invoice.deliveryOrderUrl}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
                                 title="Ver Orden de Entrega"
                               >
                                 <Eye className="w-4 h-4" />
                               </a>
-                              <a 
-                                href={invoice.deliveryOrderUrl} 
+                              <a
+                                href={invoice.deliveryOrderUrl}
                                 download
                                 className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
                                 title="Descargar Orden de Entrega"

@@ -6,7 +6,7 @@
 import app from './app';
 import { startExpirationScheduler } from './lib/scheduler';
 
-const port = 3001;
+const port = 3002;
 
 // Iniciar scheduler de vencimientos
 startExpirationScheduler();

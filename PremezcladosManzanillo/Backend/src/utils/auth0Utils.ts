@@ -30,3 +30,17 @@ export const fetchAuth0User = async (userId: string) => {
     return null;
   }
 };
+
+export const fetchAuth0UserRoles = async (userId: string) => {
+  try {
+    const token = await getManagementToken();
+    const response = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${userId}/roles`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error('[Auth0 Utility] Error fetching user roles:', error);
+    return [];
+  }
+};

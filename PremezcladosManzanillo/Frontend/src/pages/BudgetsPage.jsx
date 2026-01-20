@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useSearchParams } from "react-router-dom"; // Quitar useNavigate si ya no se usa para navegar pages
+import { useSearchParams, Navigate } from "react-router-dom"; // Quitar useNavigate si ya no se usa para navegar pages
 import api from "../utils/api";
 import { FileText, PlusCircle, List, LayoutGrid, Search } from "lucide-react";
 import BudgetList from "../sections/dashboard/BudgetList.jsx";
@@ -11,7 +11,11 @@ import { format } from "date-fns";
 const BudgetsPage = () => {
   const { user } = useAuth0();
   const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
-  
+
+  if (userRoles.includes('Contable') && !userRoles.includes('Administrador')) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   // Estado para presupuestos
   const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -130,7 +134,9 @@ const BudgetsPage = () => {
         await api.post(`/api/budgets/${budgetId}/approve`);
         fetchBudgets();
       } catch (err) {
-        setError("Failed to approve budget.");
+        const errorMsg = err.response?.data?.error || err.message || "Failed to approve budget.";
+        setError(errorMsg);
+        alert(`Error: ${errorMsg}`);
         console.error(err);
       }
     }
@@ -142,7 +148,9 @@ const BudgetsPage = () => {
         await api.post(`/api/budgets/${budgetId}/reject`, { rejectionReason });
         fetchBudgets();
       } catch (err) {
-        setError("Failed to reject budget.");
+        const errorMsg = err.response?.data?.error || err.message || "Failed to reject budget.";
+        setError(errorMsg);
+        alert(`Error: ${errorMsg}`);
         console.error(err);
       }
     }
@@ -178,21 +186,19 @@ const BudgetsPage = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode("canvas")}
-              className={`p-2 rounded-lg ${
-                viewMode === "canvas"
-                  ? "bg-brand-primary text-white"
-                  : "bg-gray-200 dark:bg-dark-surface text-gray-600 dark:text-gray-300"
-              }`}
+              className={`p-2 rounded-lg ${viewMode === "canvas"
+                ? "bg-brand-primary text-white"
+                : "bg-gray-200 dark:bg-dark-surface text-gray-600 dark:text-gray-300"
+                }`}
             >
               <LayoutGrid size={20} />
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded-lg ${
-                viewMode === "list"
-                  ? "bg-brand-primary text-white"
-                  : "bg-gray-200 dark:bg-dark-surface text-gray-600 dark:text-gray-300"
-              }`}
+              className={`p-2 rounded-lg ${viewMode === "list"
+                ? "bg-brand-primary text-white"
+                : "bg-gray-200 dark:bg-dark-surface text-gray-600 dark:text-gray-300"
+                }`}
             >
               <List size={20} />
             </button>

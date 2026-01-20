@@ -127,9 +127,9 @@ export const updateInvoice = async (req: Request, res: Response) => {
   }
 
   // Aserción de tipos para acceder a archivos desde multer
-  const files = req.files as { 
-    fiscalInvoice?: Express.Multer.File[], 
-    deliveryOrder?: Express.Multer.File[] 
+  const files = req.files as {
+    fiscalInvoice?: Express.Multer.File[],
+    deliveryOrder?: Express.Multer.File[]
   };
 
   const fiscalInvoiceFile = files?.fiscalInvoice?.[0];
@@ -160,21 +160,21 @@ export const updateInvoice = async (req: Request, res: Response) => {
 
     // Validación: para el rol Contable, ambos documentos son requeridos
     const isContable = roles.includes('Contable');
-    
+
     // Verificar si estamos subiendo nuevos archivos o si ya existen en la factura
     const willHaveFiscalInvoice = fullFiscalInvoiceUrl || existingInvoice.fiscalInvoiceUrl;
     const willHaveDeliveryOrder = fullDeliveryOrderUrl || existingInvoice.deliveryOrderUrl;
-    
+
     if (isContable && (!willHaveFiscalInvoice || !willHaveDeliveryOrder)) {
-      return res.status(400).json({ 
-        error: 'Para el rol Contable, tanto la Factura Fiscal como la Orden de Entrega son obligatorias. Por favor, sube ambos documentos.' 
+      return res.status(400).json({
+        error: 'Para el rol Contable, tanto la Factura Fiscal como la Orden de Entrega son obligatorias. Por favor, sube ambos documentos.'
       });
     }
 
     // Si ambos documentos están subidos, cambiar automáticamente el estado a FISCAL_ISSUED
-    const hasBothDocuments = (fullFiscalInvoiceUrl || existingInvoice.fiscalInvoiceUrl) && 
-                             (fullDeliveryOrderUrl || existingInvoice.deliveryOrderUrl);
-    
+    const hasBothDocuments = (fullFiscalInvoiceUrl || existingInvoice.fiscalInvoiceUrl) &&
+      (fullDeliveryOrderUrl || existingInvoice.deliveryOrderUrl);
+
     const newStatus = hasBothDocuments ? 'FISCAL_ISSUED' : existingInvoice.status;
 
     const updatedInvoice = await prisma.invoice.update({
@@ -208,7 +208,7 @@ export const updateInvoice = async (req: Request, res: Response) => {
       await prisma.notification.create({
         data: {
           userId: updatedInvoice.payment.budget.creatorId,
-          message: `La factura ${updatedInvoice.invoiceNumber} ha sido actualizada con ${documentsUploaded.join(' y ')}.`, 
+          message: `La factura ${updatedInvoice.invoiceNumber} ha sido actualizada con ${documentsUploaded.join(' y ')}.`,
         },
       });
     }
@@ -227,8 +227,8 @@ export const deleteInvoice = async (req: Request, res: Response) => {
   const authUserId = req.auth?.payload.sub as string;
   const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
 
-  if (!roles.includes('Administrador')) {
-    return res.status(403).json({ error: 'Acceso denegado: Solo administradores pueden eliminar facturas.' });
+  if (!roles.includes('Administrador') && !roles.includes('Contable')) {
+    return res.status(403).json({ error: 'Acceso denegado: Solo administradores y contables pueden eliminar facturas.' });
   }
 
   // Buscar factura

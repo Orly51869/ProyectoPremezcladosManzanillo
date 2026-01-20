@@ -10,6 +10,7 @@ import HeroSection from "../sections/home/HeroSection.jsx";
 import ProductsSection from "../sections/home/ProductsSection.jsx";
 import ServicesSection from "../sections/home/ServicesSection.jsx";
 import FeaturedProjectsSection from "../sections/home/FeaturedProjectsSection.jsx";
+
 import Footer from "../components/Footer.jsx";
 
 
@@ -21,11 +22,11 @@ export const HomePage = () => {
       <HomepageNavbar />
       <main className="w-full pt-32 md:pt-36"> {/* Offset para menú fijo */}
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-            <HeroSection />
-            <ProductsSection />
-            <ServicesSection />
+          <HeroSection />
+          <ProductsSection />
+          <ServicesSection />
 
-            <FeaturedProjectsSection />
+          <FeaturedProjectsSection />
         </div>
       </main>
       <Footer />

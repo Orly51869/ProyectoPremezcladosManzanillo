@@ -59,7 +59,7 @@ export const getBudgets = async (req: Request, res: Response) => {
     const includeProducts = {
       products: {
         include: {
-              product: true,
+          product: true,
         },
       },
       client: true,
@@ -94,12 +94,13 @@ export const approveBudget = async (req: Request, res: Response) => {
   const authUserId = req.auth?.payload.sub as string;
   const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
+  console.log('ApproveBudget: User roles:', roles, 'User ID:', authUserId);
 
   if (!authUserId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
   }
-  if (!roles.some(role => ['Administrador', 'Contable'].includes(role))) {
-    return res.status(403).json({ error: 'Forbidden: Only administrators or accountants can approve budgets.' });
+  if (!roles.some(role => ['Administrador', 'Contable', 'Comercial'].includes(role))) {
+    return res.status(403).json({ error: 'Forbidden: Only administrators, accountants, or commercial agents can approve budgets.' });
   }
 
   try {
@@ -155,7 +156,7 @@ export const rejectBudget = async (req: Request, res: Response) => {
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
 
   if (!authUserId) return res.status(401).json({ error: 'Authenticated user ID not found.' });
-  if (!roles.includes('Administrador')) return res.status(403).json({ error: 'Forbidden: Only administrators can reject budgets.' });
+  if (!roles.some(r => ['Administrador', 'Contable', 'Comercial'].includes(r))) return res.status(403).json({ error: 'Forbidden: Only privileged users can reject budgets.' });
   if (!rejectionReason || rejectionReason.trim().length === 0) return res.status(400).json({ error: 'Rejection reason is required.' });
 
   try {
@@ -249,7 +250,7 @@ export const createBudget = async (req: Request, res: Response) => {
 
   try {
     validateDeliveryDate(deliveryDate);
-    const isPrivileged = roles.some(r => ['Administrador', 'Contable'].includes(r));
+    const isPrivileged = roles.some(r => ['Administrador', 'Contable', 'Comercial'].includes(r));
     const total = await calculateTotal(products, isPrivileged, deliveryDate);
 
     const newBudget = await prisma.budget.create({
@@ -262,18 +263,18 @@ export const createBudget = async (req: Request, res: Response) => {
         client: { connect: { id: clientId } },
         products: {
           create: await Promise.all(products.map(async (p: any) => {
-              const resolvedPrice = await (async () => {
-                if (isPrivileged && p.unitPrice != null) return Number(p.unitPrice);
-                const priceRecord = await (prisma as any).productPrice.findFirst({
-                  where: { productId: p.productId, date: { lte: deliveryDate ? new Date(deliveryDate) : new Date() } },
-                  orderBy: { date: 'desc' }
-                });
-                if (priceRecord) return priceRecord.price;
-                const product = await prisma.product.findUnique({ where: { id: p.productId } });
-                if (!product) throw new Error(`Product ${p.productId} not found.`);
-                return product.price;
-              })();
-              return { quantity: p.quantity, unitPrice: resolvedPrice, totalPrice: p.quantity * resolvedPrice, product: { connect: { id: p.productId } } };
+            const resolvedPrice = await (async () => {
+              if (isPrivileged && p.unitPrice != null) return Number(p.unitPrice);
+              const priceRecord = await (prisma as any).productPrice.findFirst({
+                where: { productId: p.productId, date: { lte: deliveryDate ? new Date(deliveryDate) : new Date() } },
+                orderBy: { date: 'desc' }
+              });
+              if (priceRecord) return priceRecord.price;
+              const product = await prisma.product.findUnique({ where: { id: p.productId } });
+              if (!product) throw new Error(`Product ${p.productId} not found.`);
+              return product.price;
+            })();
+            return { quantity: p.quantity, unitPrice: resolvedPrice, totalPrice: p.quantity * resolvedPrice, product: { connect: { id: p.productId } } };
           })),
         },
       },
@@ -307,7 +308,7 @@ export const updateBudget = async (req: Request, res: Response) => {
   if (!Array.isArray(products) || products.length === 0) return res.status(400).json({ error: 'At least one product is required.' });
 
   try {
-    const isPrivileged = roles.some(r => ['Administrador', 'Contable'].includes(r));
+    const isPrivileged = roles.some(r => ['Administrador', 'Contable', 'Comercial'].includes(r));
     validateDeliveryDate(deliveryDate);
     const total = await calculateTotal(products, isPrivileged, deliveryDate);
 
@@ -323,18 +324,18 @@ export const updateBudget = async (req: Request, res: Response) => {
           client: clientId ? { connect: { id: clientId } } : undefined,
           products: {
             create: await Promise.all(products.map(async (p: any) => {
-                const resolvedPrice = await (async () => {
-                  if (isPrivileged && p.unitPrice != null) return Number(p.unitPrice);
-                  const pr = await (tx as any).productPrice.findFirst({
-                      where: { productId: p.productId, date: { lte: deliveryDate ? new Date(deliveryDate) : new Date() } },
-                      orderBy: { date: 'desc' }
-                  });
-                  if (pr) return pr.price;
-                  const prod = await tx.product.findUnique({ where: { id: p.productId } });
-                  if (!prod) throw new Error(`Product ${p.productId} not found.`);
-                  return prod.price;
-                })();
-                return { quantity: p.quantity, unitPrice: resolvedPrice, totalPrice: p.quantity * resolvedPrice, product: { connect: { id: p.productId } } };
+              const resolvedPrice = await (async () => {
+                if (isPrivileged && p.unitPrice != null) return Number(p.unitPrice);
+                const pr = await (tx as any).productPrice.findFirst({
+                  where: { productId: p.productId, date: { lte: deliveryDate ? new Date(deliveryDate) : new Date() } },
+                  orderBy: { date: 'desc' }
+                });
+                if (pr) return pr.price;
+                const prod = await tx.product.findUnique({ where: { id: p.productId } });
+                if (!prod) throw new Error(`Product ${p.productId} not found.`);
+                return prod.price;
+              })();
+              return { quantity: p.quantity, unitPrice: resolvedPrice, totalPrice: p.quantity * resolvedPrice, product: { connect: { id: p.productId } } };
             })),
           },
         },
@@ -368,8 +369,8 @@ export const deleteBudget = async (req: Request, res: Response) => {
     if (!budgetToDelete) return res.status(404).json({ error: 'Budget not found' });
 
     await prisma.$transaction(async (tx) => {
-        await tx.budgetProduct.deleteMany({ where: { budgetId: id } });
-        await tx.budget.delete({ where: { id } });
+      await tx.budgetProduct.deleteMany({ where: { budgetId: id } });
+      await tx.budget.delete({ where: { id } });
     });
 
     await logActivity({

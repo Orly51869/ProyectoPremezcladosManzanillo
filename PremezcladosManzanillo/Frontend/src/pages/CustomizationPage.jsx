@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Image as ImageIcon, Layout, Save, Plus, Trash2, RefreshCcw, Pencil } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { useAuth0 } from "@auth0/auth0-react";
 import api from '../utils/api';
 import { useSettings } from '../context/SettingsContext';
+import { productCategories } from '../mock/data';
 
 const CustomizationPage = () => {
+  const { user } = useAuth0();
   const { settings, updateSetting: updateGlobalSetting } = useSettings();
   const [activeTab, setActiveTab] = useState('hero');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+
+  // Protection: Only Administrators
+  const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
+  if (!userRoles.includes('Administrador')) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // States for configs
   const [heroConfig, setHeroConfig] = useState({
@@ -33,14 +43,24 @@ const CustomizationPage = () => {
     { id: 'especiales', title: "Concretos Especiales", description: "Rellenos fluidos y mezclas autocompactables para aplicaciones específicas.", imgSrc: "/assets/Edificio.png" }
   ]);
 
+  const [catalogConfig, setCatalogConfig] = useState([]);
+
   const [servicesConfig, setServicesConfig] = useState([
     { title: "Servicio de Bombeo", description: "Llegamos a cualquier altura.", imgSrc: "/assets/Bombeo.png" },
     { title: "Asesoría Técnica", description: "Expertos te guían en tu proyecto.", imgSrc: "/assets/Asesoria.png" },
     { title: "Entrega Express", description: "Garantizamos tu concreto a tiempo.", imgSrc: "/assets/Entrega.png" }
   ]);
 
+  const [aboutHomeConfig, setAboutHomeConfig] = useState({
+    title: "Sobre Nosotros",
+    description: "",
+    imgSrc: "",
+    buttonText: "Conoce Más"
+  });
+
   // Projects (Portfolio) State
   const [projects, setProjects] = useState([]);
+  const [dbProducts, setDbProducts] = useState([]); // Products from Inventory
   const [editingProject, setEditingProject] = useState(null);
   const [projectForm, setProjectForm] = useState({
     title: '',
@@ -62,10 +82,30 @@ const CustomizationPage = () => {
       const { data } = await api.get('/api/settings');
       if (data.hero_config) setHeroConfig(JSON.parse(data.hero_config));
       if (data.products_config) setProductsConfig(JSON.parse(data.products_config));
+
+      if (data.catalog_config && JSON.parse(data.catalog_config).length > 0) {
+        setCatalogConfig(JSON.parse(data.catalog_config));
+      } else {
+        // Fallback: Recover mock data if DB is empty
+        const recoveredData = productCategories.flatMap(cat =>
+          cat.products.map(prod => ({
+            title: prod.title,
+            description: prod.description,
+            imgSrc: prod.imageSrc,
+            category: cat.title
+          }))
+        );
+        setCatalogConfig(recoveredData);
+      }
+
       if (data.services_config) setServicesConfig(JSON.parse(data.services_config));
+      if (data.about_home_config) setAboutHomeConfig(JSON.parse(data.about_home_config));
 
       const projectsData = await api.get('/api/projects');
       setProjects(projectsData.data);
+
+      const dbProductsData = await api.get('/api/products');
+      setDbProducts(dbProductsData.data);
     } catch (error) {
       console.error("Error fetching settings", error);
     } finally {
@@ -125,6 +165,26 @@ const CustomizationPage = () => {
     const newImages = heroConfig.images.filter((_, i) => i !== index);
     const newTexts = heroConfig.texts.filter((_, i) => i !== index);
     setHeroConfig({ images: newImages, texts: newTexts });
+  };
+
+  const handleAddCategory = () => {
+    let baseName = "Nueva Categoría";
+    let newName = baseName;
+    let counter = 1;
+
+    const existingCategories = new Set(catalogConfig.map(p => p.category));
+
+    while (existingCategories.has(newName)) {
+      newName = `${baseName} ${counter}`;
+      counter++;
+    }
+
+    setCatalogConfig([...catalogConfig, {
+      title: "Nuevo Producto",
+      description: "Descripción.",
+      imgSrc: "",
+      category: newName
+    }]);
   };
 
   // Projects Handlers
@@ -210,6 +270,19 @@ const CustomizationPage = () => {
         >
           Sección Productos
         </button>
+        <button
+          onClick={() => setActiveTab('catalog')}
+          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'catalog' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          Catálogo de Productos
+        </button>
+        <button
+          onClick={() => setActiveTab('about')}
+          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'about' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          Nosotros (Home)
+        </button>
+
         <button
           onClick={() => setActiveTab('services')}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'services' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
@@ -303,60 +376,102 @@ const CustomizationPage = () => {
           <div className="space-y-8">
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-bold dark:text-white">Productos Destacados (Landing)</h3>
-              <p className="text-sm text-gray-500">Estas son las 3 categorías principales que aparecen en el inicio.</p>
+              <p className="text-sm text-gray-500">Personaliza la imagen y descripción de cada categoría que aparece en el inicio.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {productsConfig.map((prod, idx) => (
-                <div key={idx} className="p-4 bg-gray-50 dark:bg-dark-primary/50 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-4">
-                  <div className="h-40 rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-800">
-                    <img src={prod.imgSrc} alt={prod.title} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título</label>
-                    <input
-                      type="text"
-                      value={prod.title}
-                      onChange={(e) => {
-                        const newProds = [...productsConfig];
-                        newProds[idx].title = e.target.value;
-                        setProductsConfig(newProds);
-                      }}
-                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm font-bold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
-                    <textarea
-                      value={prod.description}
-                      onChange={(e) => {
-                        const newProds = [...productsConfig];
-                        newProds[idx].description = e.target.value;
-                        setProductsConfig(newProds);
-                      }}
-                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm h-24"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cambiar Imagen de Categoría</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        setLoading(true);
-                        const url = await handleFileUpload(e.target.files[0]);
-                        if (url) {
-                          const newProds = [...productsConfig];
-                          newProds[idx].imgSrc = url;
+              {[...new Set(catalogConfig.map(c => c.category || "General"))].map((catName, idx) => {
+                // Check if we have a custom config for this category
+                const existingConfig = productsConfig.find(p => (p.originalCategory === catName) || (p.title === catName));
+
+                // If not, create a derived one for display
+                const catalogItems = catalogConfig.filter(p => (p.category || 'General') === catName);
+                const firstImg = catalogItems.find(p => p.imgSrc)?.imgSrc || "/assets/Concreto.png";
+
+                const displayProduct = existingConfig || {
+                  id: catName.toLowerCase().replace(/\s+/g, '-'),
+                  title: catName,
+                  description: `Explora nuestra línea de ${catName}.`,
+                  imgSrc: firstImg,
+                  originalCategory: catName
+                };
+
+                return (
+                  <div key={idx} className="p-4 bg-gray-50 dark:bg-dark-primary/50 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-4">
+                    <div className="h-40 rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-800 relative">
+                      <span className="absolute top-2 left-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded font-bold uppercase backdrop-blur-sm">
+                        {catName}
+                      </span>
+                      <img src={displayProduct.imgSrc} alt={displayProduct.title} className="w-full h-full object-cover" />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título Visual (Home)</label>
+                      <input
+                        type="text"
+                        value={displayProduct.title}
+                        onChange={(e) => {
+                          const newTitle = e.target.value;
+                          let newProds = [...productsConfig];
+                          const index = newProds.findIndex(p => (p.originalCategory === catName) || (p.title === catName)); // Match by org category ideally
+
+                          if (index >= 0) {
+                            newProds[index] = { ...newProds[index], title: newTitle };
+                          } else {
+                            // Add new override
+                            newProds.push({ ...displayProduct, title: newTitle, originalCategory: catName });
+                          }
                           setProductsConfig(newProds);
-                        }
-                        setLoading(false);
-                      }}
-                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:bg-gray-200"
-                    />
+                        }}
+                        className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción Visual</label>
+                      <textarea
+                        value={displayProduct.description}
+                        onChange={(e) => {
+                          const newDesc = e.target.value;
+                          let newProds = [...productsConfig];
+                          const index = newProds.findIndex(p => (p.originalCategory === catName) || (p.title === catName));
+
+                          if (index >= 0) {
+                            newProds[index] = { ...newProds[index], description: newDesc };
+                          } else {
+                            newProds.push({ ...displayProduct, description: newDesc, originalCategory: catName });
+                          }
+                          setProductsConfig(newProds);
+                        }}
+                        className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm h-24"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cambiar Imagen Personalizada</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          setLoading(true);
+                          const url = await handleFileUpload(e.target.files[0]);
+                          if (url) {
+                            let newProds = [...productsConfig];
+                            const index = newProds.findIndex(p => (p.originalCategory === catName) || (p.title === catName));
+
+                            if (index >= 0) {
+                              newProds[index] = { ...newProds[index], imgSrc: url };
+                            } else {
+                              newProds.push({ ...displayProduct, imgSrc: url, originalCategory: catName });
+                            }
+                            setProductsConfig(newProds);
+                          }
+                          setLoading(false);
+                        }}
+                        className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:bg-gray-200"
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             <div className="flex justify-end pt-6 border-t dark:border-gray-700">
@@ -367,6 +482,171 @@ const CustomizationPage = () => {
               >
                 <Save size={20} />
                 {saving ? 'Guardando...' : 'Guardar Cambios Productos'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'catalog' && (
+          <div className="space-y-8">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-bold dark:text-white">Catálogo de Productos Completo</h3>
+              <div className="flex flex-col items-end">
+                <p className="text-sm text-gray-500 mb-2">Gestiona el catálogo extendido de productos por categorías.</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAddCategory}
+                    className="flex items-center gap-2 bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-lg"
+                  >
+                    <Plus size={18} /> Añadir Categoría
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {catalogConfig.length === 0 ? (
+              <div className="p-8 text-center text-gray-400 bg-gray-50 dark:bg-dark-primary/30 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+                <p>No hay productos en el catálogo aún. Añade uno nuevo.</p>
+              </div>
+            ) : (
+              <div className="space-y-12">
+                {Object.entries(catalogConfig.reduce((acc, product, index) => {
+                  const cat = product.category || 'General';
+                  if (!acc[cat]) acc[cat] = [];
+                  acc[cat].push({ product, index });
+                  return acc;
+                }, {})).map(([category, items]) => (
+                  <div key={category} className="bg-gray-50/50 dark:bg-dark-surface/50 rounded-3xl p-6 border border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="flex items-center gap-2">
+                        <span className="px-4 py-1.5 rounded-full bg-brand-primary/10 text-brand-primary text-sm font-extrabold uppercase tracking-wider">
+                          {category}
+                        </span>
+                        <button
+                          onClick={() => {
+                            const newName = prompt("Nuevo nombre para la categoría:", category);
+                            if (newName && newName !== category) {
+                              const newLogs = catalogConfig.map(p =>
+                                (p.category === category || (!p.category && category === 'General'))
+                                  ? { ...p, category: newName }
+                                  : p
+                              );
+                              setCatalogConfig(newLogs);
+                            }
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-brand-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+                          title="Renombrar categoría"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      </div>
+                      <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+                      <button
+                        onClick={() => setCatalogConfig([...catalogConfig, { title: "Nuevo Producto", description: "Descripción.", imgSrc: "", category: category }])}
+                        className="flex items-center gap-2 text-xs font-bold text-brand-primary hover:text-green-700 bg-white dark:bg-dark-primary px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition"
+                      >
+                        <Plus size={14} /> Añadir a {category}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {items.map(({ product: prod, index: idx }) => (
+                        <div key={idx} className="p-4 bg-white dark:bg-dark-primary rounded-2xl border border-gray-200 dark:border-gray-700 space-y-4 relative shadow-sm hover:shadow-md transition">
+                          <button
+                            onClick={() => {
+                              if (window.confirm('¿Estás seguro de eliminar este producto del catálogo?')) {
+                                const newLogs = catalogConfig.filter((_, i) => i !== idx);
+                                setCatalogConfig(newLogs);
+                              }
+                            }}
+                            className="absolute top-2 right-2 p-1.5 bg-white text-red-500 rounded-full shadow-md z-10 hover:bg-red-50"
+                            title="Eliminar producto"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+
+                          <div className="h-40 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                            {prod.imgSrc ? (
+                              <img src={prod.imgSrc} alt={prod.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <ImageIcon size={32} />
+                                <span className="ml-2 text-xs">Sin imagen</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+
+
+
+
+                            <div className="col-span-2">
+                              <label className="block text-[10px] font-extrabold text-gray-400 uppercase mb-1">Título</label>
+                              <input
+                                type="text"
+                                value={prod.title}
+                                onChange={(e) => {
+                                  const newLogs = [...catalogConfig];
+                                  newLogs[idx].title = e.target.value;
+                                  setCatalogConfig(newLogs);
+                                }}
+                                className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm font-bold"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-gray-400 uppercase mb-1">Descripción</label>
+                            <textarea
+                              value={prod.description}
+                              onChange={(e) => {
+                                const newLogs = [...catalogConfig];
+                                newLogs[idx].description = e.target.value;
+                                setCatalogConfig(newLogs);
+                              }}
+                              className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white text-sm h-20 resize-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-gray-400 uppercase mb-1">Imagen</label>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={async (e) => {
+                                setLoading(true);
+                                const url = await handleFileUpload(e.target.files[0]);
+                                if (url) {
+                                  const newLogs = [...catalogConfig];
+                                  newLogs[idx].imgSrc = url;
+                                  setCatalogConfig(newLogs);
+                                }
+                                setLoading(false);
+                              }}
+                              className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:bg-gray-200 hover:file:bg-gray-300 transition cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <datalist id="categories-list">
+                  {[...new Set(catalogConfig.map(p => p.category || 'General'))].map(cat => (
+                    <option key={cat} value={cat} />
+                  ))}
+                </datalist>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-6 border-t dark:border-gray-700">
+              <button
+                onClick={() => saveSetting('catalog_config', catalogConfig)}
+                disabled={saving}
+                className="flex items-center gap-2 bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg disabled:opacity-50"
+              >
+                <Save size={20} />
+                {saving ? 'Guardando...' : 'Guardar Cambios Catálogo'}
               </button>
             </div>
           </div>
@@ -440,6 +720,190 @@ const CustomizationPage = () => {
               >
                 <Save size={20} />
                 {saving ? 'Guardando...' : 'Guardar Cambios Servicios'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'about' && (
+          <div className="space-y-8">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-bold dark:text-white">Sección Nosotros (Home)</h3>
+              <p className="text-sm text-gray-500">Edita el contenido de la sección "Sobre Nosotros" en la página de inicio.</p>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-dark-primary/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  {/* Title */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título de la Sección</label>
+                    <input
+                      type="text"
+                      value={aboutHomeConfig.title}
+                      onChange={(e) => setAboutHomeConfig({ ...aboutHomeConfig, title: e.target.value })}
+                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
+                    <textarea
+                      value={aboutHomeConfig.description}
+                      onChange={(e) => setAboutHomeConfig({ ...aboutHomeConfig, description: e.target.value })}
+                      rows={6}
+                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white resize-none"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Este texto aparecerá en la página principal.</p>
+                  </div>
+
+                  {/* Button Text */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Texto del Botón</label>
+                    <input
+                      type="text"
+                      value={aboutHomeConfig.buttonText}
+                      onChange={(e) => setAboutHomeConfig({ ...aboutHomeConfig, buttonText: e.target.value })}
+                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white"
+                      placeholder="Ej: Conoce Más"
+                    />
+                  </div>
+                </div>
+
+                {/* Left Side (Image) */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagen Principal</label>
+                  <div className="relative rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-800 aspect-[4/3] mb-3 group border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-brand-primary transition">
+                    {aboutHomeConfig.imgSrc ? (
+                      <img src={aboutHomeConfig.imgSrc} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                        <ImageIcon size={48} />
+                        <span className="text-sm mt-2">Sin imagen seleccionada</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                      <p className="text-white font-bold text-sm">Cambiar Imagen</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        setLoading(true);
+                        const url = await handleFileUpload(e.target.files[0]);
+                        if (url) {
+                          setAboutHomeConfig({ ...aboutHomeConfig, imgSrc: url });
+                        }
+                        setLoading(false);
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6 border-t dark:border-gray-700">
+              <button
+                onClick={() => saveSetting('about_home_config', aboutHomeConfig)}
+                disabled={saving}
+                className="flex items-center gap-2 bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg"
+              >
+                <Save size={20} />
+                {saving ? 'Guardando...' : 'Guardar Cambios Nosotros'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'about' && (
+          <div className="space-y-8">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-bold dark:text-white">Sección Nosotros (Home)</h3>
+              <p className="text-sm text-gray-500">Edita el contenido de la sección "Sobre Nosotros" en la página de inicio.</p>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-dark-primary/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  {/* Title */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título de la Sección</label>
+                    <input
+                      type="text"
+                      value={aboutHomeConfig.title}
+                      onChange={(e) => setAboutHomeConfig({ ...aboutHomeConfig, title: e.target.value })}
+                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
+                    <textarea
+                      value={aboutHomeConfig.description}
+                      onChange={(e) => setAboutHomeConfig({ ...aboutHomeConfig, description: e.target.value })}
+                      rows={6}
+                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white resize-none"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Este texto aparecerá en la página principal.</p>
+                  </div>
+
+                  {/* Button Text */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Texto del Botón</label>
+                    <input
+                      type="text"
+                      value={aboutHomeConfig.buttonText}
+                      onChange={(e) => setAboutHomeConfig({ ...aboutHomeConfig, buttonText: e.target.value })}
+                      className="w-full rounded-lg border-gray-200 dark:bg-dark-surface dark:border-gray-700 dark:text-white"
+                      placeholder="Ej: Conoce Más"
+                    />
+                  </div>
+                </div>
+
+                {/* Left Side (Image) */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagen Principal</label>
+                  <div className="relative rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-800 aspect-[4/3] mb-3 group border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-brand-primary transition">
+                    {aboutHomeConfig.imgSrc ? (
+                      <img src={aboutHomeConfig.imgSrc} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                        <ImageIcon size={48} />
+                        <span className="text-sm mt-2">Sin imagen seleccionada</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                      <p className="text-white font-bold text-sm">Cambiar Imagen</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        setLoading(true);
+                        const url = await handleFileUpload(e.target.files[0]);
+                        if (url) {
+                          setAboutHomeConfig({ ...aboutHomeConfig, imgSrc: url });
+                        }
+                        setLoading(false);
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6 border-t dark:border-gray-700">
+              <button
+                onClick={() => saveSetting('about_home_config', aboutHomeConfig)}
+                disabled={saving}
+                className="flex items-center gap-2 bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg"
+              >
+                <Save size={20} />
+                {saving ? 'Guardando...' : 'Guardar Cambios Nosotros'}
               </button>
             </div>
           </div>

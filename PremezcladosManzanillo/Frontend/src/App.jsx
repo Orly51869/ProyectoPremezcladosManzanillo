@@ -40,7 +40,7 @@ import BudgetBuilderPage from "./pages/BudgetBuilderPage.jsx";
 
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
 import AuthenticatedApiProvider from "./components/AuthenticatedApiProvider.jsx"; // Importar el nuevo provider
-import ChatWidget from "./components/ChatWidget.jsx";
+// import ChatWidget from "./components/ChatWidget.jsx";
 import ScrollToTop from "./components/ScrollToTop";
 import CustomizationPage from "./pages/CustomizationPage.jsx";
 
@@ -104,7 +104,7 @@ const App = () => {
         <Router>
           <ScrollToTop />
           <ScrollToAnchor />
-          <ChatWidget />
+          {/* <ChatWidget /> */}
           <Routes>
             {/* Rutas Públicas */}
             <Route path="/" element={<HomePage />} />

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const budgetController_1 = require("../controllers/budgetController");
 const router = (0, express_1.Router)();
+router.post('/init', budgetController_1.initBudget); // Ruta para inicialización rápida
 router.get('/', budgetController_1.getBudgets);
 router.get('/:id', budgetController_1.getBudgetById);
 router.post('/', budgetController_1.createBudget);

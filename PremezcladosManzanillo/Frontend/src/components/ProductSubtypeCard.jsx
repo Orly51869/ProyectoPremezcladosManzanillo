@@ -5,9 +5,9 @@ import { Download, LayoutDashboard } from 'lucide-react';
 const ProductSubtypeCard = ({ product }) => {
     return (
         <div className="relative bg-white dark:bg-dark-surface rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100 dark:border-dark-surface">
-            {product.imageSrc && (
+            {(product.imgSrc || product.imageSrc) && (
                 <img
-                    src={product.imageSrc}
+                    src={product.imgSrc || product.imageSrc}
                     alt={product.title}
                     className="w-full h-40 object-cover"
                 />

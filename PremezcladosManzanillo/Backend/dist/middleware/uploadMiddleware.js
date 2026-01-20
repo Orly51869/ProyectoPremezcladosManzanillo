@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadInvoiceDocuments = exports.uploadReceipt = exports.uploadPaymentDocuments = void 0;
+exports.uploadAssets = exports.uploadInvoiceDocuments = exports.uploadReceipt = exports.uploadPaymentDocuments = void 0;
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
@@ -48,11 +48,43 @@ exports.uploadReceipt = (0, multer_1.default)({
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
 }).single('receipt');
 // Configure multer for invoice documents (fiscal invoice and delivery order)
+const invoiceStorage = multer_1.default.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadPath = path_1.default.join(__dirname, '../../uploads/invoices');
+        // Ensure the upload directory exists
+        fs_1.default.mkdirSync(uploadPath, { recursive: true });
+        cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+        // Generate a unique filename: fieldname-timestamp-originalename.ext
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${file.fieldname}-${uniqueSuffix}${path_1.default.extname(file.originalname)}`);
+    },
+});
 exports.uploadInvoiceDocuments = (0, multer_1.default)({
-    storage: storage, // Use the same storage for now
+    storage: invoiceStorage,
     fileFilter: fileFilter,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
 }).fields([
     { name: 'fiscalInvoice', maxCount: 1 },
     { name: 'deliveryOrder', maxCount: 1 },
 ]);
+// Configure multer for assets (logos, hero images, etc.)
+const assetStorage = multer_1.default.diskStorage({
+    destination: (req, file, cb) => {
+        // Save to Frontend/public/uploads/assets to be strictly part of the project structure
+        // Path: Backend/src/middleware -> ../../../Frontend/public/uploads/assets
+        const uploadPath = path_1.default.join(__dirname, '../../../Frontend/public/uploads/assets');
+        fs_1.default.mkdirSync(uploadPath, { recursive: true });
+        cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `asset-${uniqueSuffix}${path_1.default.extname(file.originalname)}`);
+    },
+});
+exports.uploadAssets = (0, multer_1.default)({
+    storage: assetStorage,
+    fileFilter: fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 },
+}).single('asset');

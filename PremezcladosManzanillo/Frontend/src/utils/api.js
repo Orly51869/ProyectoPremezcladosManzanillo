@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_REACT_APP_API_URL || "http://localhost:3001",
+  baseURL: "http://localhost:3002", // Forzamos el puerto 3002 para evitar problemas con .env desactualizado
   withCredentials: true, // Importante para enviar cookies en las solicitudes
 });
 

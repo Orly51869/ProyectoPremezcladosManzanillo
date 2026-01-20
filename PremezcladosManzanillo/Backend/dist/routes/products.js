@@ -35,21 +35,25 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const productController = __importStar(require("../controllers/productController"));
+const productPriceController = __importStar(require("../controllers/productPriceController"));
 const jwtCheck_1 = require("../middleware/jwtCheck");
-// import { checkRole } from "../middleware/roleCheck"; // This middleware will be created later
+// import { checkRole } from "../middleware/roleCheck"; // Este middleware se creará más adelante
 const router = (0, express_1.Router)();
-// Get all products
+// Obtener todos los productos
 router.get("/", jwtCheck_1.jwtCheck, productController.getProducts);
-// Create a new product (Admin and Contable only)
+// Crear un nuevo producto (solo Administrador y Contable)
 router.post("/", jwtCheck_1.jwtCheck, 
 // checkRole(["Administrador", "Contable"]),
 productController.createProduct);
-// Update a product (Admin and Contable only)
+// Actualizar un producto (solo Administrador y Contable)
 router.put("/:id", jwtCheck_1.jwtCheck, 
 // checkRole(["Administrador", "Contable"]),
 productController.updateProduct);
-// Delete a product (Admin and Contable only)
+// Eliminar un producto (solo Administrador y Contable)
 router.delete("/:id", jwtCheck_1.jwtCheck, 
 // checkRole(["Administrador", "Contable"]),
 productController.deleteProduct);
+// Price management
+router.post("/:id/prices", jwtCheck_1.jwtCheck, productPriceController.createProductPrice);
+router.get("/:id/prices", jwtCheck_1.jwtCheck, productPriceController.getProductPrice);
 exports.default = router;

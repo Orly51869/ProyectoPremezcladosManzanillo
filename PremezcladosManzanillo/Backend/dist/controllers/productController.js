@@ -1,14 +1,20 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProducts = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
-// Get all products
+const auditLogger_1 = require("../utils/auditLogger");
+const prisma_1 = __importDefault(require("../lib/prisma"));
+// Obtener todos los productos
 const getProducts = async (req, res) => {
     try {
-        const products = await prisma.product.findMany({
+        const products = await prisma_1.default.product.findMany({
             orderBy: {
                 createdAt: "desc",
+            },
+            include: {
+                category: true,
             },
         });
         res.json(products);
@@ -19,65 +25,101 @@ const getProducts = async (req, res) => {
     }
 };
 exports.getProducts = getProducts;
-// Create a new product
+// Crear un nuevo producto
 const createProduct = async (req, res) => {
     try {
         const { name, description, price, type, category } = req.body;
+        const authUserId = req.auth?.payload.sub;
+        const userName = req.dbUser?.name || req.auth?.payload?.name || 'Administrador';
         if (!name || !price || !type) {
             return res.status(400).json({ error: "Name, price, and type are required." });
         }
-        const newProduct = await prisma.product.create({
+        const newProduct = await prisma_1.default.product.create({
             data: {
                 name,
                 description,
                 price: parseFloat(price),
                 type,
-                category,
+                category: category ? {
+                    connectOrCreate: {
+                        where: { name: category },
+                        create: { name: category },
+                    }
+                } : undefined
             },
+        });
+        await (0, auditLogger_1.logActivity)({
+            userId: authUserId,
+            userName,
+            action: 'CREATE',
+            entity: 'PRODUCT',
+            entityId: newProduct.id,
+            details: `Producto creado: ${name} con precio ${price}`
         });
         res.status(201).json(newProduct);
     }
     catch (error) {
-        console.error("Error creating product:", error);
-        res.status(500).json({ error: "An error occurred while creating the product." });
+        // ...
     }
 };
 exports.createProduct = createProduct;
-// Update a product
+// Actualizar un producto
 const updateProduct = async (req, res) => {
     const { id } = req.params;
+    const authUserId = req.auth?.payload.sub;
+    const userName = req.dbUser?.name || req.auth?.payload?.name || 'Administrador';
     try {
         const { name, description, price, type, category } = req.body;
-        const updatedProduct = await prisma.product.update({
+        const updatedProduct = await prisma_1.default.product.update({
             where: { id },
             data: {
                 name,
                 description,
                 price: price ? parseFloat(price) : undefined,
                 type,
-                category,
+                category: category ? {
+                    connectOrCreate: {
+                        where: { name: category },
+                        create: { name: category },
+                    }
+                } : undefined
             },
+        });
+        await (0, auditLogger_1.logActivity)({
+            userId: authUserId,
+            userName,
+            action: 'UPDATE',
+            entity: 'PRODUCT',
+            entityId: id,
+            details: `Producto actualizado: ${name || updatedProduct.name}`
         });
         res.json(updatedProduct);
     }
     catch (error) {
-        console.error(`Error updating product ${id}:`, error);
-        res.status(500).json({ error: `An error occurred while updating product ${id}.` });
+        // ...
     }
 };
 exports.updateProduct = updateProduct;
-// Delete a product
+// Eliminar un producto
 const deleteProduct = async (req, res) => {
     const { id } = req.params;
+    const authUserId = req.auth?.payload.sub;
+    const userName = req.dbUser?.name || req.auth?.payload?.name || 'Administrador';
     try {
-        await prisma.product.delete({
-            where: { id },
+        const productToDelete = await prisma_1.default.product.findUnique({ where: { id } });
+        await prisma_1.default.product.delete({ where: { id } });
+        await (0, auditLogger_1.logActivity)({
+            userId: authUserId,
+            userName,
+            action: 'DELETE',
+            entity: 'PRODUCT',
+            entityId: id,
+            details: `Producto eliminado: ${productToDelete?.name}`
         });
-        res.status(204).send(); // No content
+        res.status(204).send();
     }
     catch (error) {
-        console.error(`Error deleting product ${id}:`, error);
-        res.status(500).json({ error: `An error occurred while deleting product ${id}.` });
+        // ...
     }
 };
 exports.deleteProduct = deleteProduct;
