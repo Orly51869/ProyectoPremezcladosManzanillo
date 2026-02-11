@@ -32,8 +32,9 @@ const corsOptions = {
   origin: [
     'http://localhost:3000',
     'http://localhost:5173',
-    process.env.FRONTEND_URL // Permitir el dominio de Netlify configurado en variables de entorno
-  ].filter(Boolean) as string[], // Eliminar valores nulos/undefined
+    'https://starlit-pika-2ba116.netlify.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean) as string[],
   credentials: true,
 };
 
