@@ -7,7 +7,7 @@ import app from './app';
 import { startExpirationScheduler } from './lib/scheduler';
 import prisma from './lib/prisma';
 
-const port = 3002;
+const port = process.env.PORT || 3002;
 
 // Iniciar scheduler de vencimientos
 startExpirationScheduler();
