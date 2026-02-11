@@ -96,6 +96,9 @@ const ProtectedRoute = () => {
 const App = () => {
   const { isLoading } = useAuth0();
 
+  // DEBUG: Verificar qué dominio de Auth0 se está usando realmente
+  console.log("Auth0 Domain in App:", import.meta.env.VITE_REACT_APP_AUTH0_DOMAIN);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900">
