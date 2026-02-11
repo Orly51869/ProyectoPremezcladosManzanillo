@@ -29,7 +29,11 @@ dotenv.config();
 const app = express();
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    process.env.FRONTEND_URL // Permitir el dominio de Netlify configurado en variables de entorno
+  ].filter(Boolean) as string[], // Eliminar valores nulos/undefined
   credentials: true,
 };
 
