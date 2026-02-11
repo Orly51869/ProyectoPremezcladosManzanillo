@@ -76,8 +76,9 @@ const Settings = () => {
             const rawType = (row.tipo || row.Tipo || row.type || row.Type || 'OTHER').toUpperCase();
             let resolvedType = 'OTHER';
             if (rawType.includes('CONCRE')) resolvedType = 'CONCRETE';
-            else if (rawType.includes('BLOQU') || rawType.includes('BLOCK')) resolvedType = 'BLOCK';
             else if (rawType.includes('SERVIC')) resolvedType = 'SERVICE';
+            // Blocks are no longer supported, default to OTHER
+            else resolvedType = 'OTHER';
 
             const productData = {
               name: row.nombre || row.name || row.Nombre || row.Name,
@@ -130,7 +131,7 @@ const Settings = () => {
             <h2 className="text-xl font-bold text-brand-primary mb-6 flex items-center gap-2">
               <Building2 size={24} /> Identidad Corporativa
             </h2>
-            
+
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
@@ -143,7 +144,7 @@ const Settings = () => {
                     className="w-full p-3 border rounded-xl dark:bg-dark-surface dark:text-white focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1">RIF / ID Fiscal</label>
                   <input
@@ -220,7 +221,7 @@ const Settings = () => {
                         onChange={async (e) => {
                           const file = e.target.files[0];
                           if (!file) return;
-                          
+
                           setSaving(true);
                           try {
                             const formData = new FormData();
@@ -302,7 +303,7 @@ const Settings = () => {
                     </tr>
                   </thead>
                   <tbody>
-                     <tr><td className="border p-1">nombre</td><td className="border p-1">Ej: Concreto 250</td></tr>
+                    <tr><td className="border p-1">nombre</td><td className="border p-1">Ej: Concreto 250</td></tr>
                     <tr><td className="border p-1">precio</td><td className="border p-1">Ej: 145.50</td></tr>
                     <tr><td className="border p-1">tipo</td><td className="border p-1">Tipología (Concreto, Bloque, Servicio, Otro)</td></tr>
                     <tr><td className="border p-1">categoria</td><td className="border p-1">Ej: Estructurales</td></tr>

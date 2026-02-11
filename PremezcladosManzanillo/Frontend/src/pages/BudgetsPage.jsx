@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useSearchParams, Navigate } from "react-router-dom"; // Quitar useNavigate si ya no se usa para navegar pages
+import { useSearchParams, Navigate, useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import { FileText, PlusCircle, List, LayoutGrid, Search } from "lucide-react";
 import BudgetList from "../sections/dashboard/BudgetList.jsx";
@@ -20,6 +20,7 @@ const BudgetsPage = () => {
   const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [processingId, setProcessingId] = useState(null); // Evitar doble click
 
   // Estados para Modales
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -49,6 +50,38 @@ const BudgetsPage = () => {
   useEffect(() => {
     fetchBudgets();
   }, [fetchBudgets]);
+
+  // Sincronizar filtro de estado con URL parameters
+  const [searchParams] = useSearchParams();
+  const { id: paramId } = useParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const statusParam = searchParams.get("status");
+    if (statusParam) {
+      setStatusFilter(statusParam);
+    }
+  }, [searchParams]);
+
+  // Deep linking for specific budget
+  useEffect(() => {
+    if (paramId && paramId !== 'new') {
+      // Try to find in already loaded budgets first to avoid extra request
+      const found = budgets.find(b => b.id === paramId);
+      if (found) {
+        setViewingBudget(found);
+      } else {
+        // If not found (or not loaded yet), fetch specific budget
+        // This ensures the link works even if the list is empty or loading
+        api.get(`/api/budgets/${paramId}`)
+          .then(res => setViewingBudget(res.data))
+          .catch(err => console.error("Could not load linked budget:", err));
+      }
+    } else if (!paramId) {
+      // If no ID in URL, close modal (user navigated back/cleared url)
+      setViewingBudget(null);
+    }
+  }, [paramId, budgets]);
 
   // Opciones de clientes para filtro
   const clientOptions = useMemo(() => {
@@ -112,46 +145,59 @@ const BudgetsPage = () => {
       fetchBudgets(); // Recargar lista
     } catch (err) {
       console.error("Error saving budget:", err);
-      alert("Error al guardar el presupuesto. Verifica los datos e intenta de nuevo.");
+      const serverMsg = err.response?.data?.error || err.message || "Error desconocido";
+      alert(`Error al guardar el presupuesto: ${serverMsg}`);
     }
   };
 
   const handleDelete = async (budgetId) => {
+    if (processingId === budgetId) return;
     if (window.confirm("¿Estás seguro de que quieres eliminar este presupuesto?")) {
       try {
+        setProcessingId(budgetId);
         await api.delete(`/api/budgets/${budgetId}`);
-        fetchBudgets();
+        await fetchBudgets();
       } catch (err) {
         setError("Failed to delete budget.");
         console.error(err);
+      } finally {
+        setProcessingId(null);
       }
     }
   };
 
   const handleApproveBudget = async (budgetId) => {
+    if (processingId === budgetId) return;
     if (window.confirm("¿Estás seguro de que quieres aprobar este presupuesto?")) {
       try {
+        setProcessingId(budgetId);
         await api.post(`/api/budgets/${budgetId}/approve`);
-        fetchBudgets();
+        await fetchBudgets();
       } catch (err) {
         const errorMsg = err.response?.data?.error || err.message || "Failed to approve budget.";
         setError(errorMsg);
         alert(`Error: ${errorMsg}`);
         console.error(err);
+      } finally {
+        setProcessingId(null);
       }
     }
   };
 
   const handleRejectBudget = async (budgetId, rejectionReason) => {
+    if (processingId === budgetId) return;
     if (window.confirm("¿Estás seguro de que quieres rechazar este presupuesto?")) {
       try {
+        setProcessingId(budgetId);
         await api.post(`/api/budgets/${budgetId}/reject`, { rejectionReason });
-        fetchBudgets();
+        await fetchBudgets();
       } catch (err) {
         const errorMsg = err.response?.data?.error || err.message || "Failed to reject budget.";
         setError(errorMsg);
         alert(`Error: ${errorMsg}`);
         console.error(err);
+      } finally {
+        setProcessingId(null);
       }
     }
   };
@@ -163,6 +209,7 @@ const BudgetsPage = () => {
 
   const handleCloseDetail = () => {
     setViewingBudget(null);
+    navigate('/budgets'); // Clear ID from URL
   };
 
   if (loading) {
@@ -243,7 +290,7 @@ const BudgetsPage = () => {
               className="p-3 border border-brand-light dark:border-dark-surface rounded-xl dark:bg-dark-surface text-sm dark:text-gray-200"
             >
               <option value="all">Todos los Estados</option>
-              <option value="DRAFT">Borrador</option>
+
               <option value="PENDING">Pendiente</option>
               <option value="APPROVED">Aprobado</option>
               <option value="REJECTED">Rechazado</option>
@@ -266,8 +313,10 @@ const BudgetsPage = () => {
         onApprove={handleApproveBudget}
         onReject={handleRejectBudget}
         onViewDetail={handleViewDetail}
+        onViewDetail={handleViewDetail}
         userRoles={userRoles}
         currentUserId={user?.sub}
+        processingId={processingId}
       />
 
       {isFormModalOpen && (
@@ -286,6 +335,7 @@ const BudgetsPage = () => {
           onClose={handleCloseDetail}
           onApprove={handleApproveBudget}
           userRoles={userRoles}
+          processingId={processingId}
         />
       )}
     </div>

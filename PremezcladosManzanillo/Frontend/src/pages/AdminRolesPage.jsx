@@ -5,13 +5,13 @@ import { UserCog, ShieldAlert, Trash2, FileDown, Edit2, Check, X } from 'lucide-
 
 const UserAvatar = ({ user }) => {
   const [imgError, setImgError] = useState(false);
-  
+
   if (user.picture && !imgError) {
     return (
-      <img 
-        className="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-gray-700 shadow-sm" 
-        src={user.picture} 
-        alt={user.name} 
+      <img
+        className="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-gray-700 shadow-sm"
+        src={user.picture}
+        alt={user.name}
         onError={() => setImgError(true)}
       />
     );
@@ -66,7 +66,7 @@ const AdminRolesPage = () => {
       if (filters.action) params.append('action', filters.action);
       if (filters.entity) params.append('entity', filters.entity);
       if (filters.userName) params.append('userName', filters.userName);
-      
+
       const response = await api.get(`/api/audit?${params.toString()}`);
       setAuditLogs(response.data);
     } catch (err) {
@@ -81,15 +81,15 @@ const AdminRolesPage = () => {
       setUpdating(userId);
       setError(null);
       setSuccess(null);
-      
+
       const roles = [newRole];
       await api.put(`/api/users/${userId}/roles`, { roles });
-      
-      setUsers(prevUsers => prevUsers.map(u => 
+
+      setUsers(prevUsers => prevUsers.map(u =>
         u.user_id === userId ? { ...u, roles: [newRole] } : u
       ));
       setSuccess('Rol actualizado correctamente.');
-      fetchAuditLogs(); 
+      fetchAuditLogs();
     } catch (err) {
       console.error('Error updating role:', err);
       setError('Error al actualizar el rol.');
@@ -107,12 +107,12 @@ const AdminRolesPage = () => {
       setUpdating(userId);
       setError(null);
       setSuccess(null);
-      
+
       await api.delete(`/api/users/${userId}`);
-      
+
       setUsers(prevUsers => prevUsers.filter(u => u.user_id !== userId));
       setSuccess(`Usuario "${userName}" eliminado correctamente.`);
-      fetchAuditLogs(); 
+      fetchAuditLogs();
     } catch (err) {
       console.error('Error deleting user:', err);
       setError(err.response?.data?.error || 'Error al eliminar el usuario.');
@@ -126,8 +126,8 @@ const AdminRolesPage = () => {
     try {
       setUpdating(userId);
       await api.put(`/api/users/${userId}`, { name: newNameValue });
-      
-      setUsers(prevUsers => prevUsers.map(u => 
+
+      setUsers(prevUsers => prevUsers.map(u =>
         u.user_id === userId ? { ...u, name: newNameValue } : u
       ));
       setSuccess('Nombre de usuario actualizado correctamente.');
@@ -159,7 +159,7 @@ const AdminRolesPage = () => {
       if (filters.entity) params.append('entity', filters.entity);
       if (filters.userName) params.append('userName', filters.userName);
       params.append('all', 'true'); // Pedir todos los registros para el reporte
-      
+
       const response = await api.get(`/api/audit?${params.toString()}`);
       const logsToExport = response.data;
 
@@ -202,12 +202,12 @@ const AdminRolesPage = () => {
     <div className="w-full p-6 dark:bg-dark-primary min-h-screen">
       <div className="flex items-center gap-4 mb-6">
         <div className="p-3 bg-white dark:bg-dark-surface rounded-xl shadow-sm">
-           <UserCog className="w-8 h-8 text-brand-primary dark:text-green-400" />
+          <UserCog className="w-8 h-8 text-brand-primary dark:text-green-400" />
         </div>
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
           Gestión de Usuarios y Roles
         </h1>
-        <button 
+        <button
           onClick={exportUsersCSV}
           className="ml-auto flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-primary transition-all shadow-sm"
         >
@@ -218,14 +218,14 @@ const AdminRolesPage = () => {
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 flex items-center gap-2">
-            <ShieldAlert size={20} />
-            <span>{error}</span>
+          <ShieldAlert size={20} />
+          <span>{error}</span>
         </div>
       )}
-      
+
       {success && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-            <span className="block sm:inline">{success}</span>
+          <span className="block sm:inline">{success}</span>
         </div>
       )}
 
@@ -277,7 +277,7 @@ const AdminRolesPage = () => {
                         ) : (
                           <>
                             <div className="text-sm font-bold text-gray-900 dark:text-white">{u.name || 'Sin nombre'}</div>
-                            <button 
+                            <button
                               onClick={() => {
                                 setEditingNameId(u.user_id);
                                 setNewNameValue(u.name || '');
@@ -296,11 +296,10 @@ const AdminRolesPage = () => {
                     <div className="text-sm text-gray-600 dark:text-gray-400">{u.email}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${
-                        u.roles && u.roles.length > 0 
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' 
+                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${u.roles && u.roles.length > 0
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                         : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                    }`}>
+                      }`}>
                       {u.roles && u.roles.length > 0 ? u.roles.join(', ') : 'Sin rol'}
                     </span>
                   </td>
@@ -311,17 +310,17 @@ const AdminRolesPage = () => {
                         className="block w-full pl-3 pr-10 py-2 text-sm font-medium border-gray-200 focus:outline-none focus:ring-brand-primary focus:border-brand-primary rounded-lg dark:bg-dark-primary dark:border-gray-700 dark:text-white transition-shadow shadow-sm"
                         value={u.roles && u.roles.length > 0 ? u.roles[0] : ''}
                         onChange={(e) => {
-                            const newRole = e.target.value;
-                            if (window.confirm(`¿Estás seguro de asignar el rol ${newRole} a ${u.name}?`)) {
-                                handleRoleChange(u.user_id, newRole);
-                            }
+                          const newRole = e.target.value;
+                          if (window.confirm(`¿Estás seguro de asignar el rol ${newRole} a ${u.name}?`)) {
+                            handleRoleChange(u.user_id, newRole);
+                          }
                         }}
                       >
                         <option value="" disabled>Seleccionar Rol</option>
                         <option value="">Sin rol (Ninguno)</option>
                         <option value="Administrador">Administrador</option>
                         <option value="Contable">Contable</option>
-                        <option value="Operaciones">Operaciones</option>
+
                         <option value="Comercial">Comercial</option>
                         <option value="Usuario">Usuario</option>
                       </select>
@@ -329,11 +328,10 @@ const AdminRolesPage = () => {
                       <button
                         onClick={() => handleDeleteUser(u.user_id, u.name)}
                         disabled={updating === u.user_id || u.email === user.email}
-                        className={`p-2 rounded-lg transition-colors ${
-                          u.email === user.email 
-                            ? 'text-gray-300 cursor-not-allowed' 
+                        className={`p-2 rounded-lg transition-colors ${u.email === user.email
+                            ? 'text-gray-300 cursor-not-allowed'
                             : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-                        }`}
+                          }`}
                         title={u.email === user.email ? "No puedes eliminarte a ti mismo" : "Eliminar usuario definitivamente"}
                       >
                         <Trash2 size={18} />
@@ -359,14 +357,14 @@ const AdminRolesPage = () => {
             Historial de Actividad
           </h2>
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={exportAuditCSV}
               className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-xl text-sm font-bold hover:bg-brand-mid transition-all shadow-md"
             >
               <FileDown className="w-4 h-4" />
               Exportar Auditoría
             </button>
-            <button 
+            <button
               onClick={() => { setFilters({ action: '', entity: '', userName: '' }); fetchAuditLogs(); }}
               className="text-sm font-semibold text-brand-primary hover:underline"
             >
@@ -377,48 +375,48 @@ const AdminRolesPage = () => {
 
         {/* Filters Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-white dark:bg-dark-surface p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
-           <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Acción</label>
-              <select 
-                value={filters.action}
-                onChange={(e) => setFilters({...filters, action: e.target.value})}
-                className="w-full rounded-lg border-gray-200 dark:bg-dark-primary dark:border-gray-700 text-sm"
-              >
-                <option value="">Todas las acciones</option>
-                <option value="CREATE">CREATE (Creación)</option>
-                <option value="UPDATE">UPDATE (Edición)</option>
-                <option value="DELETE">DELETE (Eliminación)</option>
-                <option value="APPROVE">APPROVE (Aprobación)</option>
-                <option value="REJECT">REJECT (Rechazo)</option>
-                <option value="VALIDATE">VALIDATE (Validación)</option>
-              </select>
-           </div>
-           <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Entidad</label>
-              <select 
-                value={filters.entity}
-                onChange={(e) => setFilters({...filters, entity: e.target.value})}
-                className="w-full rounded-lg border-gray-200 dark:bg-dark-primary dark:border-gray-700 text-sm"
-              >
-                <option value="">Todas las entidades</option>
-                <option value="CLIENT">CLIENT (Clientes)</option>
-                <option value="BUDGET">BUDGET (Presupuestos)</option>
-                <option value="PAYMENT">PAYMENT (Pagos)</option>
-                <option value="USER_ROLE">USER_ROLE (Roles)</option>
-                <option value="USER">USER (Usuarios)</option>
-                <option value="PRODUCT">PRODUCT (Productos)</option>
-              </select>
-           </div>
-           <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Buscar Usuario</label>
-              <input 
-                type="text"
-                placeholder="Ej: Juan Perez..."
-                value={filters.userName}
-                onChange={(e) => setFilters({...filters, userName: e.target.value})}
-                className="w-full rounded-lg border-gray-200 dark:bg-dark-primary dark:border-gray-700 text-sm"
-              />
-           </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Acción</label>
+            <select
+              value={filters.action}
+              onChange={(e) => setFilters({ ...filters, action: e.target.value })}
+              className="w-full rounded-lg border-gray-200 dark:bg-dark-primary dark:border-gray-700 text-sm"
+            >
+              <option value="">Todas las acciones</option>
+              <option value="CREATE">CREATE (Creación)</option>
+              <option value="UPDATE">UPDATE (Edición)</option>
+              <option value="DELETE">DELETE (Eliminación)</option>
+              <option value="APPROVE">APPROVE (Aprobación)</option>
+              <option value="REJECT">REJECT (Rechazo)</option>
+              <option value="VALIDATE">VALIDATE (Validación)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Entidad</label>
+            <select
+              value={filters.entity}
+              onChange={(e) => setFilters({ ...filters, entity: e.target.value })}
+              className="w-full rounded-lg border-gray-200 dark:bg-dark-primary dark:border-gray-700 text-sm"
+            >
+              <option value="">Todas las entidades</option>
+              <option value="CLIENT">CLIENT (Clientes)</option>
+              <option value="BUDGET">BUDGET (Presupuestos)</option>
+              <option value="PAYMENT">PAYMENT (Pagos)</option>
+              <option value="USER_ROLE">USER_ROLE (Roles)</option>
+              <option value="USER">USER (Usuarios)</option>
+              <option value="PRODUCT">PRODUCT (Productos)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Buscar Usuario</label>
+            <input
+              type="text"
+              placeholder="Ej: Juan Perez..."
+              value={filters.userName}
+              onChange={(e) => setFilters({ ...filters, userName: e.target.value })}
+              className="w-full rounded-lg border-gray-200 dark:bg-dark-primary dark:border-gray-700 text-sm"
+            />
+          </div>
         </div>
 
         <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden">
@@ -444,11 +442,10 @@ const AdminRolesPage = () => {
                         {log.userName || 'Sistema'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
-                          log.action === 'DELETE' || log.action === 'REJECT' ? 'bg-red-100 text-red-700' : 
-                          log.action === 'CREATE' || log.action === 'APPROVE' || log.action === 'VALIDATE' ? 'bg-green-100 text-green-700' :
-                          'bg-blue-100 text-blue-700'
-                        }`}>
+                        <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${log.action === 'DELETE' || log.action === 'REJECT' ? 'bg-red-100 text-red-700' :
+                            log.action === 'CREATE' || log.action === 'APPROVE' || log.action === 'VALIDATE' ? 'bg-green-100 text-green-700' :
+                              'bg-blue-100 text-blue-700'
+                          }`}>
                           {log.action}
                         </span>
                       </td>

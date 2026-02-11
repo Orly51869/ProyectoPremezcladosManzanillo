@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { logActivity } from '../utils/auditLogger';
 import prisma from '../lib/prisma';
 import { sendNotificationToRoles } from '../utils/notificationHelper';
+import { sendPaymentValidatedEmail } from '../services/emailService';
 
 // Crear un nuevo pago
 export const createPayment = async (req: Request, res: Response) => {
@@ -27,11 +28,14 @@ export const createPayment = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Este presupuesto ha vencido. Contacte a su asesor para renovar la cotización.' });
     }
 
-    const currentPaidAmount = budget.payments.reduce((sum, p) => sum + p.paidAmount, 0);
-    
+    // Calcular lo pagado, ignorando pagos rechazados
+    const currentPaidAmount = budget.payments
+      .filter(p => p.status !== 'REJECTED')
+      .reduce((sum, p) => sum + p.paidAmount, 0);
+
     // Calcular el monto en USD (que es la base de la contabilidad interna)
     let newAmountInUSD = parseFloat(paidAmount);
-    
+
     // Si se proporciona moneda y tasa, validamos/calculamos
     if (currency === 'VES' && exchangeRate && amountInCurrency) {
       // Si recibimos Bs, el equivalente en USD es montoBs / tasa
@@ -47,18 +51,18 @@ export const createPayment = async (req: Request, res: Response) => {
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const fullReceiptUrl = receiptFile ? `${baseUrl}/${receiptFile.path.replace(/\\/g, '/')}` : undefined;
-    
+
     const newPayment = await prisma.payment.create({
       data: {
-        budgetId, 
-        amount: budget.total, 
-        paidAmount: newAmountInUSD, 
+        budgetId,
+        amount: budget.total,
+        paidAmount: newAmountInUSD,
         pending: Math.max(0, totalPending - newAmountInUSD),
-        method, 
-        reference, 
-        bankFrom, 
-        bankTo, 
-        receiptUrl: fullReceiptUrl, 
+        method,
+        reference,
+        bankFrom,
+        bankTo,
+        receiptUrl: fullReceiptUrl,
         status: 'PENDING',
         currency: currency || 'USD',
         exchangeRate: exchangeRate ? parseFloat(exchangeRate) : undefined,
@@ -91,38 +95,38 @@ export const createPayment = async (req: Request, res: Response) => {
 
 // Obtener pagos
 export const getPayments = async (req: Request, res: Response) => {
-    const { budgetId, status } = req.query;
-    try {
-        const payments = await prisma.payment.findMany({
-            where: {
-                budgetId: budgetId ? String(budgetId) : undefined,
-                status: status ? String(status) : undefined,
-            },
-            include: {
-                budget: { include: { client: true, creator: true } },
-                validator: true,
-            },
-            orderBy: { createdAt: 'desc' },
-        });
-        res.json(payments);
-    } catch (error) {
-        res.status(500).json({ error: 'Error interno del servidor.' });
-    }
+  const { budgetId, status } = req.query;
+  try {
+    const payments = await prisma.payment.findMany({
+      where: {
+        budgetId: budgetId ? String(budgetId) : undefined,
+        status: status ? String(status) : undefined,
+      },
+      include: {
+        budget: { include: { client: true, creator: true } },
+        validator: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(payments);
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
 };
 
 // Obtener un pago por su ID
 export const getPaymentById = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    try {
-        const payment = await prisma.payment.findUnique({
-            where: { id },
-            include: { budget: { include: { client: true, creator: true } }, validator: true },
-        });
-        if (payment) res.json(payment);
-        else res.status(404).json({ error: 'Pago no encontrado.' });
-    } catch (error) {
-        res.status(500).json({ error: 'Error interno del servidor.' });
-    }
+  const { id } = req.params;
+  try {
+    const payment = await prisma.payment.findUnique({
+      where: { id },
+      include: { budget: { include: { client: true, creator: true } }, validator: true },
+    });
+    if (payment) res.json(payment);
+    else res.status(404).json({ error: 'Pago no encontrado.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
 };
 
 // Actualizar un pago (validación)
@@ -141,32 +145,89 @@ export const updatePayment = async (req: Request, res: Response) => {
     if (!existingPayment) return res.status(404).json({ error: 'Pago no encontrado.' });
     if (existingPayment.status !== 'PENDING') return res.status(400).json({ error: 'Solo pagos pendientes.' });
 
-    const updatedPayment = await prisma.payment.update({
-      where: { id },
-      data: {
-        status: status || existingPayment.status,
-        observations,
-        validator: { connect: { id: authUserId } },
-        validatedAt: new Date(),
-      },
-      include: { budget: { include: { client: true, creator: true } }, validator: true },
-    });
+    // Transacción para asegurar integridad
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedPayment = await tx.payment.update({
+        where: { id },
+        data: {
+          status: status || existingPayment.status,
+          observations,
+          validator: { connect: { id: authUserId } },
+          validatedAt: new Date(),
+        },
+        include: { budget: { include: { client: true, creator: true } }, validator: true },
+      });
 
-    if (updatedPayment.status === 'VALIDATED') {
-        await prisma.notification.create({
-            data: {
-                userId: updatedPayment.budget.creatorId,
-                message: `El pago de tu presupuesto "${updatedPayment.budget.title}" ha sido VALIDADO.`,
-            },
+      if (updatedPayment.status === 'VALIDATED') {
+        // Notificar usuario
+        await tx.notification.create({
+          data: {
+            userId: updatedPayment.budget.creatorId,
+            message: `El pago de tu presupuesto "${updatedPayment.budget.title}" ha sido VALIDADO.`,
+          },
         });
-        await prisma.invoice.create({
-            data: {
-                invoiceNumber: `INV-${Date.now()}`,
-                status: 'PROFORMA',
-                paymentId: updatedPayment.id,
-            },
+
+        // Send Email Notification for Payment Validation
+        if (updatedPayment.budget.client && updatedPayment.budget.client.email) {
+          // Determine currency and amount for display
+          // If amountInCurrency exists (e.g. VES), show that. Otherwise show USD amount.
+          // Or show both? Let's show the primary currency paid.
+          const displayAmount = updatedPayment.amountInCurrency || updatedPayment.paidAmount;
+          const displayCurrency = updatedPayment.currency || 'USD';
+
+          // Async email sending
+          sendPaymentValidatedEmail(
+            updatedPayment.budget.client.email,
+            updatedPayment.budget.client.name,
+            updatedPayment.budget.title,
+            updatedPayment.budget.id,
+            displayAmount,
+            displayCurrency
+          ).catch(err => console.error('Error sending payment email (background):', err));
+        }
+
+        // VERIFICAR SI EL PRESUPUESTO ESTÁ TOTALMENTE PAGADO
+        const budgetPayments = await tx.payment.findMany({
+          where: { budgetId: updatedPayment.budgetId, status: 'VALIDATED' }
         });
-    }
+
+        const totalPaid = budgetPayments.reduce((sum, p) => sum + p.paidAmount, 0);
+        const budgetTotal = updatedPayment.budget.total;
+
+        // Si lo pagado cubre el total (con margen de error pequeño)
+        if (totalPaid >= (budgetTotal - 0.05)) {
+          await tx.budget.update({
+            where: { id: updatedPayment.budgetId },
+            data: { status: 'PAID' }
+          });
+
+          // Solo crear la FACTURA FINAL cuando se ha pagado el total
+          await tx.invoice.create({
+            data: {
+              invoiceNumber: `INV-${Date.now()}`,
+              status: 'PROFORMA', // O cambiar a FISCAL si se desea inmediato
+              paymentId: updatedPayment.id,
+            },
+          });
+
+          await tx.notification.create({
+            data: {
+              userId: updatedPayment.budget.creatorId,
+              message: `Tu presupuesto "${updatedPayment.budget.title}" ha sido PAGADO EN SU TOTALIDAD y se ha generado su FACTURA.`,
+            },
+          });
+        }
+      } else if (updatedPayment.status === 'REJECTED') {
+        await tx.notification.create({
+          data: {
+            userId: updatedPayment.budget.creatorId,
+            message: `El pago de tu presupuesto "${updatedPayment.budget.title}" ha sido RECHAZADO.`,
+          },
+        });
+      }
+
+      return updatedPayment;
+    });
 
     await logActivity({
       userId: authUserId,
@@ -174,10 +235,10 @@ export const updatePayment = async (req: Request, res: Response) => {
       action: status === 'VALIDATED' ? 'VALIDATE' : 'REJECT',
       entity: 'PAYMENT',
       entityId: id,
-      details: `Pago ${status}: ${updatedPayment.budget.title} por ${updatedPayment.paidAmount}`
+      details: `Pago ${status}: ${result.budget.title} por ${result.paidAmount} (Estado Presupuesto actualizado si aplica)`
     });
 
-    res.json(updatedPayment);
+    res.json(result);
   } catch (error) {
     console.error('Error updating payment:', error);
     res.status(500).json({ error: 'Error interno del servidor.' });
@@ -195,11 +256,11 @@ export const deletePayment = async (req: Request, res: Response) => {
   if (!roles.includes('Administrador')) return res.status(403).json({ error: 'Acceso denegado: Solo administradores pueden eliminar pagos.' });
 
   try {
-    const payment = await prisma.payment.findUnique({ 
-      where: { id }, 
-      include: { budget: true, invoice: true } 
+    const payment = await prisma.payment.findUnique({
+      where: { id },
+      include: { budget: true, invoice: true }
     });
-    
+
     if (!payment) return res.status(404).json({ error: 'Pago no encontrado.' });
 
     // Ejecutar en transacción para limpiar factura asociada si existe

@@ -16,19 +16,42 @@ export const getCommercialReports = async (req: AuthenticatedRequest, res: Respo
     const userRole = req.dbUser?.role;
     const isRestricted = !['Administrador', 'Comercial', 'Contable'].includes(userRole || '');
 
-    let whereClause: any = {};
-    if (isRestricted) {
-       whereClause = { ownerId: req.dbUser?.id };
+    // Date Filtering
+    const { startDate, endDate } = req.query;
+    let dateFilter: any = {};
+
+    if (startDate && endDate) {
+      dateFilter = {
+        createdAt: {
+          gte: new Date(startDate as string),
+          lte: new Date(endDate as string)
+        }
+      };
     }
 
-    // A. Top Clientes (por cantidad de presupuestos y volumen total)
+    let whereClause: any = {};
+    if (isRestricted) {
+      whereClause = { ownerId: req.dbUser?.id };
+    }
+
+    // A. Top Clientes (Filtered by budget date)
+    // Note: We want clients who have budgets in this period.
+    // Calculating totals ONLY for budgets in this period.
     const topClients = await prisma.client.findMany({
-      where: whereClause,
+      where: {
+        ...whereClause,
+        budgets: {
+          some: dateFilter // Only clients with budgets in this period
+        }
+      },
       include: {
         _count: {
-          select: { budgets: true }
+          select: {
+            budgets: { where: dateFilter }
+          }
         },
         budgets: {
+          where: dateFilter, // Only include budgets in this period for sum
           select: {
             volume: true,
             total: true
@@ -53,6 +76,9 @@ export const getCommercialReports = async (req: AuthenticatedRequest, res: Respo
     // B. Productos más vendidos
     const productSales = await prisma.budgetProduct.groupBy({
       by: ['productId'],
+      where: {
+        budget: dateFilter // Filter by budget date
+      },
       _sum: {
         quantity: true,
         totalPrice: true
@@ -89,9 +115,25 @@ export const getCommercialReports = async (req: AuthenticatedRequest, res: Respo
 // 2. REPORTES CONTABLES
 export const getAccountingReports = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    // Date Filtering
+    const { startDate, endDate } = req.query;
+    let dateFilter: any = {};
+
+    if (startDate && endDate) {
+      dateFilter = {
+        createdAt: {
+          gte: new Date(startDate as string),
+          lte: new Date(endDate as string)
+        }
+      };
+    }
+
     // Ingresos por categoría de producto
     const validatedPayments = await prisma.payment.findMany({
-      where: { status: 'VALIDATED' },
+      where: {
+        status: 'VALIDATED',
+        ...dateFilter
+      },
       include: {
         budget: {
           include: {
@@ -106,7 +148,7 @@ export const getAccountingReports = async (req: AuthenticatedRequest, res: Respo
     });
 
     const revenueByProductType: Record<string, number> = {};
-    
+
     // Distribuir el pago proporcionalmente a los productos del presupuesto
     validatedPayments.forEach(payment => {
       const budget = payment.budget;
@@ -117,7 +159,7 @@ export const getAccountingReports = async (req: AuthenticatedRequest, res: Respo
         const type = bp.product.type || 'Otros';
         const proportion = bp.totalPrice / budgetTotal;
         const allocatedRevenue = payment.paidAmount * proportion;
-        
+
         revenueByProductType[type] = (revenueByProductType[type] || 0) + allocatedRevenue;
       });
     });

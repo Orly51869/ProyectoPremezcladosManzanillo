@@ -9,7 +9,7 @@ const formatCurrency = (value) => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
 };
 
-const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onReject, onViewDetail, userRoles, currentUserId }) => {
+const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onReject, onViewDetail, userRoles, currentUserId, processingId }) => {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [budgetToReject, setBudgetToReject] = useState(null);
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
@@ -129,15 +129,17 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
                           <>
                             <button
                               onClick={(e) => { e.stopPropagation(); onApprove(budget.id); }}
+                              disabled={processingId === budget.id}
                               title="Aprobar"
-                              className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                              className={`text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 ${processingId === budget.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                               <CheckCircle className="w-5 h-5" />
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); handleOpenRejectionModal(budget); }}
+                              disabled={processingId === budget.id}
                               title="Rechazar"
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                              className={`text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 ${processingId === budget.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                               <XCircle className="w-5 h-5" />
                             </button>
@@ -180,7 +182,9 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
           userRoles={userRoles}
           currentUserId={currentUserId}
           canEditOrDeleteBudget={canEditOrDeleteBudget}
+
           canApproveOrRejectBudget={canApproveOrRejectBudget}
+          processingId={processingId}
         />
       )}
 

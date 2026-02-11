@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ER Diagram - Thesis</title>
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: true });
+    </script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        .instructions { margin-bottom: 20px; color: #555; }
+        .mermaid { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h2>Diagrama Entidad-Relación (Tesis)</h2>
+        <p>Este diagrama se renderiza directamente desde el código fuente para asegurar máxima nitidez.</p>
+        <p><strong>Para guardar la imagen:</strong> Haz clic derecho sobre el diagrama (o usa una herramienta de recorte) y guárdalo como imagen.</p>
+    </div>
+    <div class="mermaid">
+        erDiagram
+    USER ||--o{ CLIENT : "posee (owner)"
+    USER ||--o{ BUDGET : "procesa (processedBy)"
+    USER ||--o{ NOTIFICATION : "recibe"
+    USER ||--o{ AUDITLOG : "genera"
+    
+    CLIENT ||--o{ BUDGET : "tiene"
+    
+    BUDGET ||--o{ BUDGET_PRODUCT : "contiene"
+    BUDGET ||--o{ PAYMENT : "registra"
+    
+    PAYMENT ||--|| INVOICE : "genera"
+    
+    PRODUCT ||--o{ BUDGET_PRODUCT : "se incluye en"
+    PRODUCT ||--o{ PRODUCT_PRICE : "tiene historial de"
+    
+    CATEGORY ||--o{ PRODUCT : "clasifica"
+    CATEGORY ||--o{ SUBCATEGORY : "contiene"
+    SUBCATEGORY ||--o{ PRODUCT : "especifica"
+
+    USER {
+        string id PK
+        string email
+        string role
+        string name
+    }
+    CLIENT {
+        string id PK
+        string rif
+        string name
+        string email
+        string ownerId FK
+    }
+    BUDGET {
+        string id PK
+        string title
+        string status
+        float total
+        float volume
+        datetime deliveryDate
+        string clientId FK
+        string processedById FK
+    }
+    PRODUCT {
+        string id PK
+        string name
+        float price
+        string type
+    }
+    PAYMENT {
+        string id PK
+        float amount
+        float paidAmount
+        float pending
+        float igtfAmount
+        string status
+        string budgetId FK
+    }
+    INVOICE {
+        string id PK
+        string invoiceNumber
+        string paymentId FK
+    }
+    SETTING {
+        string key PK
+        string value
+        string type
+    }
+    PROJECT {
+        string id PK
+        string title
+        string description
+        string imageUrl
+        string location
+        string date
+        string category
+        boolean active
+    }
+    </div>
+</body>
+</html>

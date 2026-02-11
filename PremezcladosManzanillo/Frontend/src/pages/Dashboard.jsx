@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -39,6 +40,7 @@ import CurrencyToggle from "../components/CurrencyToggle"; // Correct relative p
 
 const Dashboard = () => {
   const { user } = useAuth0();
+  const navigate = useNavigate();
   const [dashboardStats, setDashboardStats] = useState(null);
   const [recentActivityList, setRecentActivityList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,11 @@ const Dashboard = () => {
   const pending = dashboardStats?.pendingAmount || 0;
   const approvedBudgetsCount = dashboardStats?.approvedBudgets || 0;
   const totalPaymentsCount = dashboardStats?.totalPayments || 0;
-  const pendingPaymentsCount = dashboardStats?.pendingPaymentsCount || 0;
+
+  // New granular stats
+  const upcomingBudgetsCount = dashboardStats?.upcomingBudgetsCount || 0;
+  const overdueBudgetsCount = dashboardStats?.overdueBudgetsCount || 0;
+  const pendingValidationCount = dashboardStats?.pendingValidationPaymentsCount || 0;
 
   const labels = useMemo(() => dashboardStats?.chartData?.labels || ["Ene", "Feb", "Mar", "Abr", "May", "Jun"], [dashboardStats]);
   const ingresosSeries = useMemo(
@@ -198,7 +204,7 @@ const Dashboard = () => {
               </div>
               <div className="text-right">
                 <div className="inline-flex items-center gap-1 text-sm text-gray-500">
-                   <span>+0%</span>
+                  <span>+0%</span>
                 </div>
                 <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
               </div>
@@ -225,7 +231,7 @@ const Dashboard = () => {
               </div>
               <div className="text-right">
                 <div className="inline-flex items-center gap-1 text-sm text-gray-500">
-                   <span>+0%</span>
+                  <span>+0%</span>
                 </div>
                 <p className="text-xs text-brand-text dark:text-gray-400">crecimiento mensual</p>
               </div>
@@ -252,7 +258,7 @@ const Dashboard = () => {
               </div>
               <div className="text-right">
                 <div className="inline-flex items-center gap-1 text-sm text-gray-500">
-                   <span>-0%</span>
+                  <span>-0%</span>
                 </div>
                 <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
               </div>
@@ -305,10 +311,10 @@ const Dashboard = () => {
                     {totalPaymentsCount}
                   </p>
                 </div>
-                <div className="p-3 bg-white dark:bg-dark-primary rounded-lg shadow-sm">
-                  <p className="text-xs text-brand-text dark:text-gray-400">Pendientes</p>
+                <div className="p-3 bg-white dark:bg-dark-primary rounded-lg shadow-sm w-full">
+                  <p className="text-xs text-brand-text dark:text-gray-400">Pendientes de Validar</p>
                   <p className="font-bold text-brand-dark dark:text-gray-100">
-                    {pendingPaymentsCount}
+                    {pendingValidationCount}
                   </p>
                 </div>
               </div>
@@ -328,7 +334,10 @@ const Dashboard = () => {
                   <p className="text-sm font-medium dark:text-gray-200">
                     {approvedBudgetsCount} presupuestos aprobados
                   </p>
-                  <button className="text-xs text-brand-mid dark:text-green-400 mt-1">
+                  <button
+                    onClick={() => navigate('/budgets?status=APPROVED')}
+                    className="text-xs text-brand-mid dark:text-green-400 mt-1 hover:underline focus:outline-none"
+                  >
                     Ver detalle
                   </button>
                 </div>
@@ -340,9 +349,12 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium dark:text-gray-200">
-                    {pendingPaymentsCount} pago(s) próximo(s) a vencer
+                    {upcomingBudgetsCount} presupuestos por vencer
                   </p>
-                  <button className="text-xs text-brand-mid dark:text-green-400 mt-1">
+                  <button
+                    onClick={() => navigate('/budgets?status=APPROVED')} // Idealmente filtrar por fecha
+                    className="text-xs text-brand-mid dark:text-green-400 mt-1 hover:underline focus:outline-none"
+                  >
                     Ver detalle
                   </button>
                 </div>
@@ -354,9 +366,12 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium dark:text-gray-200">
-                    {pendingPaymentsCount} Pago(s) vencido(s)
+                    {overdueBudgetsCount} presupuestos vencidos
                   </p>
-                  <button className="text-xs text-brand-mid dark:text-green-400 mt-1">
+                  <button
+                    onClick={() => navigate('/budgets?status=APPROVED')} // Idealmente filtrar por vencidos
+                    className="text-xs text-brand-mid dark:text-green-400 mt-1 hover:underline focus:outline-none"
+                  >
                     Ver detalle
                   </button>
                 </div>

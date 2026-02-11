@@ -46,14 +46,20 @@ const ProductsPage = () => {
     const categoryNames = products
       .map(p => p.category?.name || (typeof p.category === 'string' ? p.category : null))
       .filter(Boolean);
-      
+
     const uniqueCategories = [...new Set(categoryNames)];
     return [{ value: 'all', label: 'Todas las Categorías' }, ...uniqueCategories.map(c => ({ value: c, label: c }))];
   }, [products]);
 
   const typeOptions = useMemo(() => {
     const types = [...new Set(products.map(p => p.type))];
-    return [{ value: 'all', label: 'Todos los Tipos' }, ...types.map(t => ({ value: t, label: t }))];
+    const typeMap = {
+      'CONCRETE': 'Concreto',
+      'SERVICE': 'Servicio',
+      'OTHER': 'Otro',
+      'BLOCK': 'Bloque'
+    };
+    return [{ value: 'all', label: 'Todos los Tipos' }, ...types.map(t => ({ value: t, label: typeMap[t] || t }))];
   }, [products]);
 
   const filteredProducts = useMemo(() => {

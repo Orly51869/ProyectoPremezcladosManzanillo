@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { PlusCircle, Trash2 } from "lucide-react";
 import api from "../../utils/api";
 import { format } from "date-fns";
+// Helper para calcular fecha de vencimiento (7 días hábiles, Lun-Wk, start tomorrow)
+const calculateBusinessExpirationDate = (startDate, days) => {
+  let currentDate = new Date(startDate);
+  currentDate.setHours(0, 0, 0, 0);
+  currentDate.setDate(currentDate.getDate() + 1); // Start counting from tomorrow
+
+  let businessDaysCount = 0;
+  while (businessDaysCount < days) {
+    const day = currentDate.getDay();
+    if (day !== 0) { // Skip Sunday (0) only
+      businessDaysCount++;
+    }
+    if (businessDaysCount === days) break;
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  return currentDate;
+};
 import ClientFormModal from "./ClientFormModal";
-import ProductCatalog from "./ProductCatalog"; // Importar el catálogo de productos
+import ProductCatalog from "./ProductCatalog";
+
+import { useSettings } from "../../context/SettingsContext"; // Import Context
 
 const BudgetForm = ({
   initialValues = {},
@@ -12,10 +30,15 @@ const BudgetForm = ({
   onCancel,
   userRoles = [],
 }) => {
+  const { settings } = useSettings(); // Get Settings
+  const ivaRate = parseFloat(settings?.company_iva || "16");
+
   // State for data fetched from API
   const [clients, setClients] = useState([]);
   const [showClientFormModal, setShowClientFormModal] = useState(false);
   const [serverError, setServerError] = useState(null);
+
+  const [applyIva, setApplyIva] = useState(false); // Toggle state
 
   // Form state
   const [formState, setFormState] = useState({
@@ -29,7 +52,9 @@ const BudgetForm = ({
     element: initialValues.element || "",
     observations: initialValues.observations || "",
     volume: initialValues.volume || "",
-    validUntil: initialValues.validUntil ? format(new Date(initialValues.validUntil), "yyyy-MM-dd") : "",
+    validUntil: initialValues.validUntil
+      ? new Date(initialValues.validUntil).toISOString().split('T')[0]
+      : format(calculateBusinessExpirationDate(new Date(), 7), "yyyy-MM-dd"),
     pumpRequired: initialValues.pumpRequired === true ? "true" : "false",
   });
 
@@ -64,7 +89,39 @@ const BudgetForm = ({
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormState(prev => ({ ...prev, [name]: value }));
+
+    // Limpiar errores al escribir
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
+
+    if (name === "deliveryDate" && value) {
+      // Validar que no sea domingo
+      const date = new Date(`${value}T00:00:00`);
+      if (date.getDay() === 0) { // 0 es Domingo
+        setErrors(prev => ({ ...prev, deliveryDate: "⛔ No trabajamos los domingos. Por favor seleccione de Lunes a Sábado." }));
+      }
+    }
+
+    let updates = { [name]: value };
+
+    // Si selecciona tipo "Bombeable", se activa automáticamente el servicio de bomba
+    if (name === "concreteType") {
+      if (value === "bombeable") {
+        updates.pumpRequired = "true";
+      }
+
+      // Si cambia a Pavimento (MR), resetear resistencia a un valor de MR
+      if (value === "mr") {
+        updates.resistance = "MR 40";
+      }
+      // Si deja de ser Pavimento, volver a una resistencia estándar
+      else if (formState.concreteType === 'mr' && value !== 'mr') {
+        updates.resistance = "150";
+      }
+    }
+
+    setFormState(prev => ({ ...prev, ...updates }));
   };
 
   const handleAddProduct = (product) => {
@@ -84,14 +141,27 @@ const BudgetForm = ({
             name: product.name,
             quantity: 1,
             unitPrice: product.price,
+            type: product.type // Save type for Tax calculation
           },
         ];
       }
     });
   };
 
-  const handleUpdateQuantity = (productId, newQuantity) => {
-    if (newQuantity > 0) {
+  const handleUpdateQuantity = (productId, value) => {
+    if (value === '') {
+      setProductItems(prevItems =>
+        prevItems.map(item =>
+          item.productId === productId
+            ? { ...item, quantity: '' }
+            : item
+        )
+      );
+      return;
+    }
+
+    const newQuantity = parseInt(value, 10);
+    if (!isNaN(newQuantity) && newQuantity >= 0) {
       setProductItems(prevItems =>
         prevItems.map(item =>
           item.productId === productId
@@ -106,19 +176,72 @@ const BudgetForm = ({
     setProductItems(prevItems => prevItems.filter(item => item.productId !== productId));
   };
 
+  const calculateSubtotal = () => {
+    return productItems.reduce((acc, item) => {
+      const quantity = Number(item.quantity) || 0;
+      const price = Number(item.unitPrice) || 0;
+      return acc + (quantity * price);
+    }, 0);
+  };
+
   const calculateTotal = () => {
-    return productItems.reduce(
-      (total, item) => total + item.quantity * item.unitPrice,
-      0
-    );
+    const subtotal = calculateSubtotal();
+    return applyIva ? subtotal * (1 + ivaRate / 100) : subtotal;
   };
 
   const validate = () => {
     const err = {};
     if (!formState.clientId) err.clientId = "Selecciona un cliente.";
     if (!formState.title.trim()) err.title = "El título del presupuesto es requerido.";
-    if (!formState.observations.trim()) err.observations = "Las observaciones son obligatorias.";
+    // Observaciones ahora opcionales para guardar (se pueden requerir solo al aprobar si se desea)
+    // if (!formState.observations.trim()) err.observations = "Las observaciones son obligatorias.";
+
     if (productItems.length === 0) err.items = "Añade al menos un producto o servicio.";
+
+    // Validación de fecha en el submit también
+    if (formState.deliveryDate) {
+      const date = new Date(`${formState.deliveryDate}T00:00:00`);
+      if (date.getDay() === 0) {
+        err.deliveryDate = "⛔ No trabajamos los domingos.";
+      }
+    }
+
+    // Validación de Bombeo (Min 10 m³)
+    // Detectar si se seleccionó la opción O si hay un ítem de bombeo en la lista
+    const pumpItem = productItems.find(item =>
+      item.name.toLowerCase().includes('bombeo') ||
+      item.name.toLowerCase().includes('bomba')
+    );
+    const hasPumpItem = !!pumpItem;
+
+    if (formState.pumpRequired === 'true' || hasPumpItem) {
+      const vol = parseFloat(formState.volume);
+      if (!vol || vol < 10) {
+        err.pumpRequired = "⚠️ El servicio de bombeo (seleccionado o en lista) requiere un volumen mínimo de 10 m³.";
+      }
+
+      // Validar que la cantidad del ítem de bombeo coincida con el volumen total (si existe el ítem)
+      if (pumpItem && Math.abs(Number(pumpItem.quantity) - vol) > 0.1) {
+        err.items = `⚠️ La cantidad de 'Bombeo' (${pumpItem.quantity}) debe coincidir con el Volumen Estimado (${vol} m³).`;
+      }
+    }
+
+    // Validación de Consistencia de Volumen
+    // La suma de las cantidades de items de "Concreto" debe ser igual al Volumen Estimado
+    const totalConcreteQty = productItems
+      .filter(item => item.name.toLowerCase().includes('concreto'))
+      .reduce((sum, item) => sum + Number(item.quantity), 0);
+
+    // Solo validamos si hay items de concreto y se ingresó un volumen
+    if (totalConcreteQty > 0 && formState.volume) {
+      const vol = parseFloat(formState.volume);
+      if (Math.abs(totalConcreteQty - vol) > 0.1) { // Margen de error pequeño por decimales
+        err.volume = `⚠️ La cantidad total de ítems de Concreto (${totalConcreteQty} m³) no coincide con el Volumen Estimado (${vol} m³). Ajuste los ítems o el volumen.`;
+        // También marcamos error en items para que sea evidente
+        if (!err.items) err.items = "Discrepancia entre Volumen Estimado y cantidad de productos.";
+      }
+    }
+
     return err;
   };
 
@@ -127,23 +250,47 @@ const BudgetForm = ({
     const formErrors = validate();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
+      // Scroll to top to ensure user sees errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Feedback inmediato CON detalles
+      const errorMessages = Object.values(formErrors).join('\n- ');
+      alert(`No se puede guardar. Por favor revisa:\n- ${errorMessages}`);
       return;
+    }
+
+    // Append IVA info to observations for persistence since schema update is risky
+    let finalObservations = formState.observations;
+    if (applyIva) {
+      finalObservations += `\n[IVA_APLICADO:${ivaRate}%]`;
     }
 
     const budgetData = {
       ...formState,
+      observations: finalObservations,
       volume: formState.volume ? parseFloat(formState.volume) : undefined,
       validUntil: formState.validUntil || undefined,
       pumpRequired: formState.pumpRequired === 'true',
+      // Send calculated fields just in case backend uses them or we rely on frontend calc
+      total: calculateTotal(),
+      applyIva: applyIva,
       products: productItems.map(({ productId, quantity, unitPrice }) => {
-        const base = { productId, quantity: Number(quantity) };
+        // Ensure quantity is at least 1 when saving
+        const qty = Number(quantity);
+        const base = { productId, quantity: qty > 0 ? qty : 1 };
         if (isPrivilegedEditor) {
           base.unitPrice = Number(unitPrice || 0);
         }
         return base;
       }),
     };
-    onSave(budgetData);
+
+    try {
+      onSave(budgetData);
+    } catch (err) {
+      console.error("Error calling onSave:", err);
+      alert("Ocurrió un error al intentar guardar.");
+    }
   };
 
   // Client modal handlers
@@ -229,20 +376,21 @@ const BudgetForm = ({
                 name="deliveryDate"
                 value={formState.deliveryDate}
                 onChange={handleFormChange}
-                className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
+                className={`mt-1 block w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200 ${errors.deliveryDate ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface'}`}
               />
+              {errors.deliveryDate && <p className="text-xs text-red-600 font-bold mt-1">{errors.deliveryDate}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-red-700 dark:text-red-400 font-bold">Válido Hasta (Vencimiento)</label>
               <input
                 type="date"
                 name="validUntil"
-                value={formState.validUntil || format(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")}
+                value={formState.validUntil || format(calculateBusinessExpirationDate(new Date(), 7), "yyyy-MM-dd")}
                 onChange={handleFormChange}
                 disabled={!isPrivilegedEditor}
                 className={`mt-1 block w-full rounded-lg border px-3 py-2 focus:ring-2 dark:text-gray-200 ${!isPrivilegedEditor
-                    ? 'bg-gray-100 dark:bg-dark-surface/50 border-gray-200 text-gray-500 cursor-not-allowed'
-                    : 'border-red-200 dark:border-red-900 bg-red-50/30 dark:bg-red-900/10 focus:ring-red-200'
+                  ? 'bg-gray-100 dark:bg-dark-surface/50 border-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'border-red-200 dark:border-red-900 bg-red-50/30 dark:bg-red-900/10 focus:ring-red-200'
                   }`}
               />
               {!isPrivilegedEditor && (
@@ -263,9 +411,9 @@ const BudgetForm = ({
               >
                 <option value="vivienda">Vivienda</option>
                 <option value="edificio">Edificio</option>
-                <option value="comercial">Comercial</option>
-                <option value="pavimento">Pavimento</option>
-                <option value="otro">Otro</option>
+                <option value="vialidad">Vialidad</option>
+                <option value="industrial">Industrial</option>
+                <option value="obras_menores">Obras Menores</option>
               </select>
             </div>
             <div>
@@ -280,25 +428,6 @@ const BudgetForm = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Resistencia (kg/cm²)</label>
-              <select
-                name="resistance"
-                value={formState.resistance}
-                onChange={handleFormChange}
-                className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
-              >
-                <option value="150">150</option>
-                <option value="180">180</option>
-                <option value="200">200</option>
-                <option value="210">210</option>
-                <option value="250">250</option>
-                <option value="280">280</option>
-                <option value="300">300</option>
-                <option value="350">350</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
-            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo Concreto</label>
               <select
                 name="concreteType"
@@ -310,6 +439,37 @@ const BudgetForm = ({
                 <option value="bombeable">Bombeable</option>
                 <option value="mr">MR (Pavimento)</option>
                 <option value="fino">Fino</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Resistencia (kg/cm²)</label>
+              <select
+                name="resistance"
+                value={formState.resistance}
+                onChange={handleFormChange}
+                className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
+              >
+                {formState.concreteType === 'mr' ? (
+                  <>
+                    <option value="MR 40">MR 40</option>
+                    <option value="MR 45">MR 45</option>
+                    <option value="MR 50">MR 50</option>
+                    <option value="50 ft">50 ft</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="100">100</option>
+                    <option value="120">120</option>
+                    <option value="150">150</option>
+                    <option value="180">180</option>
+                    <option value="200">200</option>
+                    <option value="210">210</option>
+                    <option value="250">250</option>
+                    <option value="280">280</option>
+                    <option value="300">300</option>
+                    <option value="350">350</option>
+                  </>
+                )}
               </select>
             </div>
           </div>
@@ -334,11 +494,19 @@ const BudgetForm = ({
                 name="pumpRequired"
                 value={formState.pumpRequired}
                 onChange={handleFormChange}
-                className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
+                disabled={formState.concreteType === 'bombeable'}
+                className={`mt-1 block w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200 ${formState.concreteType === 'bombeable'
+                  ? 'bg-gray-100 dark:bg-dark-surface/50 border-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-white dark:bg-dark-surface border-gray-200 dark:border-gray-600'
+                  }`}
               >
                 <option value="false">No requiere</option>
                 <option value="true">Sí requiere</option>
               </select>
+              {formState.concreteType === 'bombeable' && (
+                <p className="text-[10px] text-gray-400 mt-1 italic">Requerido automáticamente por tipo de concreto.</p>
+              )}
+
             </div>
           </div>
 
@@ -393,7 +561,7 @@ const BudgetForm = ({
                           type="number"
                           min="1"
                           value={item.quantity}
-                          onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value, 10) || 1)}
+                          onChange={(e) => handleUpdateQuantity(item.productId, e.target.value)}
                           className="w-full h-8 rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface text-center text-xs font-black text-brand-primary focus:ring-1 focus:ring-brand-primary"
                         />
                       </td>
@@ -421,22 +589,58 @@ const BudgetForm = ({
 
         {/* Total y Acciones */}
         <div className="pt-4 space-y-4">
-          {canViewPrices && productItems.length > 0 && (
-            <div className="text-right text-2xl font-bold text-gray-800 dark:text-white">
-              Total: ${calculateTotal().toFixed(2)}
-            </div>
-          )}
-          <div className="flex justify-end gap-4">
+          <div className="flex justify-between items-start">
+            {/* IVA Toggle - Always visible IF IVA > 0 */}
+            {ivaRate > 0 && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase text-gray-500 racking-wider">Impuesto (IVA)</label>
+                <div className="flex bg-gray-100 dark:bg-dark-surface p-1 rounded-lg w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setApplyIva(false)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${!applyIva ? 'bg-white shadow text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Exento (0%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setApplyIva(true)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${applyIva ? 'bg-white shadow text-brand-primary' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Aplicar ({ivaRate}%)
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {canViewPrices && productItems.length > 0 && (
+              <div className="flex flex-col items-end gap-1">
+                <div className="text-sm text-gray-500">Subtotal: ${calculateSubtotal().toFixed(2)}</div>
+
+                {applyIva && (
+                  <div className="text-sm text-red-500 font-bold">
+                    + IVA ({ivaRate}%): ${(calculateSubtotal() * (ivaRate / 100)).toFixed(2)}
+                  </div>
+                )}
+
+                <div className="text-3xl font-black text-brand-primary dark:text-white border-t border-brand-light pt-1 mt-1">
+                  Total: ${calculateTotal().toFixed(2)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-4 mt-4">
             <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600">Cancelar</button>
             <button type="button" onClick={handleSubmit} className="px-6 py-2 rounded-lg text-white bg-brand-primary hover:bg-brand-mid">Guardar</button>
           </div>
         </div>
-      </div>
+      </div >
 
       {/* Columna Derecha: Catálogo */}
-      <div className="w-1/2">
+      < div className="w-1/2" >
         <ProductCatalog onAddProduct={handleAddProduct} />
-      </div>
+      </div >
 
       {showClientFormModal && (
         <ClientFormModal
@@ -446,7 +650,7 @@ const BudgetForm = ({
           serverError={serverError}
         />
       )}
-    </div>
+    </div >
   );
 };
 

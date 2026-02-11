@@ -13,7 +13,7 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
   useEffect(() => {
     if (product) {
       // Normalizar tipo si viene de carga masiva con datos erróneos
-      const validTypes = ["CONCRETE", "BLOCK", "SERVICE", "OTHER"];
+      const validTypes = ["CONCRETE", "SERVICE", "OTHER"];
       const currentType = product.type || "CONCRETE";
       const normalizedType = validTypes.includes(currentType.toUpperCase()) ? currentType.toUpperCase() : "OTHER";
 
@@ -99,7 +99,6 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
                 className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
               >
                 <option value="CONCRETE">Concreto</option>
-                <option value="BLOCK">Bloque</option>
                 <option value="SERVICE">Servicio</option>
                 <option value="OTHER">Otro</option>
               </select>

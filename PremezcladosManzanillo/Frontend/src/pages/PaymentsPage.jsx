@@ -15,7 +15,7 @@ const PaymentsPage = () => {
   const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [showForm, setShowForm] = useState(false);
   const [receipt, setReceipt] = useState(null);
   const [viewMode, setViewMode] = useState('list');
@@ -50,11 +50,23 @@ const PaymentsPage = () => {
   }, [fetchPayments, fetchBudgets]);
 
   const approvedBudgets = useMemo(() => {
-    return budgets.filter(budget => budget.status === 'APPROVED');
+    return budgets.filter(budget => {
+      // Filtrar solo presupuestos aprobados
+      if (budget.status !== 'APPROVED') return false;
+
+      // Calcular el monto pagado (incluyendo pagos validados y pendientes)
+      // Nota: Si el usuario tiene pagos pendientes que cubren el total, también lo ocultamos para prevenir sobrepagos
+      const totalPaidOrPending = (budget.payments || [])
+        .filter(p => p.status === 'VALIDATED' || p.status === 'PENDING')
+        .reduce((sum, p) => sum + (p.paidAmount || 0), 0);
+
+      // Si el monto pagado/pendiente cubre el total (con margen de error de 0.50 USD), no mostrar
+      return totalPaidOrPending < (budget.total - 0.50);
+    });
   }, [budgets]);
 
   const filteredPayments = useMemo(() => {
-    return payments.filter(payment => 
+    return payments.filter(payment =>
       payment.budgetId.toLowerCase().includes(search.toLowerCase()) ||
       payment.reference?.toLowerCase().includes(search.toLowerCase()) ||
       payment.method.toLowerCase().includes(search.toLowerCase())

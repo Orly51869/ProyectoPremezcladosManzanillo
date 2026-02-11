@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  BarChart3, 
-  Download, 
-  TrendingUp, 
-  Wallet, 
-  Truck, 
-  Users, 
+import {
+  BarChart3,
+  Download,
+  TrendingUp,
+  Wallet,
+  Truck,
+  Users,
   ShoppingBag,
   MapPin,
   Calendar,
@@ -22,11 +22,10 @@ import {
   LinearScale,
   BarElement,
 } from 'chart.js';
-import { 
-  getDashboardStats, 
-  getCommercialReports, 
-  getAccountingReports, 
-  getOperationalReports 
+import {
+  getDashboardStats,
+  getCommercialReports,
+  getAccountingReports
 } from '../../utils/api';
 import { useAuth0 } from '@auth0/auth0-react';
 import { formatCurrency, formatDate } from '../../utils/helpers';
@@ -45,25 +44,75 @@ const Reports = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Date Range State
+  const [dateRange, setDateRange] = useState('all');
+  const [customDates, setCustomDates] = useState({ start: '', end: '' });
+
   // Auto-selección de pestaña por rol
   useEffect(() => {
     const roles = (user?.['https://premezcladomanzanillo.com/roles'] || []).map(r => r.toLowerCase());
     if (roles.includes('contable')) setActiveTab('contabilidad');
-    else if (roles.includes('operaciones')) setActiveTab('operaciones');
     else setActiveTab('comercial');
   }, [user]);
+
+  const getDateParams = () => {
+    const now = new Date();
+    let start, end;
+
+    switch (dateRange) {
+      case 'last_month':
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        break;
+      case 'last_3_months':
+        start = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+        end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        break;
+      case 'last_6_months':
+        start = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+        end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        break;
+      case 'year_to_date':
+        start = new Date(now.getFullYear(), 0, 1);
+        end = new Date();
+        break;
+      case 'custom':
+        if (customDates.start && customDates.end) {
+          start = new Date(customDates.start);
+          start.setHours(0, 0, 0, 0);
+          end = new Date(customDates.end);
+          end.setHours(23, 59, 59, 999);
+        }
+        break;
+      default:
+        // 'all' - no filter
+        return {};
+    }
+
+    if (start && end) {
+      return { startDate: start.toISOString(), endDate: end.toISOString() };
+    }
+    return {};
+  };
 
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        const [gen, com, acc, ope] = await Promise.all([
-          getDashboardStats(),
-          getCommercialReports(),
-          getAccountingReports(),
-          getOperationalReports()
+        const params = getDateParams();
+
+        // If custom is selected but dates are missing, don't fetch or fetch all?
+        if (dateRange === 'custom' && (!customDates.start || !customDates.end)) {
+          setLoading(false);
+          return;
+        }
+
+        const [gen, com, acc] = await Promise.all([
+          getDashboardStats(params),
+          getCommercialReports(params),
+          getAccountingReports(params)
         ]);
-        setData({ general: gen, commercial: com, accounting: acc, operational: ope });
+        setData({ general: gen, commercial: com, accounting: acc });
       } catch (err) {
         console.error("Error fetching reports data:", err);
       } finally {
@@ -71,12 +120,30 @@ const Reports = () => {
       }
     };
     fetchAllData();
-  }, []);
+  }, [dateRange, customDates]);
+
+  const rangeLabels = {
+    all: 'Todo el Historial',
+    last_month: 'Último Mes',
+    last_3_months: 'Últimos 3 Meses',
+    last_6_months: 'Últimos 6 Meses',
+    year_to_date: 'Este Año (YTD)',
+    custom: 'Rango Personalizado'
+  };
 
   const handleExport = (format) => {
     alert(`Generando reporte ${format.toUpperCase()}...`);
     if (format === 'pdf') {
-       generateReportPDF(null, data.general, activeTab, user?.name || 'Usuario');
+      let specificData = null;
+      if (activeTab === 'comercial') specificData = data.commercial;
+      else if (activeTab === 'contabilidad') specificData = data.accounting;
+
+      let dateText = rangeLabels[dateRange] || dateRange;
+      if (dateRange === 'custom' && customDates.start && customDates.end) {
+        dateText = `${customDates.start} al ${customDates.end}`;
+      }
+
+      generateReportPDF(specificData, data.general, activeTab, user?.name || 'Usuario', dateText);
     }
   };
 
@@ -94,37 +161,66 @@ const Reports = () => {
             <p className="text-gray-500 dark:text-gray-400">Análisis y rendimiento de Premezclado Manzanillo</p>
           </div>
         </div>
-        
-        <div className="flex gap-2">
-          <button onClick={() => handleExport('pdf')} className="flex items-center gap-2 bg-white dark:bg-dark-primary border border-gray-200 dark:border-dark-surface px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-dark-surface transition-colors">
-            <Download className="w-4 h-4 text-brand-primary" /> PDF
-          </button>
-          <button onClick={() => handleExport('excel')} className="flex items-center gap-2 bg-brand-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-mid transition-colors shadow-md">
-            <Download className="w-4 h-4" /> Excel
-          </button>
+
+        <div className="flex flex-col md:flex-row gap-3 items-end md:items-center">
+          {/* DATE RANGE SELECTOR */}
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="bg-white dark:bg-dark-primary border border-gray-200 dark:border-dark-surface rounded-lg px-3 py-2 text-sm font-medium dark:text-white focus:ring-2 focus:ring-brand-primary"
+          >
+            <option value="all">Todo el Historial</option>
+            <option value="last_month">Último Mes</option>
+            <option value="last_3_months">Últimos 3 Meses</option>
+            <option value="last_6_months">Últimos 6 Meses</option>
+            <option value="year_to_date">Este Año (YTD)</option>
+            <option value="custom">Rango Personalizado</option>
+          </select>
+
+          {dateRange === 'custom' && (
+            <div className="flex gap-2 items-center">
+              <input
+                type="date"
+                value={customDates.start}
+                onChange={(e) => setCustomDates({ ...customDates, start: e.target.value })}
+                className="bg-white dark:bg-dark-primary border border-gray-200 dark:border-dark-surface rounded-lg px-2 py-2 text-sm dark:text-white"
+              />
+              <span className="text-gray-400">-</span>
+              <input
+                type="date"
+                value={customDates.end}
+                onChange={(e) => setCustomDates({ ...customDates, end: e.target.value })}
+                className="bg-white dark:bg-dark-primary border border-gray-200 dark:border-dark-surface rounded-lg px-2 py-2 text-sm dark:text-white"
+              />
+            </div>
+          )}
+
+          <div className="flex gap-2 ml-2">
+            <button onClick={() => handleExport('pdf')} className="flex items-center gap-2 bg-white dark:bg-dark-primary border border-gray-200 dark:border-dark-surface px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-dark-surface transition-colors">
+              <Download className="w-4 h-4 text-brand-primary" /> PDF
+            </button>
+            <button onClick={() => handleExport('excel')} className="flex items-center gap-2 bg-brand-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-mid transition-colors shadow-md">
+              <Download className="w-4 h-4" /> Excel
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 dark:bg-dark-surface p-1 rounded-xl mb-8 w-fit border border-gray-200 dark:border-dark-surface">
-        <button 
+        <button
           onClick={() => setActiveTab('comercial')}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'comercial' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
           <TrendingUp className="w-4 h-4" /> Comercial
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('contabilidad')}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'contabilidad' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
           <Wallet className="w-4 h-4" /> Contabilidad
         </button>
-        <button 
-          onClick={() => setActiveTab('operaciones')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'operaciones' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-        >
-          <Truck className="w-4 h-4" /> Operaciones
-        </button>
+
       </div>
 
       <AnimatePresence mode="wait">
@@ -137,7 +233,7 @@ const Reports = () => {
         >
           {activeTab === 'comercial' && <CommercialView data={data.commercial} />}
           {activeTab === 'contabilidad' && <AccountingView data={data.accounting} />}
-          {activeTab === 'operaciones' && <OperationalView data={data.operational} />}
+
         </motion.div>
       </AnimatePresence>
     </div>
@@ -152,7 +248,7 @@ const CommercialView = ({ data }) => (
         <h3 className="text-xl font-bold dark:text-white">Top 5 Productos Vendidos</h3>
       </div>
       <div className="h-64">
-        <Bar 
+        <Bar
           data={{
             labels: data?.topProducts?.map(p => p.name) || [],
             datasets: [{
@@ -208,7 +304,7 @@ const AccountingView = ({ data }) => (
         <h3 className="text-xl font-bold dark:text-white">Ingresos por Tipo de Concreto</h3>
       </div>
       <div className="h-64 flex justify-center">
-        <Pie 
+        <Pie
           data={{
             labels: data?.revenueByType?.map(r => r.name) || [],
             datasets: [{
@@ -223,7 +319,7 @@ const AccountingView = ({ data }) => (
     </div>
 
     <div className="bg-white dark:bg-dark-primary rounded-2xl p-6 shadow-soft border border-gray-100 dark:border-dark-surface">
-       <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-6">
         <Clock className="w-5 h-5 text-orange-500" />
         <h3 className="text-xl font-bold dark:text-white">Análisis de Cartera Pendiente</h3>
       </div>
@@ -292,7 +388,7 @@ const OperationalView = ({ data }) => (
               <span className="font-bold text-brand-primary">{zone.count} obras</span>
             </div>
             <div className="h-2 w-full bg-gray-100 dark:bg-dark-surface rounded-full overflow-hidden">
-               <div className="h-full bg-brand-primary" style={{ width: `${(zone.count / data.deliveries.length) * 100}%` }}></div>
+              <div className="h-full bg-brand-primary" style={{ width: `${(zone.count / data.deliveries.length) * 100}%` }}></div>
             </div>
           </div>
         ))}

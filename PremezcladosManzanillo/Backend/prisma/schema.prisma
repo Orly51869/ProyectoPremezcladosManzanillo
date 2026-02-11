@@ -26,6 +26,8 @@ model User {
   processedBudgets Budget[] @relation("ProcessedBudgets") // Added directly to User model
   validatedPayments Payment[] @relation("ValidatedPayments") // Renamed for clarity
   notifications     Notification[] // Relation to notifications
+
+  @@map("usuarios")
 }
 
 // Modelo de cliente asociado con un Usuario
@@ -45,6 +47,8 @@ model Client {
 
   // Relación con presupuestos
   budgets Budget[]
+  
+  @@map("clientes")
 }
 
 // Modelos de presupuestos
@@ -79,6 +83,8 @@ model Budget {
   processedById String?
   processedAt   DateTime?
   rejectionReason String?
+
+  @@map("presupuestos")
 }
 
 // Modelos de pagos
@@ -111,6 +117,8 @@ model Payment {
 
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
+  @@map("pagos")
 }
 
 // Modelos de productos
@@ -127,6 +135,8 @@ model BudgetProduct {
   // Relation to Product
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
+
+  @@map("items_presupuesto")
 }
 
 // Modelos de productos y servicios
@@ -148,6 +158,8 @@ model Product {
   budgets BudgetProduct[]
   // Precios históricos por producto
   productPrices ProductPrice[]
+
+  @@map("productos")
 }
 
 // Categorías de productos
@@ -159,6 +171,8 @@ model Category {
   products    Product[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+
+  @@map("categorias")
 }
 
 model Subcategory {
@@ -171,6 +185,8 @@ model Subcategory {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   @@unique([name, categoryId])
+
+  @@map("subcategorias")
 }
 
 // Precios históricos por producto
@@ -186,6 +202,8 @@ model ProductPrice {
   createdAt    DateTime @default(now())
 
   @@index([productId, date])
+
+  @@map("historial_precios")
 }
 
 // Modelo de notificación para alertas de usuario
@@ -198,6 +216,8 @@ model Notification {
   // Relación con el usuario que recibe la notificación
   user   User   @relation(fields: [userId], references: [id])
   userId String
+
+  @@map("notificaciones")
 }
 
 // Modelo de factura vinculada a un pago
@@ -212,6 +232,8 @@ model Invoice {
   // Relación uno a uno con Payment
   payment   Payment @relation(fields: [paymentId], references: [id])
   paymentId String  @unique
+
+  @@map("facturas")
 }
 
 // Modelo para rastrear actividades y cambios administrativos de usuarios
@@ -228,6 +250,8 @@ model AuditLog {
 
   @@index([userId])
   @@index([createdAt])
+
+  @@map("auditoria")
 }
 
 // Modelo para configuraciones dinámicas de la aplicación (fondos, títulos, etc.)
@@ -236,6 +260,8 @@ model Setting {
   value     String
   type      String   @default("text") // text, image, color, etc.
   updatedAt DateTime @updatedAt
+
+  @@map("configuraciones")
 }
 
 // Modelo para la galería de proyectos/obras finalizadas (Portfolio)
@@ -250,4 +276,6 @@ model Project {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@map("portafolio_proyectos")
 }

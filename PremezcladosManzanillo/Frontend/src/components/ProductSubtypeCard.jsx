@@ -22,15 +22,17 @@ const ProductSubtypeCard = ({ product }) => {
             </div>
 
             <div className="flex justify-center space-x-3 mt-4 p-4">
-                <a
-                    href={`/assets/data/ficha-tecnica-${product.id}.pdf`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-1 text-sm border border-brand-primary dark:border-green-400 text-brand-primary dark:text-green-400 px-3 py-2 rounded-full hover:bg-brand-primary hover:text-white dark:hover:bg-green-600 dark:hover:text-white transition"
-                >
-                    <Download size={16} />
-                    <span>Ficha Técnica</span>
-                </a>
+                {(product.technicalDatasheet || product.id) && (
+                    <a
+                        href={product.technicalDatasheet || `/assets/data/ficha-tecnica-${product.id}.pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-1 text-sm border border-brand-primary dark:border-green-400 text-brand-primary dark:text-green-400 px-3 py-2 rounded-full hover:bg-brand-primary hover:text-white dark:hover:bg-green-600 dark:hover:text-white transition"
+                    >
+                        <Download size={16} />
+                        <span>Ficha Técnica</span>
+                    </a>
+                )}
             </div>
         </div>
     );

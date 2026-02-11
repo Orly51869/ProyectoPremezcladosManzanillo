@@ -28,31 +28,6 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
   const [receiptFile, setReceiptFile] = useState(null);
   const [formErrors, setFormErrors] = useState({});
 
-  useEffect(() => {
-    if (initialValues) {
-      if (initialValues.budgetId) setBudgetId(initialValues.budgetId);
-      if (initialValues.amount) setPaidAmount(initialValues.amount);
-    } else if (approvedBudgets.length > 0 && !budgetId) {
-      setBudgetId(approvedBudgets[0].id);
-    }
-  }, [approvedBudgets, budgetId, initialValues]);
-
-  const validateForm = () => {
-    const errors = {};
-    if (!budgetId) errors.budgetId = "Debe seleccionar un presupuesto.";
-
-    if (currency === 'USD') {
-      if (!paidAmount || parseFloat(paidAmount) <= 0) errors.paidAmount = "El monto pagado debe ser mayor a 0.";
-    } else {
-      if (!amountInCurrency || parseFloat(amountInCurrency) <= 0) errors.amountInCurrency = "El monto en Bs. debe ser mayor a 0.";
-      if (!exchangeRate || parseFloat(exchangeRate) <= 0) errors.exchangeRate = "La tasa de cambio debe ser válida.";
-    }
-
-    if (!method) errors.method = "Debe seleccionar un método de pago.";
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
   // Efecto para calcular el equivalente en USD cuando cambian los Bs. o la Tasa
   useEffect(() => {
     if (currency === 'VES' && amountInCurrency && exchangeRate) {
@@ -74,6 +49,54 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
     }
   }, [currency, paidAmount, exchangeRate]);
 
+  useEffect(() => {
+    if (initialValues) {
+      if (initialValues.budgetId) setBudgetId(initialValues.budgetId);
+      if (initialValues.amount) setPaidAmount(initialValues.amount);
+    } else if (approvedBudgets.length > 0 && !budgetId) {
+      // Auto-seleccionar primero
+      const firstBudget = approvedBudgets[0];
+      setBudgetId(firstBudget.id);
+    }
+  }, [approvedBudgets, budgetId, initialValues]);
+
+  // Nuevo Effect para auto-llenar el monto restante cuando se cambia el presupuesto
+  useEffect(() => {
+    if (budgetId && approvedBudgets.length > 0) {
+      const selected = approvedBudgets.find(b => b.id === budgetId);
+      if (selected) {
+        // Calcular restante
+        const total = selected.total || 0; // O la suma calculada si total no está actualizado
+        const paid = (selected.payments || [])
+          .filter(p => p.status === 'VALIDATED' || p.status === 'PENDING')
+          .reduce((sum, p) => sum + (p.paidAmount || 0), 0);
+        const remaining = Math.max(0, total - paid);
+
+        // Si no hay monto escrito aún, sugerir el restante
+        if (!paidAmount || paidAmount === '0') {
+          setPaidAmount(remaining.toFixed(2));
+        }
+      }
+    }
+  }, [budgetId, approvedBudgets]);
+  // Nota: Eliminamos paidAmount de deps para evitar loop infinito si el usuario edita
+
+  const validateForm = () => {
+    const errors = {};
+    if (!budgetId) errors.budgetId = "Debe seleccionar un presupuesto.";
+
+    if (currency === 'USD') {
+      if (!paidAmount || parseFloat(paidAmount) <= 0) errors.paidAmount = "El monto debe ser mayor a 0.";
+    } else {
+      if (!amountInCurrency || parseFloat(amountInCurrency) <= 0) errors.amountInCurrency = "El monto en Bs. debe ser mayor a 0.";
+      if (!exchangeRate || parseFloat(exchangeRate) <= 0) errors.exchangeRate = "La tasa de cambio debe ser válida.";
+    }
+
+    if (!method) errors.method = "Debe seleccionar un método de pago.";
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Helper para formatear siempre en USD
   const formatPriceUSD = (val) => {
     return parseFloat(val || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -87,7 +110,7 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
 
     const formData = new FormData();
     formData.append('budgetId', budgetId);
-    formData.append('paidAmount', paidAmount); // Correctly sending paidAmount
+    formData.append('paidAmount', paidAmount); // Correctly sending paidAmount as entered
     formData.append('date', paymentDate || new Date().toISOString());
     formData.append('method', method);
     formData.append('currency', currency);
@@ -101,12 +124,13 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
       const igtfCalculated = parseFloat(paidAmount || 0) * (parseFloat(igtfRate || 0) / 100);
       formData.append('igtfAmount', igtfCalculated.toFixed(2));
     }
+
     if (reference) formData.append('reference', reference);
     if (bankFrom) formData.append('bankFrom', bankFrom);
     if (bankTo) formData.append('bankTo', bankTo);
-    if (receiptFile) formData.append('receipt', receiptFile); // 'receipt' is the field name for multer.single('receipt')
+    if (receiptFile) formData.append('receipt', receiptFile);
 
-    onSubmit(formData); // Send FormData to parent component
+    onSubmit(formData);
   };
 
   return (
@@ -127,11 +151,34 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
             {approvedBudgets.length === 0 ? (
               <option value="">No hay presupuestos aprobados</option>
             ) : (
-              approvedBudgets.map((budget) => (
-                <option key={budget.id} value={budget.id}>
-                  {budget.title} (Total: ${budget.total.toFixed(2)})
-                </option>
-              ))
+              approvedBudgets.map((budget) => {
+                // Calculate Total (Tax-Free for Puerto Libre)
+                // Just sum of products, no IVA logic.
+                let calculatedTotal = 0;
+
+                const products = budget.products || [];
+                products.forEach(p => {
+                  const qty = p.quantity || 0;
+                  const price = p.unitPrice || 0;
+                  calculatedTotal += qty * price;
+                });
+
+                // If backend is already updated, budget.total should match calculatedTotal
+                // We use calculatedTotal to be safe in case page hasn't refreshed data from server yet
+                const finalTotal = calculatedTotal;
+
+                const paid = (budget.payments || [])
+                  .filter(p => p.status === 'VALIDATED' || p.status === 'PENDING')
+                  .reduce((sum, p) => sum + (p.paidAmount || 0), 0);
+
+                const remaining = Math.max(0, finalTotal - paid);
+
+                return (
+                  <option key={budget.id} value={budget.id}>
+                    {budget.title} (Restante: ${remaining.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                  </option>
+                );
+              })
             )}
           </select>
           {formErrors.budgetId && <p className="text-red-500 text-xs mt-1">{formErrors.budgetId}</p>}
@@ -180,21 +227,46 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
 
           {/* Sección de IGTF - Solo visible en USD */}
           {currency === 'USD' && (
-            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-orange-800 dark:text-orange-300">
-                    IGTF ({igtfRate}%)
-                  </span>
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800 transition-all">
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-orange-800 dark:text-orange-300">
+                      Base (Abono)
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-sm font-bold text-gray-700 dark:text-gray-300">
+                      {formatPriceUSD(parseFloat(paidAmount || 0))}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="text-right">
-                  <span className="block text-sm font-bold text-orange-700 dark:text-orange-400">
-                    + {formatPriceUSD(parseFloat(paidAmount || 0) * (parseFloat(igtfRate || 0) / 100))}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-orange-800 dark:text-orange-300">
+                      + IGTF ({igtfRate}%)
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-sm font-bold text-orange-700 dark:text-orange-400">
+                      {formatPriceUSD(parseFloat(paidAmount || 0) * (parseFloat(igtfRate || 0) / 100))}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-2 border-t border-orange-200 dark:border-orange-700 flex justify-between items-center text-orange-900 dark:text-orange-100">
+                  <span className="font-bold">Total a Transferir:</span>
+                  <span className="font-extrabold text-lg">
+                    {formatPriceUSD(parseFloat(paidAmount || 0) + (parseFloat(paidAmount || 0) * (parseFloat(igtfRate || 0) / 100)))}
                   </span>
                 </div>
               </div>
-              <p className="text-[10px] text-orange-600 dark:text-orange-400">El IGTF es un impuesto adicional y no se resta del saldo pendiente del presupuesto.</p>
+
+              <p className="text-[10px] text-orange-600 dark:text-orange-400 mt-2">
+                El IGTF es un impuesto adicional obligatorio para pagos en divisas. El monto total a transferir incluye este impuesto.
+              </p>
             </div>
           )}
 
@@ -298,7 +370,7 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
           Registrar Pago
         </button>
       </div>
-    </form>
+    </form >
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Image as ImageIcon, Layout, Save, Plus, Trash2, RefreshCcw, Pencil } from 'lucide-react';
+import { Image as ImageIcon, Layout, Save, Plus, Trash2, RefreshCcw, Pencil, FileText } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { useAuth0 } from "@auth0/auth0-react";
 import api from '../utils/api';
@@ -619,6 +619,67 @@ const CustomizationPage = () => {
                                 if (url) {
                                   const newLogs = [...catalogConfig];
                                   newLogs[idx].imgSrc = url;
+                                  setCatalogConfig(newLogs);
+                                }
+                                setLoading(false);
+                              }}
+                              className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:bg-gray-200 hover:file:bg-gray-300 transition cursor-pointer"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-gray-400 uppercase mb-1">
+                              Ficha Técnica (PDF)
+                            </label>
+                            <div className="flex items-center gap-2 mb-2">
+                              {prod.technicalDatasheet ? (
+                                <a
+                                  href={prod.technicalDatasheet}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-xs text-brand-primary underline"
+                                >
+                                  <FileText size={14} /> Ver Ficha Actual
+                                </a>
+                              ) : (
+                                <span className="text-xs text-gray-400 italic">Sin ficha técnica</span>
+                              )}
+                            </div>
+                            <input
+                              type="file"
+                              accept="application/pdf"
+                              onChange={async (e) => {
+                                setLoading(true);
+                                const url = await handleFileUpload(e.target.files[0]);
+                                if (url) {
+                                  const newLogs = [...catalogConfig];
+                                  // Find the correct index in the original array if needed, but here we are using the filtered/mapped index from the reduce. 
+                                  // Wait, the index passed in the map is 'idx'. 
+                                  // But `items` is a subset of `catalogConfig`.
+                                  // The `items` array contains objects like { product: prod, index: originalIndex }.
+                                  // So I should use `items[idx].index` to update the original `catalogConfig`.
+
+                                  // Ah, wait. The previous code usage:
+                                  /*
+                                  onChange={(e) => {
+                                      const newLogs = [...catalogConfig];
+                                      newLogs[idx].imgSrc = url; // This looks suspicious in the original code!
+                                      setCatalogConfig(newLogs);
+                                    }}
+                                  */
+
+                                  // Let's check how 'idx' is derived.
+                                  // {items.map(({ product: prod, index: idx }) => (
+
+                                  // In the reduce: 
+                                  // acc[cat].push({ product, index }); 
+                                  // 'index' here is the index in the original catalogConfig array.
+
+                                  // In the map:
+                                  // items.map(({ product: prod, index: idx })
+                                  // So 'idx' IS the original index.
+
+                                  newLogs[idx].technicalDatasheet = url;
                                   setCatalogConfig(newLogs);
                                 }
                                 setLoading(false);

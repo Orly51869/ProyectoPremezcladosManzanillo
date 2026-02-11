@@ -2,7 +2,6 @@
 // Propósito: Ruteo principal de la aplicación y layout del panel.
 import React, { useEffect } from "react";
 import {
-  BrowserRouter as Router,
   Routes,
   Route,
   Outlet,
@@ -61,28 +60,35 @@ const ScrollToAnchor = () => {
 
 // Componente para proteger rutas
 const ProtectedRoute = () => {
-  const { isAuthenticated, isLoading, user } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
   const location = useLocation();
 
   // Obtener roles del usuario desde Auth0
-  const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+  // const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
 
   // Log para depurar el estado de la ruta protegida
-  console.log(`[ProtectedRoute] isLoading: ${isLoading}, isAuthenticated: ${isAuthenticated}, userRoles: ${userRoles}`);
+  // console.log(`[ProtectedRoute] isLoading: ${isLoading}, isAuthenticated: ${isAuthenticated}, userRoles: ${userRoles}`);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      // Guardar la ruta actual para redirigir después del login
+      loginWithRedirect({
+        appState: { returnTo: location.pathname + location.search }
+      });
+    }
+  }, [isLoading, isAuthenticated, loginWithRedirect, location]);
 
   if (isLoading) {
-    return <div>Cargando...</div>; // O un spinner/componente de carga más elaborado
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="text-xl font-semibold text-gray-800 dark:text-gray-200">Cargando...</div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return null; // Esperar a que useEffect redirija
   }
-
-  // Redirigir a usuarios con rol "Usuario" de /dashboard a /budgets
-  // if (userRoles.includes("Usuario") && location.pathname === "/dashboard") {
-  //   console.log("[ProtectedRoute] Usuario role detected, redirecting from /dashboard to /budgets");
-  //   return <Navigate to="/budgets" replace />;
-  // }
 
   return <Outlet />;
 };
@@ -101,45 +107,44 @@ const App = () => {
   return (
     <SettingsProvider>
       <CurrencyProvider>
-        <Router>
-          <ScrollToTop />
-          <ScrollToAnchor />
-          {/* <ChatWidget /> */}
-          <Routes>
-            {/* Rutas Públicas */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/productos" element={<ProductsCatalogPage />} />
-            <Route path="/productos/estructurales" element={<StructuralConcretesPage />} />
-            <Route path="/productos/pavimentos" element={<PavementConcretesPage />} />
-            <Route path="/productos/especiales" element={<SpecialConcretesPage />} />
-            <Route path="/productos/:productId" element={<ProductDetailPage />} />
-            <Route path="/servicios" element={<ServicesPage />} />
-            <Route path="/nosotros" element={<AboutPage />} />
-            <Route path="/contacto" element={<ContactPage />} />
-            <Route path="/proyectos" element={<ProjectsPage />} />
+        <ScrollToTop />
+        <ScrollToAnchor />
+        {/* <ChatWidget /> */}
+        <Routes>
+          {/* Rutas Públicas */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/productos" element={<ProductsCatalogPage />} />
+          <Route path="/productos/estructurales" element={<StructuralConcretesPage />} />
+          <Route path="/productos/pavimentos" element={<PavementConcretesPage />} />
+          <Route path="/productos/especiales" element={<SpecialConcretesPage />} />
+          <Route path="/productos/:productId" element={<ProductDetailPage />} />
+          <Route path="/servicios" element={<ServicesPage />} />
+          <Route path="/nosotros" element={<AboutPage />} />
+          <Route path="/contacto" element={<ContactPage />} />
+          <Route path="/proyectos" element={<ProjectsPage />} />
 
 
-            {/* Rutas Protegidas */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<AuthenticatedApiProvider />}> {/* AuthenticatedApiProvider ahora renderiza un Outlet */}
-                <Route element={<DashboardLayout />}> {/* DashboardLayout envuelve las páginas del dashboard */}
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/clients" element={<ClientsPage />} />
-                  <Route path="/notifications" element={<NotificationsPage />} />
-                  <Route path="/budgets/*" element={<BudgetsPage />} />
-                  <Route path="/dashboard/budgets/build/:id" element={<BudgetBuilderPage />} />
-                  <Route path="/products-management" element={<ProductsPage />} />
-                  <Route path="/payments" element={<PaymentsPage />} />
-                  <Route path="/invoices" element={<InvoicesPage />} /> {/* Nueva ruta para la página de facturas */}
-                  <Route path="/admin/roles" element={<AdminRolesPage />} />
-                  <Route path="/customize" element={<CustomizationPage />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/settings" element={<Settings />} />
-                </Route>
+          {/* Rutas Protegidas */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AuthenticatedApiProvider />}> {/* AuthenticatedApiProvider ahora renderiza un Outlet */}
+              <Route element={<DashboardLayout />}> {/* DashboardLayout envuelve las páginas del dashboard */}
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/clients" element={<ClientsPage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/budgets/:id" element={<BudgetsPage />} />
+                <Route path="/budgets/*" element={<BudgetsPage />} />
+                <Route path="/dashboard/budgets/build/:id" element={<BudgetBuilderPage />} />
+                <Route path="/products-management" element={<ProductsPage />} />
+                <Route path="/payments" element={<PaymentsPage />} />
+                <Route path="/invoices" element={<InvoicesPage />} /> {/* Nueva ruta para la página de facturas */}
+                <Route path="/admin/roles" element={<AdminRolesPage />} />
+                <Route path="/customize" element={<CustomizationPage />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/settings" element={<Settings />} />
               </Route>
             </Route>
-          </Routes>
-        </Router>
+          </Route>
+        </Routes>
       </CurrencyProvider>
     </SettingsProvider>
   );

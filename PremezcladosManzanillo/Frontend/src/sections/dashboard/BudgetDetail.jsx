@@ -21,11 +21,11 @@ const formatDate = (value) => {
   try {
     const d = new Date(value);
     if (!isNaN(d)) return d.toISOString().slice(0, 10);
-  } catch (e) {}
+  } catch (e) { }
   return '';
 };
 
-const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove }) => {
+const BudgetDetail = ({ budget, onClose = () => { }, userRoles = [], onApprove, processingId }) => {
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose();
@@ -112,7 +112,7 @@ const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove })
                 <h4 className="font-medium text-red-700 dark:text-red-400 mb-2 flex items-center gap-1">Vencimiento</h4>
                 {canApprove && (budget.status === 'PENDING' || budget.status === 'APPROVED') ? (
                   <div className="space-y-1">
-                    <input 
+                    <input
                       type="date"
                       defaultValue={budget.validUntil ? formatDate(budget.validUntil) : ''}
                       onChange={async (e) => {
@@ -129,7 +129,13 @@ const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove })
                   </div>
                 ) : (
                   <div className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                    {budget.validUntil ? format(new Date(budget.validUntil), 'dd/MM/yyyy') : 'No definida'}
+                    {budget.validUntil ? (() => {
+                      const d = new Date(budget.validUntil);
+                      const day = d.getUTCDate().toString().padStart(2, '0');
+                      const month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+                      const year = d.getUTCFullYear();
+                      return `${day}/${month}/${year}`;
+                    })() : 'No definida'}
                   </div>
                 )}
               </div>
@@ -139,7 +145,7 @@ const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove })
           <div>
             <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Observaciones</h4>
             <div className="text-sm text-gray-800 dark:text-gray-300 bg-gray-50 dark:bg-dark-surface p-3 rounded-lg border border-gray-100 dark:border-gray-700">
-                {project.observaciones ? project.observaciones : <span className="text-gray-400 italic">Sin observaciones registradas.</span>}
+              {project.observaciones ? project.observaciones : <span className="text-gray-400 italic">Sin observaciones registradas.</span>}
             </div>
           </div>
 
@@ -147,7 +153,8 @@ const BudgetDetail = ({ budget, onClose = () => {}, userRoles = [], onApprove })
             {showApproveButton && (
               <button
                 onClick={() => onApprove(budget.id)}
-                className="px-4 py-2 rounded-md bg-green-600 text-white border border-green-700 text-sm hover:bg-green-700 transition duration-150"
+                disabled={processingId === budget.id}
+                className={`px-4 py-2 rounded-md bg-green-600 text-white border border-green-700 text-sm hover:bg-green-700 transition duration-150 ${processingId === budget.id ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 Aprobar Presupuesto
               </button>

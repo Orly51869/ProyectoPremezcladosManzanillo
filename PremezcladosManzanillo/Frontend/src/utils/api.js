@@ -38,9 +38,9 @@ export const checkSession = async () => {
   }
 };
 
-export const getDashboardStats = async () => {
+export const getDashboardStats = async (params = {}) => {
   try {
-    const response = await api.get("/api/dashboard/stats");
+    const response = await api.get("/api/dashboard/stats", { params });
     return response.data;
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
@@ -68,18 +68,18 @@ export const getExchangeRates = async () => {
   }
 };
 
-export const getCommercialReports = async () => {
-  const response = await api.get("/api/reports/commercial");
+export const getCommercialReports = async (params = {}) => {
+  const response = await api.get("/api/reports/commercial", { params });
   return response.data;
 };
 
-export const getAccountingReports = async () => {
-  const response = await api.get("/api/reports/accounting");
+export const getAccountingReports = async (params = {}) => {
+  const response = await api.get("/api/reports/accounting", { params });
   return response.data;
 };
 
-export const getOperationalReports = async () => {
-  const response = await api.get("/api/reports/operational");
+export const getOperationalReports = async (params = {}) => {
+  const response = await api.get("/api/reports/operational", { params });
   return response.data;
 };
 

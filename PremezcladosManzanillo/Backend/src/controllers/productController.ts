@@ -20,8 +20,18 @@ export const getProducts = async (req: Request, res: Response) => {
   }
 };
 
+// Helper to check permissions
+const checkAdminOrAccountant = (req: Request) => {
+  const roles = (req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[]) || [];
+  return roles.includes('Administrador') || roles.includes('Contable');
+};
+
 // Crear un nuevo producto
 export const createProduct = async (req: Request, res: Response) => {
+  if (!checkAdminOrAccountant(req)) {
+    return res.status(403).json({ error: 'Acceso denegado: Se requieren permisos de Administrador o Contable.' });
+  }
+
   try {
     const { name, description, price, type, category } = req.body;
     const authUserId = req.auth?.payload.sub as string;
@@ -32,6 +42,7 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     const newProduct = await prisma.product.create({
+      // ... (rest of createProduct logic)
       data: {
         name,
         description,
@@ -57,18 +68,23 @@ export const createProduct = async (req: Request, res: Response) => {
 
     res.status(201).json(newProduct);
   } catch (error) {
-    // ...
+    console.error("Error creating product:", error);
+    res.status(500).json({ error: "Error creating product" });
   }
 };
 
 // Actualizar un producto
 export const updateProduct = async (req: Request, res: Response) => {
+  if (!checkAdminOrAccountant(req)) {
+    return res.status(403).json({ error: 'Acceso denegado.' });
+  }
+
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub as string;
   const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
   try {
     const { name, description, price, type, category } = req.body;
-
+    // ...
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
@@ -96,15 +112,20 @@ export const updateProduct = async (req: Request, res: Response) => {
 
     res.json(updatedProduct);
   } catch (error) {
-    // ...
+    console.error("Error updating product:", error);
+    res.status(500).json({ error: "Error updating product" });
   }
 };
 
 // Eliminar un producto
 export const deleteProduct = async (req: Request, res: Response) => {
+  if (!checkAdminOrAccountant(req)) {
+    return res.status(403).json({ error: 'Acceso denegado.' });
+  }
   const { id } = req.params;
   const authUserId = req.auth?.payload.sub as string;
   const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
+  // ...
   try {
     const productToDelete = await prisma.product.findUnique({ where: { id } });
     await prisma.product.delete({ where: { id } });
@@ -118,7 +139,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
       details: `Producto eliminado: ${productToDelete?.name}`
     });
 
-    res.status(204).send(); 
+    res.status(204).send();
   } catch (error) {
     // ...
   }

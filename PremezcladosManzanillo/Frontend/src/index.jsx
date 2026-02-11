@@ -2,7 +2,8 @@
 // Punto de entrada de la aplicación React. Monta el componente `App` en el DOM.
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { Auth0Provider } from "@auth0/auth0-react";
+import { BrowserRouter } from "react-router-dom";
+import Auth0ProviderWithNavigate from "./components/Auth0ProviderWithNavigate";
 import "./styles.css";
 
 import App from "./App.jsx";
@@ -30,7 +31,7 @@ if (!auth0Domain || !auth0ClientId) {
     
     Luego reinicia el servidor de desarrollo.
   `;
-  
+
   root.render(
     <div style={{
       padding: '2rem',
@@ -48,17 +49,11 @@ if (!auth0Domain || !auth0ClientId) {
 } else {
   root.render(
     <StrictMode>
-      <Auth0Provider
-        domain={auth0Domain}
-        clientId={auth0ClientId}
-        authorizationParams={{
-          redirect_uri: window.location.origin,
-          audience: "https://premezclados-api.com",
-          scope: "openid profile email read:permissions"
-        }}
-      >
-        <App />
-      </Auth0Provider>
+      <BrowserRouter>
+        <Auth0ProviderWithNavigate>
+          <App />
+        </Auth0ProviderWithNavigate>
+      </BrowserRouter>
     </StrictMode>
   );
 }

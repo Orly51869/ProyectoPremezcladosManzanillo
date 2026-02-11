@@ -13,7 +13,6 @@ const ProductCatalog = ({ onAddProduct }) => {
   const tabs = [
     { id: 'ALL', label: 'Todos', icon: Menu },
     { id: 'CONCRETE', label: 'Concreto', icon: Layers },
-    { id: 'BLOCK', label: 'Bloques', icon: Box },
     { id: 'SERVICE', label: 'Servicios', icon: Wrench },
     { id: 'OTHER', label: 'Otros', icon: Plus },
   ];
@@ -78,11 +77,10 @@ const ProductCatalog = ({ onAddProduct }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-                  isActive 
-                    ? 'bg-brand-primary text-white shadow-md' 
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${isActive
+                    ? 'bg-brand-primary text-white shadow-md'
                     : 'bg-white dark:bg-dark-primary/40 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-primary/60'
-                }`}
+                  }`}
               >
                 <Icon size={12} />
                 {tab.label}
@@ -108,8 +106,8 @@ const ProductCatalog = ({ onAddProduct }) => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {categorizedProducts[categoryName].map(product => (
-                  <div 
-                    key={product.id} 
+                  <div
+                    key={product.id}
                     className="flex items-center justify-between gap-3 px-3 py-2 bg-gray-50/50 dark:bg-dark-primary/30 rounded-lg border border-transparent hover:border-brand-primary/20 transition-all group"
                     title={product.description || 'Sin descripción'}
                   >
@@ -121,7 +119,7 @@ const ProductCatalog = ({ onAddProduct }) => {
                         {formatCurrency(product.price)}
                       </div>
                     </div>
-                    
+
                     <button
                       onClick={() => onAddProduct(product)}
                       className="p-1.5 bg-white dark:bg-dark-surface text-brand-primary shadow-sm rounded-md border border-gray-100 dark:border-gray-800 hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-all transform active:scale-90"

@@ -32,7 +32,7 @@ const DashboardNavbar = () => {
 
   // Obtener roles del usuario desde Auth0
   const userRoles = (user?.['https://premezcladomanzanillo.com/roles'] || []).map(r => r.toLowerCase());
-  const isOnlyUsuario = userRoles.includes('usuario') && !userRoles.includes('administrador') && !userRoles.includes('comercial') && !userRoles.includes('contable') && !userRoles.includes('operaciones');
+  const isOnlyUsuario = userRoles.includes('usuario') && !userRoles.includes('administrador') && !userRoles.includes('comercial') && !userRoles.includes('contable');
 
   // Polling para notificaciones
   useEffect(() => {
@@ -74,9 +74,9 @@ const DashboardNavbar = () => {
     { path: "/budgets", icon: FileSpreadsheet, label: "Presupuestos", requiredRoles: ["Administrador", "Comercial", "Usuario"] },
     { path: "/products-management", icon: Package, label: "Productos", requiredRoles: ["Administrador", "Contable"] },
     { path: "/payments", icon: CreditCard, label: "Comprobantes", requiredRoles: ["Administrador", "Contable", "Usuario"] },
-    { path: "/invoices", icon: Receipt, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Operaciones", "Usuario"] },
+    { path: "/invoices", icon: Receipt, label: "Facturas", requiredRoles: ["Administrador", "Contable", "Usuario"] },
     { path: "/customize", icon: Palette, label: "Personalizar", requiredRoles: ["Administrador"] },
-    { path: "/reports", icon: PieChart, label: "Reportes", requiredRoles: ["Administrador", "Contable", "Comercial", "Operaciones"] },
+    { path: "/reports", icon: PieChart, label: "Reportes", requiredRoles: ["Administrador", "Contable", "Comercial"] },
     { path: "/settings", icon: Settings, label: "Configuración", requiredRoles: ["Administrador"] },
     { path: "/admin/roles", icon: UserCog, label: "Roles", requiredRoles: ["Administrador"] },
   ];
