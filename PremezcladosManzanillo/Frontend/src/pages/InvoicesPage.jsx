@@ -8,11 +8,7 @@ import InvoicePDF from '../sections/dashboard/InvoicePDF';
 
 const InvoicesPage = () => {
   const { user } = useAuth0();
-  const rawRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
-  const userRoles = [...rawRoles];
-  if (user?.email === 'orlandojvelasquezt14@gmail.com' && !userRoles.includes('Administrador')) {
-    userRoles.push('Administrador');
-  }
+  const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
 
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);

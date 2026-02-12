@@ -27,11 +27,10 @@ const UserAvatar = ({ user }) => {
 const AdminRolesPage = () => {
   const { user } = useAuth0();
 
-  const rawRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
-  const roles = [...rawRoles];
-  if (user?.email === 'orlandojvelasquezt14@gmail.com' && !roles.includes('Administrador')) {
-    roles.push('Administrador');
-  }
+  // DEBUG: Check user payload in frontend
+  console.log('AdminRolesPage User:', user);
+  const roles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+  console.log('AdminRolesPage Roles:', roles);
 
   const [users, setUsers] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);

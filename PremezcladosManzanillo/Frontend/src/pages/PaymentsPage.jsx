@@ -8,11 +8,7 @@ import ReceiptModal from "../sections/dashboard/ReceiptModal.jsx";
 
 const PaymentsPage = () => {
   const { user } = useAuth0();
-  const rawRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
-  const userRoles = [...rawRoles];
-  if (user?.email === 'orlandojvelasquezt14@gmail.com' && !userRoles.includes('Administrador')) {
-    userRoles.push('Administrador');
-  }
+  const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
   const currentUserId = user?.sub;
 
   const [payments, setPayments] = useState([]);

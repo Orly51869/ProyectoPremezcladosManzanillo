@@ -7,11 +7,7 @@ import ProductList from "../sections/dashboard/ProductList";
 
 const ProductsPage = () => {
   const { user } = useAuth0();
-  const rawRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
-  const userRoles = [...rawRoles];
-  if (user?.email === 'orlandojvelasquezt14@gmail.com' && !userRoles.includes('Administrador')) {
-    userRoles.push('Administrador');
-  }
+  const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);

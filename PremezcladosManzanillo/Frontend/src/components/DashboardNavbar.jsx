@@ -40,12 +40,6 @@ const DashboardNavbar = () => {
   // FIX: Usar roles reales de Auth0. Si no hay roles, por defecto es vacio (o 'usuario' si prefieres fallback)
   const userRoles = rawRoles.length > 0 ? rawRoles.map(r => r.toLowerCase()) : [];
 
-  // OWNER OVERRIDE: Force Admin for specific owner email if logic fails
-  if (user?.email === 'orlandojvelasquezt14@gmail.com' && !userRoles.includes('administrador')) {
-    userRoles.push('administrador');
-    console.log('👑 Owner Override Active: Administrador role forced.');
-  }
-
   const isOnlyUsuario = userRoles.includes('usuario') && !userRoles.includes('administrador') && !userRoles.includes('comercial') && !userRoles.includes('contable');
 
   // Polling para notificaciones

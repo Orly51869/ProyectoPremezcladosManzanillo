@@ -52,9 +52,6 @@ const Reports = () => {
   useEffect(() => {
     const rawRoles = (user?.['https://premezcladomanzanillo.com/roles'] || []);
     const roles = rawRoles.map(r => r.toLowerCase());
-    if (user?.email === 'orlandojvelasquezt14@gmail.com' && !roles.includes('administrador')) {
-      roles.push('administrador');
-    }
     if (roles.includes('contable')) setActiveTab('contabilidad');
     else setActiveTab('comercial');
   }, [user]);

@@ -67,7 +67,6 @@ const ProtectedRoute = () => {
 
   // Obtener roles del usuario desde Auth0
   // const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
-  // if (user?.email === 'orlandojvelasquezt14@gmail.com' && !userRoles.includes('Administrador')) userRoles.push('Administrador');
 
   // Log para depurar el estado de la ruta protegida
   // console.log(`[ProtectedRoute] isLoading: ${isLoading}, isAuthenticated: ${isAuthenticated}, userRoles: ${userRoles}`);

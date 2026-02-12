@@ -27,11 +27,7 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
   const { formatPrice, currency, exchangeRate } = useCurrency();
   const { user } = useAuth0();
 
-  const rawRoles = (user?.['https://premezcladomanzanillo.com/roles'] || []);
-  const userRoles = rawRoles.map(r => r.toLowerCase());
-  if (user?.email === 'orlandojvelasquezt14@gmail.com' && !userRoles.includes('administrador')) {
-    userRoles.push('administrador');
-  }
+  const userRoles = (user?.['https://premezcladomanzanillo.com/roles'] || []).map(r => r.toLowerCase());
   const hidePrices = false;
 
   if (!budget) return null;

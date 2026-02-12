@@ -7,11 +7,7 @@ import Modal from './Modal'; // Assuming generic Modal exists
 const CurrencyToggle = () => {
     const { currency, exchangeRate, toggleCurrency, updateRateManual, isManual, loading, resetToOfficial, refreshRates } = useCurrency();
     const { user } = useAuth0();
-    const rawRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
-    const userRoles = [...rawRoles];
-    if (user?.email === 'orlandojvelasquezt14@gmail.com' && !userRoles.includes('Administrador')) {
-        userRoles.push('Administrador');
-    }
+    const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
     const canEditRate = userRoles.includes('Administrador') || userRoles.includes('Contable');
 
     const [isEditing, setIsEditing] = useState(false);
