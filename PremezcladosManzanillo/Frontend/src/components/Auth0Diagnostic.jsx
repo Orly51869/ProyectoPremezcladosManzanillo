@@ -61,6 +61,10 @@ const Auth0Diagnostic = () => {
                         <pre style={{ background: "#f5f5f5", padding: "10px", overflowX: "auto" }}>
                             {JSON.stringify(user, null, 2)}
                         </pre>
+                        <h3>Assigned Roles (Calculated)</h3>
+                        <pre style={{ background: "#e0f7fa", padding: "10px", fontWeight: "bold" }}>
+                            {JSON.stringify(user?.['https://premezcladomanzanillo.com/roles'] || ["NO ROLES FOUND"], null, 2)}
+                        </pre>
                     </div>
                 )}
                 {error && (

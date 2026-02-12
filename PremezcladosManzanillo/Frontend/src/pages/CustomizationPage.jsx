@@ -16,7 +16,11 @@ const CustomizationPage = () => {
   const [message, setMessage] = useState(null);
 
   // Protection: Only Administrators
-  const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
+  const rawRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
+  const userRoles = [...rawRoles];
+  if (user?.email === 'orlandojvelasquezt14@gmail.com' && !userRoles.includes('Administrador')) {
+    userRoles.push('Administrador');
+  }
   if (!userRoles.includes('Administrador')) {
     return <Navigate to="/dashboard" replace />;
   }

@@ -36,23 +36,23 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
       }
     }
 
+    // 3. Determinar rol
     const authRoles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] | undefined;
-
-    // Determine role from Auth0, but fallback to existing DB role if Auth0 roles are empty/undefined
-    let determinedRole = 'Usuario';
+    let determinedRole = user?.role || 'Usuario'; // Por defecto, conservar lo que ya tiene, o 'Usuario' si es nuevo
 
     if (authRoles && authRoles.length > 0) {
       determinedRole = authRoles[0];
+      console.log(`[Provisioning] Rol obtenido del Token: ${determinedRole}`);
     } else {
-      // Try to fetch roles from API if missing in token
+      // Si no viene en el token, intentar consultar la API de Auth0
+      console.log('[Provisioning] Rol no encontrado en Token, consultando API...');
       const apiRoles = await fetchAuth0UserRoles(authId);
+
       if (apiRoles && apiRoles.length > 0) {
         determinedRole = apiRoles[0].name;
-        console.log(`[Provisioning] Fetched role from Auth0 API: ${determinedRole}`);
-      } else if (user && user.role === 'Administrador') {
-        // Fallback to existing DB role only if API didn't return anything (or failed silently) and user was Admin. 
-        // Ideally we should trust API return of [] means no role aka Usuario. But for safety during migration:
-        determinedRole = 'Administrador';
+        console.log(`[Provisioning] Rol obtenido de API Auth0: ${determinedRole}`);
+      } else {
+        console.log('[Provisioning] No se encontraron roles en API. Manteniendo rol actual:', determinedRole);
       }
     }
 

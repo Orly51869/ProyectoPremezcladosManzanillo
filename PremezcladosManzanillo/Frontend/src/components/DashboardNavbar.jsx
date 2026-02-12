@@ -37,9 +37,15 @@ const DashboardNavbar = () => {
   // DEBUG: Ver qué está llegando realmente
   console.log("Auth0 Roles Received:", rawRoles);
 
-  // FIX: Si no hay roles (Auth0 nuevo/mal configurado), asumir Administrador para NO bloquear
-  // FORCE: Forzamos administrador siempre para evitar el parpadeo mientras se arregla el backend de Auth0
-  const userRoles = ['administrador']; // rawRoles.length > 0 ? rawRoles.map(r => r.toLowerCase()) : ['administrador'];
+  // FIX: Usar roles reales de Auth0. Si no hay roles, por defecto es vacio (o 'usuario' si prefieres fallback)
+  const userRoles = rawRoles.length > 0 ? rawRoles.map(r => r.toLowerCase()) : [];
+
+  // OWNER OVERRIDE: Force Admin for specific owner email if logic fails
+  if (user?.email === 'orlandojvelasquezt14@gmail.com' && !userRoles.includes('administrador')) {
+    userRoles.push('administrador');
+    console.log('👑 Owner Override Active: Administrador role forced.');
+  }
+
   const isOnlyUsuario = userRoles.includes('usuario') && !userRoles.includes('administrador') && !userRoles.includes('comercial') && !userRoles.includes('contable');
 
   // Polling para notificaciones

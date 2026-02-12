@@ -26,6 +26,13 @@ const UserAvatar = ({ user }) => {
 
 const AdminRolesPage = () => {
   const { user } = useAuth0();
+
+  const rawRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+  const roles = [...rawRoles];
+  if (user?.email === 'orlandojvelasquezt14@gmail.com' && !roles.includes('Administrador')) {
+    roles.push('Administrador');
+  }
+
   const [users, setUsers] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -297,8 +304,8 @@ const AdminRolesPage = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${u.roles && u.roles.length > 0
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                       }`}>
                       {u.roles && u.roles.length > 0 ? u.roles.join(', ') : 'Sin rol'}
                     </span>
@@ -329,8 +336,8 @@ const AdminRolesPage = () => {
                         onClick={() => handleDeleteUser(u.user_id, u.name)}
                         disabled={updating === u.user_id || u.email === user.email}
                         className={`p-2 rounded-lg transition-colors ${u.email === user.email
-                            ? 'text-gray-300 cursor-not-allowed'
-                            : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                          ? 'text-gray-300 cursor-not-allowed'
+                          : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
                           }`}
                         title={u.email === user.email ? "No puedes eliminarte a ti mismo" : "Eliminar usuario definitivamente"}
                       >
@@ -443,8 +450,8 @@ const AdminRolesPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${log.action === 'DELETE' || log.action === 'REJECT' ? 'bg-red-100 text-red-700' :
-                            log.action === 'CREATE' || log.action === 'APPROVE' || log.action === 'VALIDATE' ? 'bg-green-100 text-green-700' :
-                              'bg-blue-100 text-blue-700'
+                          log.action === 'CREATE' || log.action === 'APPROVE' || log.action === 'VALIDATE' ? 'bg-green-100 text-green-700' :
+                            'bg-blue-100 text-blue-700'
                           }`}>
                           {log.action}
                         </span>

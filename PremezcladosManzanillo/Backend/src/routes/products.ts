@@ -2,7 +2,7 @@ import { Router } from "express";
 import * as productController from "../controllers/productController";
 import * as productPriceController from "../controllers/productPriceController";
 import { jwtCheck } from "../middleware/jwtCheck";
-// import { checkRole } from "../middleware/roleCheck"; // Este middleware se creará más adelante
+import { checkRole } from "../middleware/checkRole";
 
 const router = Router();
 
@@ -13,7 +13,7 @@ router.get("/", jwtCheck, productController.getProducts);
 router.post(
   "/",
   jwtCheck,
-  // checkRole(["Administrador", "Contable"]),
+  checkRole(["Administrador", "Contable"]),
   productController.createProduct
 );
 
@@ -21,7 +21,7 @@ router.post(
 router.put(
   "/:id",
   jwtCheck,
-  // checkRole(["Administrador", "Contable"]),
+  checkRole(["Administrador", "Contable"]),
   productController.updateProduct
 );
 
@@ -29,7 +29,7 @@ router.put(
 router.delete(
   "/:id",
   jwtCheck,
-  // checkRole(["Administrador", "Contable"]),
+  checkRole(["Administrador", "Contable"]),
   productController.deleteProduct
 );
 
