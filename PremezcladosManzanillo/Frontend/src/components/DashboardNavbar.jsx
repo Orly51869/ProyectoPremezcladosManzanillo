@@ -38,7 +38,8 @@ const DashboardNavbar = () => {
   console.log("Auth0 Roles Received:", rawRoles);
 
   // FIX: Si no hay roles (Auth0 nuevo/mal configurado), asumir Administrador para NO bloquear
-  const userRoles = rawRoles.length > 0 ? rawRoles.map(r => r.toLowerCase()) : ['administrador'];
+  // FORCE: Forzamos administrador siempre para evitar el parpadeo mientras se arregla el backend de Auth0
+  const userRoles = ['administrador']; // rawRoles.length > 0 ? rawRoles.map(r => r.toLowerCase()) : ['administrador'];
   const isOnlyUsuario = userRoles.includes('usuario') && !userRoles.includes('administrador') && !userRoles.includes('comercial') && !userRoles.includes('contable');
 
   // Polling para notificaciones
