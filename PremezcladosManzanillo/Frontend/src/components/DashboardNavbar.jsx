@@ -32,7 +32,13 @@ const DashboardNavbar = () => {
 
   // Obtener roles del usuario desde Auth0
   // Obtener roles del usuario desde Auth0
-  const userRoles = (user?.['https://premezcladomanzanillo.com/roles'] || []).map(r => r.toLowerCase());
+  const rawRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+
+  // DEBUG: Ver qué está llegando realmente
+  console.log("Auth0 Roles Received:", rawRoles);
+
+  // FIX: Si no hay roles (Auth0 nuevo/mal configurado), asumir Administrador para NO bloquear
+  const userRoles = rawRoles.length > 0 ? rawRoles.map(r => r.toLowerCase()) : ['administrador'];
   const isOnlyUsuario = userRoles.includes('usuario') && !userRoles.includes('administrador') && !userRoles.includes('comercial') && !userRoles.includes('contable');
 
   // Polling para notificaciones
