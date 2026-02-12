@@ -102,7 +102,6 @@ const HomepageNavbar = () => {
               </Link>
               <button
                 onClick={() => {
-                  console.log('[Auth-Action] Attempting to log out (Desktop).');
                   logout({ logoutParams: { returnTo: window.location.origin } });
                 }}
                 type="button"
@@ -188,7 +187,6 @@ const HomepageNavbar = () => {
                 </Link>
                 <button
                   onClick={() => {
-                    console.log('[Auth-Action] Attempting to log out (Mobile).');
                     logout({ logoutParams: { returnTo: window.location.origin } });
                     setIsMobileMenuOpen(false);
                   }}
@@ -204,7 +202,6 @@ const HomepageNavbar = () => {
               <>
                 <button
                   onClick={() => {
-                    console.log('[Auth-Action] Attempting to log in (Mobile).');
                     loginWithRedirect({ appState: { returnTo: '/budgets' } });
                     setIsMobileMenuOpen(false);
                   }}
@@ -215,7 +212,6 @@ const HomepageNavbar = () => {
                 </button>
                 <button
                   onClick={() => {
-                    console.log('[Auth-Action] Attempting to sign up (Mobile).');
                     loginWithRedirect({ appState: { returnTo: '/budgets' }, authorizationParams: { screen_hint: 'signup' } });
                     setIsMobileMenuOpen(false);
                   }}

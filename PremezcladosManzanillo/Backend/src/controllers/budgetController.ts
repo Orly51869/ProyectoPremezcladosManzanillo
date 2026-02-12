@@ -129,7 +129,7 @@ export const approveBudget = async (req: Request, res: Response) => {
   const authUserId = req.auth?.payload.sub as string;
   const userName = (req as any).dbUser?.name || (req.auth?.payload as any)?.name || 'Administrador';
   const roles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] || [];
-  console.log('ApproveBudget: User roles:', roles, 'User ID:', authUserId);
+
 
   if (!authUserId) {
     return res.status(401).json({ error: 'Authenticated user ID not found.' });
@@ -432,14 +432,7 @@ export const updateBudget = async (req: Request, res: Response) => {
     // Check ownership by ID OR Email (robustness)
     const isOwner = existingBudget.creatorId === authUserId || (userEmail && existingBudget.creator?.email === userEmail);
 
-    console.log('[DEBUG-UPDATE] Budget ID:', id);
-    console.log('[DEBUG-UPDATE] Auth User ID:', authUserId);
-    console.log('[DEBUG-UPDATE] User Email:', userEmail);
-    console.log('[DEBUG-UPDATE] Budget Creator ID:', existingBudget.creatorId);
-    console.log('[DEBUG-UPDATE] Budget Creator Email:', existingBudget.creator?.email);
-    console.log('[DEBUG-UPDATE] Is Owner:', isOwner);
-    console.log('[DEBUG-UPDATE] Roles:', roles);
-    console.log('[DEBUG-UPDATE] Status:', existingBudget.status);
+
 
     // Logic:
     // 1. If PENDING -> Owner OR Privileged can edit.

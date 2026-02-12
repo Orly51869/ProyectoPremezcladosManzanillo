@@ -39,11 +39,9 @@ import BudgetBuilderPage from "./pages/BudgetBuilderPage.jsx";
 
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
 import AuthenticatedApiProvider from "./components/AuthenticatedApiProvider.jsx"; // Importar el nuevo provider
-// import ChatWidget from "./components/ChatWidget.jsx";
 import ScrollToTop from "./components/ScrollToTop";
 import CustomizationPage from "./pages/CustomizationPage.jsx";
-import Auth0Diagnostic from "./components/Auth0Diagnostic.jsx"; // Diagnostic page
-import LoginPage from "./pages/LoginPage.jsx"; // New Login Page
+import LoginPage from "./pages/LoginPage.jsx";
 
 // Componente para manejar el scroll a las anclas (sin cambios)
 const ScrollToAnchor = () => {
@@ -64,12 +62,6 @@ const ScrollToAnchor = () => {
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
   const location = useLocation();
-
-  // Obtener roles del usuario desde Auth0
-  // const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
-
-  // Log para depurar el estado de la ruta protegida
-  // console.log(`[ProtectedRoute] isLoading: ${isLoading}, isAuthenticated: ${isAuthenticated}, userRoles: ${userRoles}`);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -115,10 +107,8 @@ const App = () => {
         <ScrollToAnchor />
         {/* <ChatWidget /> */}
         <Routes>
-          {/* Rutas Públicas */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/auth-debug" element={<Auth0Diagnostic />} /> {/* Diagnostic Route */}
-          <Route path="/login" element={<LoginPage />} /> {/* New Login Route */}
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/productos" element={<ProductsCatalogPage />} />
           <Route path="/productos/estructurales" element={<StructuralConcretesPage />} />
           <Route path="/productos/pavimentos" element={<PavementConcretesPage />} />
