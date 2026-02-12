@@ -31,9 +31,8 @@ const DashboardNavbar = () => {
   const [imgError, setImgError] = useState(false);
 
   // Obtener roles del usuario desde Auth0
-  // FIX: Si no hay roles (Auth0 nuevo), asumir Administrador por defecto para no bloquear la UI
-  const rawRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
-  const userRoles = rawRoles.length > 0 ? rawRoles.map(r => r.toLowerCase()) : ['administrador'];
+  // Obtener roles del usuario desde Auth0
+  const userRoles = (user?.['https://premezcladomanzanillo.com/roles'] || []).map(r => r.toLowerCase());
   const isOnlyUsuario = userRoles.includes('usuario') && !userRoles.includes('administrador') && !userRoles.includes('comercial') && !userRoles.includes('contable');
 
   // Polling para notificaciones
