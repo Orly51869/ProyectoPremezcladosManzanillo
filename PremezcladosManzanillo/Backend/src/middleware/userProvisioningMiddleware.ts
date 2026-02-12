@@ -32,7 +32,6 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
       const auth0User = await fetchAuth0User(authId);
       if (auth0User) {
         currentNameFromAuth = auth0User.name || auth0User.nickname || auth0User.user_metadata?.full_name || currentNameFromAuth;
-        console.log(`[Provisioning] Fetched better name from Auth0 API: ${currentNameFromAuth}`);
       }
     }
 
@@ -42,17 +41,12 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
 
     if (authRoles && authRoles.length > 0) {
       determinedRole = authRoles[0];
-      console.log(`[Provisioning] Rol obtenido del Token: ${determinedRole}`);
     } else {
       // Si no viene en el token, intentar consultar la API de Auth0
-      console.log('[Provisioning] Rol no encontrado en Token, consultando API...');
       const apiRoles = await fetchAuth0UserRoles(authId);
 
       if (apiRoles && apiRoles.length > 0) {
         determinedRole = apiRoles[0].name;
-        console.log(`[Provisioning] Rol obtenido de API Auth0: ${determinedRole}`);
-      } else {
-        console.log('[Provisioning] No se encontraron roles en API. Manteniendo rol actual:', determinedRole);
       }
     }
 

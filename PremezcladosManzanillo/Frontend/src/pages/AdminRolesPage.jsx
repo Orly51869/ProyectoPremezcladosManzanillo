@@ -26,11 +26,7 @@ const UserAvatar = ({ user }) => {
 
 const AdminRolesPage = () => {
   const { user } = useAuth0();
-
-  // DEBUG: Check user payload in frontend
-  console.log('AdminRolesPage User:', user);
   const roles = user?.['https://premezcladomanzanillo.com/roles'] || [];
-  console.log('AdminRolesPage Roles:', roles);
 
   const [users, setUsers] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);

@@ -7,9 +7,10 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
   // Also check the user object populated by userProvisioningMiddleware
   const dbUser = (req as any).dbUser;
 
-  console.log('[requireAdmin] Checking access for:', user?.sub);
-  console.log('[requireAdmin] Roles in Token:', roles);
-  console.log('[requireAdmin] DB User Role:', dbUser?.role);
+  // const dbUser = (req as any).dbUser; // Already retrieved above
+  // console.log('[requireAdmin] Checking access for:', user?.sub); // Removed
+  // console.log('[requireAdmin] Roles in Token:', roles); // Removed
+
 
   if (roles.includes('Administrador') || dbUser?.role === 'Administrador') {
     next();

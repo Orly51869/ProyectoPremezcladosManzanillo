@@ -31,11 +31,7 @@ const DashboardNavbar = () => {
   const [imgError, setImgError] = useState(false);
 
   // Obtener roles del usuario desde Auth0
-  // Obtener roles del usuario desde Auth0
   const rawRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
-
-  // DEBUG: Ver qué está llegando realmente
-  console.log("Auth0 Roles Received:", rawRoles);
 
   // FIX: Usar roles reales de Auth0. Si no hay roles, por defecto es vacio (o 'usuario' si prefieres fallback)
   const userRoles = rawRoles.length > 0 ? rawRoles.map(r => r.toLowerCase()) : [];
