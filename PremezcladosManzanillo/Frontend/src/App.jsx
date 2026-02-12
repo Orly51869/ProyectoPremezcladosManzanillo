@@ -43,6 +43,7 @@ import AuthenticatedApiProvider from "./components/AuthenticatedApiProvider.jsx"
 import ScrollToTop from "./components/ScrollToTop";
 import CustomizationPage from "./pages/CustomizationPage.jsx";
 import Auth0Diagnostic from "./components/Auth0Diagnostic.jsx"; // Diagnostic page
+import LoginPage from "./pages/LoginPage.jsx"; // New Login Page
 
 // Componente para manejar el scroll a las anclas (sin cambios)
 const ScrollToAnchor = () => {
@@ -118,6 +119,7 @@ const App = () => {
           {/* Rutas Públicas */}
           <Route path="/" element={<HomePage />} />
           <Route path="/auth-debug" element={<Auth0Diagnostic />} /> {/* Diagnostic Route */}
+          <Route path="/login" element={<LoginPage />} /> {/* New Login Route */}
           <Route path="/productos" element={<ProductsCatalogPage />} />
           <Route path="/productos/estructurales" element={<StructuralConcretesPage />} />
           <Route path="/productos/pavimentos" element={<PavementConcretesPage />} />

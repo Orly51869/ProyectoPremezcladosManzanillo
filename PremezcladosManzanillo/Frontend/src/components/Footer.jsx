@@ -58,7 +58,7 @@ const Footer = () => {
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Clientes</h3>
                         <ul className="space-y-2">
-                            <li><Link to="/dashboard" className="text-sm text-gray-600 dark:text-gray-400 hover:text-brand-primary transition">Acceso a Clientes</Link></li>
+                            <li><Link to="/login?returnTo=/dashboard" className="text-sm text-gray-600 dark:text-gray-400 hover:text-brand-primary transition">Acceso a Clientes</Link></li>
                             <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-brand-primary transition">Preguntas Frecuentes</a></li>
                             <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-brand-primary transition">Términos y Condiciones</a></li>
                         </ul>
