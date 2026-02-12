@@ -90,7 +90,7 @@ const ClientsPage = () => {
       console.error('Error saving client:', err);
       if (err.response && err.response.status === 409) {
         setServerError(err.response.data.error); // Establecer error específico del servidor
-        console.log("Server error set:", err.response.data.error); // Añadir log en consola para depuración
+
       } else {
         setError('Error al guardar el cliente. Por favor, inténtalo de nuevo.');
       }

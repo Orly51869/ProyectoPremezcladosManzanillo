@@ -56,7 +56,7 @@ const BudgetDetail = ({ budget, onClose = () => { }, userRoles = [], onApprove, 
   const canApprove = userRoles.includes('Administrador') || userRoles.includes('Contable');
   const showApproveButton = canApprove && budget.status === 'PENDING';
 
-  console.log('Inspeccionando presupuesto en BudgetDetail:', budget);
+
 
   return (
     <div

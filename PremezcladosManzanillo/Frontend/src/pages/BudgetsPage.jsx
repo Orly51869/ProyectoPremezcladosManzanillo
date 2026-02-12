@@ -313,7 +313,6 @@ const BudgetsPage = () => {
         onApprove={handleApproveBudget}
         onReject={handleRejectBudget}
         onViewDetail={handleViewDetail}
-        onViewDetail={handleViewDetail}
         userRoles={userRoles}
         currentUserId={user?.sub}
         processingId={processingId}

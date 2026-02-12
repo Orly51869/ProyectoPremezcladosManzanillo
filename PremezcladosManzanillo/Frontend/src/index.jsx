@@ -14,9 +14,7 @@ const root = createRoot(document.getElementById("root"));
 const auth0Domain = import.meta.env.VITE_REACT_APP_AUTH0_DOMAIN;
 const auth0ClientId = import.meta.env.VITE_REACT_APP_AUTH0_CLIENT_ID;
 
-// Log para verificar las variables de entorno de Auth0
-console.log("Auth0 Domain:", auth0Domain);
-console.log("Auth0 Client ID:", auth0ClientId);
+
 
 // Validar que las variables de entorno estén definidas
 if (!auth0Domain || !auth0ClientId) {

@@ -96,9 +96,7 @@ const DashboardNavbar = () => {
   });
 
   return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
+    <nav
       className="fixed w-full top-0 z-50 bg-white/90 dark:bg-dark-primary backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm"
     >
       <div className="max-w-[1920px] mx-auto px-4 lg:px-6">
@@ -199,7 +197,7 @@ const DashboardNavbar = () => {
                       <span>Panel Principal</span>
                     </Link>
 
-                    {userRoles.includes("Administrador") && (
+                    {userRoles.includes("administrador") && (
                       <Link to="/settings" className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 rounded-lg hover:bg-brand-primary hover:text-white dark:hover:bg-dark-btn transition-colors">
                         <Settings className="w-4 h-4" />
                         <span>Configuración</span>
@@ -263,7 +261,7 @@ const DashboardNavbar = () => {
           )}
         </AnimatePresence>
       </div>
-    </motion.nav>
+    </nav>
   );
 };
 

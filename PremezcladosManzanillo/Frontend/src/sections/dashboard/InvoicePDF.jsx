@@ -98,7 +98,7 @@ const InvoicePDF = ({ invoice, className = '', small = false }) => {
         // Intentar obtener items de multiple fuentes posibles (budget.items, budget.products, o simulated products)
         const items = budget.products || budget.items || [];
 
-        console.log("Items encontrados para PDF:", items); // Debug
+
 
         const tableRows = items.map(item => {
             // Manejar estructura anidada item.product o estructura plana item
