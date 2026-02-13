@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import useUserRoles from "../hooks/useUserRoles";
 import api from "../utils/api";
 import { Package, PlusCircle, List, LayoutGrid, Search } from "lucide-react";
 import ProductFormModal from "../sections/dashboard/ProductFormModal";
@@ -7,7 +8,7 @@ import ProductList from "../sections/dashboard/ProductList";
 
 const ProductsPage = () => {
   const { user } = useAuth0();
-  const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
+  const { rawRoles: userRoles } = useUserRoles();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import useUserRoles from "../hooks/useUserRoles";
 import api from "../utils/api";
 import { FileText, List, LayoutGrid, Search } from "lucide-react";
 import PaymentsList from "../sections/dashboard/PaymentsList.jsx";
@@ -8,7 +9,7 @@ import ReceiptModal from "../sections/dashboard/ReceiptModal.jsx";
 
 const PaymentsPage = () => {
   const { user } = useAuth0();
-  const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
+  const { rawRoles: userRoles } = useUserRoles();
   const currentUserId = user?.sub;
 
   const [payments, setPayments] = useState([]);

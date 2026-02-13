@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import useUserRoles from '../hooks/useUserRoles';
 import api from '../utils/api';
 import { FileText, Download, Upload, X, Eye, Trash2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
@@ -8,7 +9,7 @@ import InvoicePDF from '../sections/dashboard/InvoicePDF';
 
 const InvoicesPage = () => {
   const { user } = useAuth0();
-  const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+  const { rawRoles: userRoles } = useUserRoles();
 
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);

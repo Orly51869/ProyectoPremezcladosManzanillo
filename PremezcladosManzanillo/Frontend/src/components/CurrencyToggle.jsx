@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
 import { useAuth0 } from '@auth0/auth0-react';
+import useUserRoles from '../hooks/useUserRoles';
 import { RefreshCw, Edit2, Check, X } from 'lucide-react';
 import Modal from './Modal'; // Assuming generic Modal exists
 
 const CurrencyToggle = () => {
     const { currency, exchangeRate, toggleCurrency, updateRateManual, isManual, loading, resetToOfficial, refreshRates } = useCurrency();
     const { user } = useAuth0();
-    const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+    const { rawRoles: userRoles } = useUserRoles();
     const canEditRate = userRoles.includes('Administrador') || userRoles.includes('Contable');
 
     const [isEditing, setIsEditing] = useState(false);

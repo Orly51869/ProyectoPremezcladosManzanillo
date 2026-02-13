@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import useUserRoles from "../hooks/useUserRoles";
 import { useSearchParams, Navigate, useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import { FileText, PlusCircle, List, LayoutGrid, Search } from "lucide-react";
@@ -10,7 +11,7 @@ import { format } from "date-fns";
 
 const BudgetsPage = () => {
   const { user } = useAuth0();
-  const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
+  const { rawRoles: userRoles } = useUserRoles();
 
   if (userRoles.includes('Contable') && !userRoles.includes('Administrador')) {
     return <Navigate to="/dashboard" replace />;

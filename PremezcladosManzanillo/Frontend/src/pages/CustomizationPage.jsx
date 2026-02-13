@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Image as ImageIcon, Layout, Save, Plus, Trash2, RefreshCcw, Pencil, FileText } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { useAuth0 } from "@auth0/auth0-react";
+import useUserRoles from '../hooks/useUserRoles';
 import api from '../utils/api';
 import { useSettings } from '../context/SettingsContext';
 import { productCategories } from '../mock/data';
@@ -16,7 +17,7 @@ const CustomizationPage = () => {
   const [message, setMessage] = useState(null);
 
   // Protection: Only Administrators
-  const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
+  const { rawRoles: userRoles } = useUserRoles();
   if (!userRoles.includes('Administrador')) {
     return <Navigate to="/dashboard" replace />;
   }

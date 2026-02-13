@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
+import useUserRoles from '../hooks/useUserRoles';
 import api from '../utils/api';
 import ProductCatalog from '../sections/dashboard/ProductCatalog';
 import CurrentBudgetSidebar from '../sections/dashboard/CurrentBudgetSidebar';
@@ -9,7 +10,7 @@ const BudgetBuilderPage = () => {
   const { id: budgetId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth0();
-  const userRoles = user?.["https://premezcladomanzanillo.com/roles"] || [];
+  const { rawRoles: userRoles } = useUserRoles();
 
   const [budget, setBudget] = useState(null);
   const [items, setItems] = useState([]);

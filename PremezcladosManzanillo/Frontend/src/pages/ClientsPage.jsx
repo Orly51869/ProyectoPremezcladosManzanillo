@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import useUserRoles from '../hooks/useUserRoles';
 import api from '../utils/api';
 import { PlusCircle, Users, List, LayoutGrid, Search } from 'lucide-react';
 import ClientFormModal from "../sections/dashboard/ClientFormModal";
@@ -7,7 +8,7 @@ import ClientList from '../sections/dashboard/ClientList.jsx';
 
 const ClientsPage = () => {
   const { user } = useAuth0();
-  const userRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+  const { rawRoles: userRoles } = useUserRoles();
 
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);

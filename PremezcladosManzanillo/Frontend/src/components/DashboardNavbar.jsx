@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from '../utils/api';
+import useUserRoles from '../hooks/useUserRoles';
 import {
   LayoutDashboard,
   Users,
@@ -30,13 +31,9 @@ const DashboardNavbar = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [imgError, setImgError] = useState(false);
 
-  // Obtener roles del usuario desde Auth0
-  const rawRoles = user?.['https://premezcladomanzanillo.com/roles'] || [];
+  // Roles del usuario con fallback centralizado
+  const { userRoles, isOnlyUsuario } = useUserRoles();
 
-  // FIX: Usar roles reales de Auth0. Si no hay roles, por defecto es vacio (o 'usuario' si prefieres fallback)
-  const userRoles = rawRoles.length > 0 ? rawRoles.map(r => r.toLowerCase()) : [];
-
-  const isOnlyUsuario = userRoles.includes('usuario') && !userRoles.includes('administrador') && !userRoles.includes('comercial') && !userRoles.includes('contable');
 
   // Polling para notificaciones
   useEffect(() => {

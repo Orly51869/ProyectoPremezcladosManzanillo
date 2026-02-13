@@ -35,19 +35,36 @@ export const userProvisioningMiddleware = async (req: Request, res: Response, ne
       }
     }
 
-    // 3. Determinar rol
+    // 3. Determinar rol del usuario
+    // ──────────────────────────────────────────────────────────────────
+    // Estrategia de resolución de rol (en orden de prioridad):
+    //   1. Token JWT (claim personalizado inyectado por Auth0 Action)
+    //   2. Auth0 Management API (consulta directa a los roles asignados)
+    //   3. Rol existente en la base de datos local (si el usuario ya existe)
+    //   4. Fallback por defecto: 'Usuario' (para nuevos registros)
+    //
+    // ⚡ Todos los usuarios nuevos que se registren a través de Auth0
+    //    recibirán automáticamente el rol "Usuario" si no tienen roles
+    //    asignados. Esto garantiza acceso mínimo al sistema desde el
+    //    primer inicio de sesión.
+    // ──────────────────────────────────────────────────────────────────
+    const DEFAULT_ROLE = 'Usuario';
     const authRoles = req.auth?.payload['https://premezcladomanzanillo.com/roles'] as string[] | undefined;
-    let determinedRole = user?.role || 'Usuario'; // Por defecto, conservar lo que ya tiene, o 'Usuario' si es nuevo
+    let determinedRole = user?.role || DEFAULT_ROLE;
 
     if (authRoles && authRoles.length > 0) {
+      // Prioridad 1: Rol proveniente del token JWT (inyectado por Auth0 Action)
       determinedRole = authRoles[0];
     } else {
-      // Si no viene en el token, intentar consultar la API de Auth0
+      // Prioridad 2: Consultar la API de gestión de Auth0
       const apiRoles = await fetchAuth0UserRoles(authId);
 
       if (apiRoles && apiRoles.length > 0) {
         determinedRole = apiRoles[0].name;
       }
+      // Si no se encuentra ningún rol, se mantiene el fallback:
+      // - Rol existente en BD para usuarios ya registrados
+      // - 'Usuario' para usuarios nuevos (DEFAULT_ROLE)
     }
 
     const finalName = currentNameFromAuth || user?.name || (authEmail ? authEmail.split('@')[0] : 'Usuario');
