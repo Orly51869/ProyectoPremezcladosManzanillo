@@ -42,6 +42,7 @@ import AuthenticatedApiProvider from "./components/AuthenticatedApiProvider.jsx"
 import ScrollToTop from "./components/ScrollToTop";
 import CustomizationPage from "./pages/CustomizationPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
+import LoadingScreen from "./components/LoadingScreen.jsx";
 
 // Componente para manejar el scroll a las anclas (sin cambios)
 const ScrollToAnchor = () => {
@@ -73,11 +74,7 @@ const ProtectedRoute = () => {
   }, [isLoading, isAuthenticated, loginWithRedirect, location]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="text-xl font-semibold text-gray-800 dark:text-gray-200">Cargando...</div>
-      </div>
-    );
+    return <LoadingScreen message="Verificando sesión..." />;
   }
 
   if (!isAuthenticated) {
@@ -88,16 +85,15 @@ const ProtectedRoute = () => {
 };
 
 const App = () => {
-  const { isLoading } = useAuth0();
+  const { isLoading, isAuthenticated } = useAuth0();
+  const location = useLocation();
 
+  // Detectar si estamos en un callback de Auth0 (evita flash del HomePage)
+  const searchParams = new URLSearchParams(location.search);
+  const isAuth0Callback = searchParams.has('code') && searchParams.has('state');
 
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="text-xl font-semibold text-gray-800 dark:text-gray-200">Cargando...</div>
-      </div>
-    );
+  if (isLoading || isAuth0Callback) {
+    return <LoadingScreen message="Iniciando aplicación..." />;
   }
 
   return (
@@ -107,7 +103,8 @@ const App = () => {
         <ScrollToAnchor />
         {/* <ChatWidget /> */}
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          {/* Si está autenticado y está en /, redirigir al dashboard */}
+          <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/productos" element={<ProductsCatalogPage />} />
           <Route path="/productos/estructurales" element={<StructuralConcretesPage />} />

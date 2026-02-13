@@ -10,7 +10,7 @@ const DashboardLayout = () => (
     <motion.main
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.25 }}
       className="flex-grow pt-32 md:pt-36"
     >
       <Outlet />
