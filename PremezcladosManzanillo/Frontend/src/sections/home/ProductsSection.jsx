@@ -34,28 +34,28 @@ const ProductsSection = () => {
     const fetchCatalog = async () => {
       try {
         const { data } = await api.get('/api/settings');
-        // Check for catalog_config and valid content
+        // Verificar catalog_config y contenido válido
         if (data.catalog_config) {
           try {
             const catalog = JSON.parse(data.catalog_config);
             const overrides = data.products_config ? JSON.parse(data.products_config) : [];
 
-            // Only proceed if we have valid catalog items
+            // Solo proceder si tenemos ítems de catálogo válidos
             if (Array.isArray(catalog) && catalog.length > 0) {
-              // Extract unique categories
+              // Extraer categorías únicas
               const uniqueCategories = [...new Set(catalog.map(item => item.category || 'General'))];
 
-              // Build category objects
+              // Construir objetos de categoría
               const processedCategories = uniqueCategories.map(catName => {
 
-                // Check for override in products_config by originalCategory OR title
+                // Verificar sobreescritura en products_config por originalCategory O título
                 const override = overrides.find(p => (p.originalCategory === catName) || (p.title === catName));
 
-                // Default Data from Catalog
+                // Datos por defecto del Catálogo
                 const catProducts = catalog.filter(p => (p.category || 'General') === catName);
-                const firstImage = catProducts.find(p => p.imgSrc)?.imgSrc || "/assets/Concreto.png"; // Fallback image
+                const firstImage = catProducts.find(p => p.imgSrc)?.imgSrc || "/assets/Concreto.png"; // Imagen por defecto
 
-                // Use override if exists, otherwise default
+                // Usar sobreescritura si existe, sino valor por defecto
                 if (override) {
                   return {
                     id: catName.toLowerCase().replace(/\s+/g, '-'),
@@ -92,7 +92,7 @@ const ProductsSection = () => {
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => {
       const next = prevIndex + 3;
-      if (next >= categories.length) return 0; // Wrap to start
+      if (next >= categories.length) return 0; // Volver al inicio
       return next;
     });
   };
@@ -101,7 +101,7 @@ const ProductsSection = () => {
     setCurrentIndex((prevIndex) => {
       const next = prevIndex - 3;
       if (next < 0) {
-        // Wrap to last page
+        // Volver a la última página
         const remainder = categories.length % 3;
         if (remainder === 0) return Math.max(0, categories.length - 3);
         return Math.max(0, categories.length - remainder);
@@ -116,7 +116,7 @@ const ProductsSection = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
 
-        {/* Arrows - Rendered inside container but pushed out slightly */}
+        {/* Flechas - Renderizadas dentro del contenedor pero desplazadas ligeramente hacia afuera */}
         {categories.length > 3 && (
           <>
             <button
@@ -140,13 +140,13 @@ const ProductsSection = () => {
           {categories.slice(currentIndex, currentIndex + 3).map((category) => (
             <Link
               key={category.id}
-              to={`/productos`} // Linking to general products page
+              to={`/productos`} // Enlace a la página general de productos
               className="block h-full transition duration-300 hover:scale-[1.02]"
             >
               <ContentCard {...category} />
             </Link>
           ))}
-          {/* If there are fewer than 3 items in the current slice, grid handles it reasonably well */}
+          {/* Si hay menos de 3 ítems en el segmento actual, el grid lo maneja razonablemente bien */}
         </div>
       </div>
 

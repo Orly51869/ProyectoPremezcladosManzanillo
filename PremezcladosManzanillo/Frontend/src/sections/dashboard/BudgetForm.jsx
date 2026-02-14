@@ -2,16 +2,16 @@ import React, { useState, useEffect } from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
 import api from "../../utils/api";
 import { format } from "date-fns";
-// Helper para calcular fecha de vencimiento (7 días hábiles, Lun-Wk, start tomorrow)
+// Función para calcular fecha de vencimiento (7 días hábiles, Lun-Sáb, comenzando mañana)
 const calculateBusinessExpirationDate = (startDate, days) => {
   let currentDate = new Date(startDate);
   currentDate.setHours(0, 0, 0, 0);
-  currentDate.setDate(currentDate.getDate() + 1); // Start counting from tomorrow
+  currentDate.setDate(currentDate.getDate() + 1); // Comenzar a contar desde mañana
 
   let businessDaysCount = 0;
   while (businessDaysCount < days) {
     const day = currentDate.getDay();
-    if (day !== 0) { // Skip Sunday (0) only
+    if (day !== 0) { // Saltar Domingo (0) solamente
       businessDaysCount++;
     }
     if (businessDaysCount === days) break;
@@ -22,7 +22,7 @@ const calculateBusinessExpirationDate = (startDate, days) => {
 import ClientFormModal from "./ClientFormModal";
 import ProductCatalog from "./ProductCatalog";
 
-import { useSettings } from "../../context/SettingsContext"; // Import Context
+import { useSettings } from "../../context/SettingsContext"; // Importar Contexto
 
 const BudgetForm = ({
   initialValues = {},
@@ -30,17 +30,17 @@ const BudgetForm = ({
   onCancel,
   userRoles = [],
 }) => {
-  const { settings } = useSettings(); // Get Settings
+  const { settings } = useSettings(); // Obtener Configuración
   const ivaRate = parseFloat(settings?.company_iva || "16");
 
-  // State for data fetched from API
+  // Estado para datos obtenidos de la API
   const [clients, setClients] = useState([]);
   const [showClientFormModal, setShowClientFormModal] = useState(false);
   const [serverError, setServerError] = useState(null);
 
-  const [applyIva, setApplyIva] = useState(false); // Toggle state
+  const [applyIva, setApplyIva] = useState(false); // Estado del toggle
 
-  // Form state
+  // Estado del formulario
   const [formState, setFormState] = useState({
     clientId: initialValues.clientId || "",
     title: initialValues.title || "",
@@ -68,7 +68,7 @@ const BudgetForm = ({
   );
   const [errors, setErrors] = useState({});
 
-  // Role / status based helpers
+  // Helpers basados en rol / estado
   const status = initialValues.status || "";
   const isApproved = status === "APPROVED";
   const isPrivilegedEditor = userRoles.includes("Contable") || userRoles.includes("Administrador") || userRoles.includes("Comercial");
@@ -141,7 +141,7 @@ const BudgetForm = ({
             name: product.name,
             quantity: 1,
             unitPrice: product.price,
-            type: product.type // Save type for Tax calculation
+            type: product.type // Guardar tipo para cálculo de impuestos
           },
         ];
       }
@@ -250,7 +250,7 @@ const BudgetForm = ({
     const formErrors = validate();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
-      // Scroll to top to ensure user sees errors
+      // Desplazar hacia arriba para asegurar que el usuario vea los errores
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Feedback inmediato CON detalles
@@ -259,7 +259,7 @@ const BudgetForm = ({
       return;
     }
 
-    // Append IVA info to observations for persistence since schema update is risky
+    // Añadir información de IVA a observaciones para persistencia, ya que actualizar el esquema es riesgoso
     let finalObservations = formState.observations;
     if (applyIva) {
       finalObservations += `\n[IVA_APLICADO:${ivaRate}%]`;
@@ -271,11 +271,11 @@ const BudgetForm = ({
       volume: formState.volume ? parseFloat(formState.volume) : undefined,
       validUntil: formState.validUntil || undefined,
       pumpRequired: formState.pumpRequired === 'true',
-      // Send calculated fields just in case backend uses them or we rely on frontend calc
+      // Enviar campos calculados por si el backend los usa o dependemos del cálculo del frontend
       total: calculateTotal(),
       applyIva: applyIva,
       products: productItems.map(({ productId, quantity, unitPrice }) => {
-        // Ensure quantity is at least 1 when saving
+        // Asegurar que la cantidad sea al menos 1 al guardar
         const qty = Number(quantity);
         const base = { productId, quantity: qty > 0 ? qty : 1 };
         if (isPrivilegedEditor) {
@@ -293,7 +293,7 @@ const BudgetForm = ({
     }
   };
 
-  // Client modal handlers
+  // Manejadores del modal de cliente
   const handleOpenClientFormModal = () => { setShowClientFormModal(true); setServerError(null); };
   const handleCloseClientFormModal = () => { setShowClientFormModal(false); setServerError(null); };
   const handleSaveClientFromModal = async (formData) => {
@@ -590,7 +590,7 @@ const BudgetForm = ({
         {/* Total y Acciones */}
         <div className="pt-4 space-y-4">
           <div className="flex justify-between items-start">
-            {/* IVA Toggle - Always visible IF IVA > 0 */}
+            {/* IVA Toggle - Siempre visible SI IVA > 0 */}
             {ivaRate > 0 && (
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase text-gray-500 racking-wider">Impuesto (IVA)</label>

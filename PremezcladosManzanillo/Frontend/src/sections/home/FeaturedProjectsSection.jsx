@@ -5,7 +5,7 @@ import FeaturedProjectCard from '../../components/FeaturedProjectCard.jsx';
 import { getProjects } from '../../utils/api';
 import { Link } from 'react-router-dom';
 
-// Función para dividir el array en chunks
+// Función para dividir el array en bloques
 const chunk = (arr, size) =>
   Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
     arr.slice(i * size, i * size + size)
@@ -116,7 +116,7 @@ const FeaturedProjectsSection = () => {
               )}
             </div>
 
-            {/* Dots navigation */}
+            {/* Puntos de navegación */}
             {projectChunks.length > 1 && (
               <div className="flex justify-center gap-2 mt-4">
                 {projectChunks.map((_, i) => (

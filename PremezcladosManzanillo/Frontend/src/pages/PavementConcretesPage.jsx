@@ -2,15 +2,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import HomepageNavbar from '../components/HomepageNavbar.jsx';
 import Footer from '../components/Footer.jsx';
-// import { productCategories } from '../mock/data'; // Remove mock data import
+// import { productCategories } from '../mock/data'; // Eliminar importación de datos de prueba
 import OtherCategoriesSection from '../sections/product/OtherCategoriesSection.jsx';
 import ProductSubtypeCard from '../components/ProductSubtypeCard.jsx';
-import api from '../utils/api'; // Import the api utility
+import api from '../utils/api'; // Importar utilidad de api
 
 // Componente para una Sección de Categoría completa
 const CategorySection = ({ category }) => (
     <div className="mb-16">
-        {/* Title Section - Full Width */}
+        {/* Sección de Título - Ancho Completo */}
         <div className="bg-white dark:bg-dark-surface shadow-md">
             <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center">
                 <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
@@ -22,7 +22,7 @@ const CategorySection = ({ category }) => (
             </div>
         </div>
 
-        {/* Hero Image Section - Centered */}
+        {/* Sección de Imagen Hero - Centrada */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
             <div
                 className="w-full bg-cover bg-center rounded-2xl shadow-lg"
@@ -33,7 +33,7 @@ const CategorySection = ({ category }) => (
             />
         </div>
 
-        {/* Content Section - Constrained Width */}
+        {/* Sección de Contenido - Ancho Limitado */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
             <p className="text-center text-gray-700 dark:text-gray-300 mb-10 italic max-w-4xl mx-auto">
                 {category.description}
@@ -59,8 +59,8 @@ const PavementConcretesPage = () => {
                 setAllProducts(response.data);
                 setLoading(false);
             } catch (err) {
-                console.error('Error fetching products:', err);
-                // Fallback to mock data on error
+                console.error('Error al obtener productos:', err);
+                // Respaldo a datos de prueba en caso de error
                 setLoading(false);
             }
         };

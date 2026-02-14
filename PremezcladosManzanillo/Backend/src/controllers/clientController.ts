@@ -27,8 +27,8 @@ export const getClientsByOwner = async (req: Request, res: Response) => {
       },
     };
 
-    if (roles.includes('Administrador') || roles.includes('Comercial')) {
-      // Los Administradores y Comerciales pueden ver todos los clientes
+    if (roles.includes('Administrador') || roles.includes('Comercial') || roles.includes('Contable')) {
+      // Los Administradores, Comerciales y Contables pueden ver todos los clientes
       clients = await prisma.client.findMany({ include: includeArgs });
     } else {
       // Otros roles (p. ej., 'Usuario') solo pueden ver sus propios clientes
@@ -138,7 +138,7 @@ export const updateClient = async (req: Request, res: Response) => {
       if (!canBeManagedByPrivileged) {
         return res.status(403).json({ error: 'No puedes modificar este cliente porque ya tiene presupuestos asociados. Solo un Administrador o Contable puede hacerlo.' });
       }
-    } 
+    }
     // Escenario 2: El cliente NO tiene presupuestos
     else {
       const canBeManagedByComercial = roles.includes('Comercial') && isOwner;
@@ -221,7 +221,7 @@ export const deleteClient = async (req: Request, res: Response) => {
     const isContable = roles.includes('Contable');
     const isUsuario = roles.includes('Usuario');
     // Asumir que el rol 'Comercial' debe comportarse como 'Usuario' según la ambigüedad en la solicitud
-    const isComercial = roles.includes('Comercial'); 
+    const isComercial = roles.includes('Comercial');
 
     let authorized = false;
     let errorMessage = 'No tienes permiso para eliminar este cliente.';
@@ -242,7 +242,7 @@ export const deleteClient = async (req: Request, res: Response) => {
     if (!authorized) {
       return res.status(403).json({ error: errorMessage });
     }
-    
+
     // Usar una transacción para asegurar que todos los registros relacionados se eliminen en el orden correcto
     await prisma.$transaction(async (tx) => {
       // Eliminar todas las facturas relacionadas con los pagos de los presupuestos de este cliente
@@ -295,21 +295,21 @@ export const deleteClient = async (req: Request, res: Response) => {
     // Devolver estado 204
   } catch (error: any) {
     console.error(`Error deleting client with ID ${id}:`, error);
-    
+
     // Manejar errores de clave foránea de Prisma
     if (error.code === 'P2003') {
-      return res.status(400).json({ 
-        error: 'No se puede eliminar el cliente porque tiene registros relacionados (presupuestos, pagos, etc.). Por favor, contacta a un administrador.' 
+      return res.status(400).json({
+        error: 'No se puede eliminar el cliente porque tiene registros relacionados (presupuestos, pagos, etc.). Por favor, contacta a un administrador.'
       });
     }
-    
+
     // Manejar otros errores de Prisma
     if (error.code && error.code.startsWith('P')) {
-      return res.status(400).json({ 
-        error: `Error al eliminar el cliente: ${error.message || 'Error de base de datos'}` 
+      return res.status(400).json({
+        error: `Error al eliminar el cliente: ${error.message || 'Error de base de datos'}`
       });
     }
-    
+
     res.status(500).json({ error: 'Error interno del servidor al eliminar el cliente.' });
   }
 };

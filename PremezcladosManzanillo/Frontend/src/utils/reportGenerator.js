@@ -7,10 +7,10 @@ export const generateReportPDF = async (data, stats, role, userName, dateRangeTe
     const doc = new jsPDF();
     const logoDataUrl = await getLogoDataUrl();
 
-    // --- Header Corporativo ---
+    // --- Encabezado Corporativo ---
     let y = addCompanyHeader(doc, logoDataUrl);
 
-    // --- Title ---
+    // --- Título ---
     doc.setDrawColor(200);
     doc.line(14, y, 196, y);
     y += 10;
@@ -30,7 +30,7 @@ export const generateReportPDF = async (data, stats, role, userName, dateRangeTe
 
     y += 10;
 
-    // --- Content based on Role ---
+    // --- Contenido basado en Rol ---
 
     const normalizedRole = role ? role.toLowerCase() : '';
     const isAccounting = normalizedRole === 'contable' || normalizedRole === 'contabilidad' || normalizedRole === 'administrador' || normalizedRole === 'admin';
@@ -38,7 +38,7 @@ export const generateReportPDF = async (data, stats, role, userName, dateRangeTe
 
     // --- Content based on Role ---
 
-    // 1. Financial Summary (Admin/Contable)
+    // 1. Resumen Financiero (Admin/Contable)
     if (isAccounting) {
         doc.setFontSize(12);
         doc.setTextColor(0);
@@ -57,13 +57,13 @@ export const generateReportPDF = async (data, stats, role, userName, dateRangeTe
             head: [['Concepto', 'Valor']],
             body: summaryData,
             theme: 'striped',
-            headStyles: { fillColor: [22, 163, 74] }, // Green
+            headStyles: { fillColor: [22, 163, 74] }, // Verde
             columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
         });
 
         y = doc.lastAutoTable.finalY + 15;
 
-        // Accounting Specifics (Revenue By Type)
+        // Detalles Contables (Ingresos por Tipo)
         if (data?.revenueByType) {
             doc.text("Ingresos por Tipo de Concreto", 14, y);
             y += 6;
@@ -81,9 +81,9 @@ export const generateReportPDF = async (data, stats, role, userName, dateRangeTe
             y = doc.lastAutoTable.finalY + 15;
         }
 
-        // Aging Analysis
+        // Análisis de Antigüedad
         if (data?.agingAnalysis) {
-            // Check space
+            // Verificar espacio
             if (y > 220) { doc.addPage(); y = 20; }
 
             doc.text("Análisis de Cartera", 14, y);
@@ -103,9 +103,9 @@ export const generateReportPDF = async (data, stats, role, userName, dateRangeTe
         }
     }
 
-    // 2. Monthly Evolution (Chart Data) - Shared
+    // 2. Evolución Mensual (Datos del Gráfico) - Compartido
     if (stats?.chartData && (isAccounting || isCommercial)) {
-        // Check space
+        // Verificar espacio
         if (y > 220) { doc.addPage(); y = 20; }
 
         doc.setFontSize(12);
@@ -125,20 +125,20 @@ export const generateReportPDF = async (data, stats, role, userName, dateRangeTe
             head: tableHead,
             body: tableBody,
             theme: 'grid',
-            headStyles: { fillColor: [55, 65, 81] }, // Dark Gray
+            headStyles: { fillColor: [55, 65, 81] }, // Gris Oscuro
             columnStyles: {
                 1: { halign: 'right' },
-                2: { halign: 'right', textColor: [220, 38, 38] } // Red for pending
+                2: { halign: 'right', textColor: [220, 38, 38] } // Rojo para pendientes
             },
         });
 
         y = doc.lastAutoTable.finalY + 15;
     }
 
-    // 3. Operational/Commercial Summary
+    // 3. Resumen Operacional/Comercial
     if (isCommercial) {
-        // If we are continuing on same page, check space
-        if (y > 200) { // More aggressive page break check
+        // Si continuamos en la misma página, verificar espacio
+        if (y > 200) { // Verificación más agresiva de salto de página
             doc.addPage();
             y = 20;
         }
@@ -159,12 +159,12 @@ export const generateReportPDF = async (data, stats, role, userName, dateRangeTe
             head: [['Indicador', 'Valor']],
             body: operationalData,
             theme: 'striped',
-            headStyles: { fillColor: [234, 88, 12] }, // Orange for Commercial
+            headStyles: { fillColor: [234, 88, 12] }, // Naranja para Comercial
             columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
         });
         y = doc.lastAutoTable.finalY + 15;
 
-        // Top Products
+        // Productos Principales
         if (data?.topProducts) {
             if (y > 220) { doc.addPage(); y = 20; }
             doc.text("Top 5 Productos Vendidos", 14, y);
@@ -183,7 +183,7 @@ export const generateReportPDF = async (data, stats, role, userName, dateRangeTe
             y = doc.lastAutoTable.finalY + 15;
         }
 
-        // Top Clients
+        // Clientes Principales
         if (data?.topClients) {
             if (y > 220) { doc.addPage(); y = 20; }
             doc.text("Top 5 Clientes (Ingresos)", 14, y);
@@ -202,7 +202,7 @@ export const generateReportPDF = async (data, stats, role, userName, dateRangeTe
         }
     }
 
-    // Footer
+    // Pie de página
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);

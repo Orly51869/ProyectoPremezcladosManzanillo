@@ -3,7 +3,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useAuth0 } from '@auth0/auth0-react';
 import useUserRoles from '../hooks/useUserRoles';
 import { RefreshCw, Edit2, Check, X } from 'lucide-react';
-import Modal from './Modal'; // Assuming generic Modal exists
+import Modal from './Modal'; // Asumiendo que existe un Modal gen\u00e9rico
 
 const CurrencyToggle = () => {
     const { currency, exchangeRate, toggleCurrency, updateRateManual, isManual, loading, resetToOfficial, refreshRates } = useCurrency();

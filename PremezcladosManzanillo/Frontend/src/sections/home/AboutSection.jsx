@@ -5,7 +5,7 @@ const AboutSection = () => {
     const [config, setConfig] = useState({
         title: "Sobre Nosotros",
         description: "Somos una empresa comprometida con la calidad y el servicio. Ofrecemos soluciones integrales para tus proyectos de construcción, garantizando siempre los mejores resultados y la satisfacción de nuestros clientes.",
-        imgSrc: "/assets/Toma frontal Planta.jpeg", // Default image
+        imgSrc: "/assets/Toma frontal Planta.jpeg", // Imagen por defecto
         buttonText: "Conoce Más"
     });
 
@@ -29,7 +29,7 @@ const AboutSection = () => {
         <section className="py-20 bg-gray-50 dark:bg-dark-surface/50">
             <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                    {/* Text Content */}
+                    {/* Contenido de Texto */}
                     <div className="order-2 lg:order-1 space-y-6">
                         <span className="inline-block px-3 py-1 bg-brand-primary/10 text-brand-primary text-sm font-bold uppercase tracking-wider rounded-full">
                             Nuestra Historia
@@ -50,7 +50,7 @@ const AboutSection = () => {
                         </div>
                     </div>
 
-                    {/* Image Content */}
+                    {/* Contenido de Imagen */}
                     <div className="order-1 lg:order-2 relative">
                         <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3] group">
                             <div className="absolute inset-0 bg-brand-primary/20 mix-blend-multiply group-hover:bg-transparent transition duration-500"></div>
@@ -60,7 +60,7 @@ const AboutSection = () => {
                                 className="w-full h-full object-cover transform group-hover:scale-105 transition duration-700"
                             />
                         </div>
-                        {/* Decorative element */}
+                        {/* Elemento decorativo */}
                         <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-brand-secondary rounded-full blur-2xl opacity-50 z-[-1]"></div>
                         <div className="absolute -top-6 -right-6 w-32 h-32 bg-brand-primary rounded-full blur-3xl opacity-30 z-[-1]"></div>
                     </div>

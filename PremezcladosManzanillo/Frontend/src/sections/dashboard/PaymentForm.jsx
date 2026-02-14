@@ -16,7 +16,7 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
   const [exchangeRate, setExchangeRate] = useState(currentExchangeRate || "");
   const [igtfRate, setIgtfRate] = useState(settings?.company_igtf || 3);
 
-  // Update effect to sync with settings if they load later, but respect manual changes if implemented logic allowed (here simple sync)
+  // Efecto de actualización para sincronizar con configuraciones si se cargan después, pero respetar cambios manuales si la lógica implementada lo permite (aquí sincronización simple)
   useEffect(() => {
     if (settings?.company_igtf) setIgtfRate(settings.company_igtf);
   }, [settings]);
@@ -110,7 +110,7 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
 
     const formData = new FormData();
     formData.append('budgetId', budgetId);
-    formData.append('paidAmount', paidAmount); // Correctly sending paidAmount as entered
+    formData.append('paidAmount', paidAmount); // Enviando paidAmount correctamente tal como fue ingresado
     formData.append('date', paymentDate || new Date().toISOString());
     formData.append('method', method);
     formData.append('currency', currency);
@@ -152,8 +152,8 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
               <option value="">No hay presupuestos aprobados</option>
             ) : (
               approvedBudgets.map((budget) => {
-                // Calculate Total (Tax-Free for Puerto Libre)
-                // Just sum of products, no IVA logic.
+                // Calcular Total (Libre de Impuestos para Puerto Libre)
+                // Solo suma de productos, sin lógica de IVA.
                 let calculatedTotal = 0;
 
                 const products = budget.products || [];
@@ -163,8 +163,8 @@ const PaymentForm = ({ onSubmit = () => { }, onCancel = () => { }, approvedBudge
                   calculatedTotal += qty * price;
                 });
 
-                // If backend is already updated, budget.total should match calculatedTotal
-                // We use calculatedTotal to be safe in case page hasn't refreshed data from server yet
+                // Si el backend ya está actualizado, budget.total debería coincidir con calculatedTotal
+                // Usamos calculatedTotal para estar seguros en caso de que la página no haya actualizado datos del servidor aún
                 const finalTotal = calculatedTotal;
 
                 const paid = (budget.payments || [])

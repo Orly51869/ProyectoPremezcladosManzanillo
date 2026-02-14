@@ -5,7 +5,7 @@ function ScrollToTop() {
   const { pathname } = useLocation();
 
   useLayoutEffect(() => {
-    // Disable browser's default scroll restoration to avoid conflict
+    // Deshabilitar la restauraci\u00f3n de scroll predeterminada del navegador para evitar conflictos
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }

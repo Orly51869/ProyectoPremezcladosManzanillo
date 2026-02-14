@@ -198,7 +198,7 @@ const AboutPage = () => {
           </div>
         </section>
 
-        {/* CTA removed per user request */}
+        {/* CTA eliminado por solicitud del usuario */}
       </main>
       <Footer />
     </div>

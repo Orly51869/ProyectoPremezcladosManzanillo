@@ -29,11 +29,11 @@ const HeroSection = () => {
       .then(res => res.json())
       .then(data => {
         if (data.hero_config) {
-           try { 
-             const config = JSON.parse(data.hero_config);
-             if (config.images) setImages(config.images);
-             if (config.texts) setTexts(config.texts);
-           } catch(e) { console.error("Error parsing hero_config", e); }
+          try {
+            const config = JSON.parse(data.hero_config);
+            if (config.images) setImages(config.images);
+            if (config.texts) setTexts(config.texts);
+          } catch (e) { console.error("Error parsing hero_config", e); }
         }
       })
       .catch(err => console.error("Error loading settings", err));
@@ -45,9 +45,9 @@ const HeroSection = () => {
       setCurrentImageIndex((prevIndex) =>
         prevIndex >= images.length - 1 ? 0 : prevIndex + 1
       );
-    }, 5000); 
+    }, 5000);
 
-    return () => clearInterval(timer); 
+    return () => clearInterval(timer);
   }, [images]);
 
   const goToSlide = (slideIndex) => {
@@ -57,7 +57,7 @@ const HeroSection = () => {
   return (
     // Contenedor principal con márgenes, altura, bordes redondeados y overflow hidden
     <section className="relative h-[85vh] flex items-end justify-center text-white overflow-hidden rounded-xl mb-16 shadow-2xl">
-      
+
       <AnimatePresence>
         <motion.img
           key={currentImageIndex}
@@ -70,12 +70,12 @@ const HeroSection = () => {
           transition={{ duration: 1 }}
         />
       </AnimatePresence>
-      
+
       {/* Capa oscura para mejorar legibilidad del texto */}
       <div className="absolute inset-0 bg-black opacity-50"></div>
-      
+
       {/* Contenido de texto animado */}
-      <motion.div 
+      <motion.div
         className="relative z-10 text-center p-4 mb-16"
         key={currentImageIndex}
         initial={{ opacity: 0, y: 20 }}
@@ -83,18 +83,17 @@ const HeroSection = () => {
         transition={{ duration: 0.8 }}
       >
         <h1 className="text-3xl md:text-4xl font-extrabold text-white max-w-4xl mx-auto">{texts[currentImageIndex]}</h1>
-        
+
       </motion.div>
 
-      {/* Navigation Dots */}
+      {/* Puntos de Navegación */}
       <div className="absolute bottom-5 z-10 flex space-x-3">
         {images.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-              currentImageIndex === index ? 'bg-white' : 'bg-white/50'
-            }`}
+            className={`w-3 h-3 rounded-full transition-colors duration-300 ${currentImageIndex === index ? 'bg-white' : 'bg-white/50'
+              }`}
             aria-label={`Ir a la imagen ${index + 1}`}
           />
         ))}

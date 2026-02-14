@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Edit, Trash2, CheckCircle, XCircle } from 'lucide-react'; // Added CheckCircle, XCircle
+import { Edit, Trash2, CheckCircle, XCircle } from 'lucide-react'; // Agregados CheckCircle, XCircle
 import { format } from 'date-fns';
 import BudgetTable from './BudgetTable.jsx';
-import Modal from '../../components/Modal.jsx'; // Assuming a generic Modal component
+import Modal from '../../components/Modal.jsx'; // Asumiendo un componente Modal gen\u00e9rico
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
@@ -15,13 +15,13 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
 
   const canEditOrDeleteBudget = (budget) => {
-    // Admin and Comercial can always edit/delete
+    // Admin y Comercial siempre pueden editar/eliminar
     if (userRoles.includes('Administrador') || userRoles.includes('Comercial')) return true;
 
-    // Contable can edit/delete APPROVED or PENDING budgets
+    // Contable puede editar/eliminar presupuestos APROBADOS o PENDIENTES
     if (userRoles.includes('Contable') && (budget.status === 'APPROVED' || budget.status === 'PENDING')) return true;
 
-    // Usuario can delete PENDING budgets they own created TODAY
+    // Usuario puede eliminar presupuestos PENDIENTES propios creados HOY
     const isOwner = budget.creatorId === currentUserId;
     if (userRoles.includes('Usuario') && budget.status === 'PENDING' && isOwner) {
       const today = new Date().setHours(0, 0, 0, 0);
@@ -33,7 +33,7 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
   };
 
   const canApproveOrRejectBudget = (budget) => {
-    // Admin AND Contable can approve/reject if budget is PENDING
+    // Admin Y Contable pueden aprobar/rechazar si el presupuesto está PENDIENTE
     const isPrivileged = userRoles.includes('Administrador') || userRoles.includes('Contable') || userRoles.includes('Comercial');
     return isPrivileged && budget.status === 'PENDING';
   };
@@ -54,7 +54,7 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
     }
   };
 
-  // Group by client for canvas view
+  // Agrupar por cliente para vista de canvas
   const groupedByClient = useMemo(() => {
     if (viewMode !== 'canvas') return [];
     const groups = new Map();
@@ -177,7 +177,7 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
           onEdit={onEdit}
           onDelete={onDelete}
           onApprove={onApprove}
-          onReject={handleOpenRejectionModal} // Pass function to open rejection modal
+          onReject={handleOpenRejectionModal} // Pasar función para abrir modal de rechazo
           onViewDetail={onViewDetail}
           userRoles={userRoles}
           currentUserId={currentUserId}

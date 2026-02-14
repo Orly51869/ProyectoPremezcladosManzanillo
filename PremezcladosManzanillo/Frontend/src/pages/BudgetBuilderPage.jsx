@@ -17,14 +17,14 @@ const BudgetBuilderPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch initial budget data
+  // Obtener datos iniciales del presupuesto
   const fetchBudget = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get(`/api/budgets/${budgetId}`);
       const fetchedBudget = response.data;
       setBudget(fetchedBudget);
-      // Initialize items from budget if they exist (for editing)
+      // Inicializar ítems del presupuesto si existen (para edición)
       if (fetchedBudget.products) {
         setItems(fetchedBudget.products.map(p => ({
           productId: p.product.id,
@@ -49,21 +49,21 @@ const BudgetBuilderPage = () => {
     setItems(prevItems => {
       const existingItem = prevItems.find(item => item.productId === product.id);
       if (existingItem) {
-        // If item exists, increase quantity
+        // Si el ítem existe, aumentar cantidad
         return prevItems.map(item =>
           item.productId === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       } else {
-        // Otherwise, add new item
+        // De lo contrario, agregar nuevo ítem
         return [
           ...prevItems,
           {
             productId: product.id,
             name: product.name,
             quantity: 1,
-            unitPrice: product.price, // Use default price from product
+            unitPrice: product.price, // Usar precio por defecto del producto
           },
         ];
       }
@@ -88,8 +88,8 @@ const BudgetBuilderPage = () => {
 
   const handleSaveBudget = async () => {
     const budgetData = {
-      ...budget, // Send other budget details back
-      status: 'PENDING', // Update status on save
+      ...budget, // Enviar otros detalles del presupuesto
+      status: 'PENDING', // Actualizar estado al guardar
       products: items.map(({ productId, quantity, unitPrice }) => ({
         productId,
         quantity,
@@ -99,7 +99,7 @@ const BudgetBuilderPage = () => {
 
     try {
       await api.put(`/api/budgets/${budgetId}`, budgetData);
-      navigate('/budgets'); // Navigate back to the list on success
+      navigate('/budgets'); // Navegar de vuelta a la lista al tener éxito
     } catch (err) {
       setError('No se pudo guardar el presupuesto.');
       console.error(err);
@@ -115,13 +115,13 @@ const BudgetBuilderPage = () => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-theme(space.24))]"> {/* Adjust height based on your layout's navbar height */}
-      {/* Left Column: Product Catalog */}
+    <div className="flex h-[calc(100vh-theme(space.24))]"> {/* Ajustar altura según la altura del navbar de tu layout */}
+      {/* Columna Izquierda: Catálogo de Productos */}
       <div className="w-2/3 p-6 overflow-y-auto">
         <ProductCatalog onAddProduct={handleAddProduct} />
       </div>
 
-      {/* Right Column: Budget Sidebar */}
+      {/* Columna Derecha: Barra Lateral del Presupuesto */}
       <div className="w-1/3 bg-gray-50 dark:bg-dark-primary p-4 border-l border-gray-200 dark:border-gray-700">
         <CurrentBudgetSidebar
           budget={budget}

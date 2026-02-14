@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import useUserRoles from '../../hooks/useUserRoles';
 import {
   BarChart3,
   Download,
@@ -35,6 +36,7 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 
 const Reports = () => {
   const { user } = useAuth0();
+  const { rawRoles: userRoles } = useUserRoles();
   const [activeTab, setActiveTab] = useState('comercial');
   const [data, setData] = useState({
     commercial: null,
@@ -48,13 +50,19 @@ const Reports = () => {
   const [dateRange, setDateRange] = useState('all');
   const [customDates, setCustomDates] = useState({ start: '', end: '' });
 
+  // Determinar qué tabs puede ver cada rol
+  // Administrador: ambos tabs | Contable: solo Contabilidad | Comercial: solo Comercial
+  const canViewAccounting = userRoles.includes('Administrador') || userRoles.includes('Contable');
+  const canViewCommercial = userRoles.includes('Administrador') || userRoles.includes('Comercial');
+
   // Auto-selección de pestaña por rol
   useEffect(() => {
-    const rawRoles = (user?.['https://premezcladomanzanillo.com/roles'] || []);
-    const roles = rawRoles.map(r => r.toLowerCase());
-    if (roles.includes('contable')) setActiveTab('contabilidad');
-    else setActiveTab('comercial');
-  }, [user]);
+    if (userRoles.includes('Contable') && !userRoles.includes('Administrador')) {
+      setActiveTab('contabilidad');
+    } else {
+      setActiveTab('comercial');
+    }
+  }, [userRoles]);
 
   const getDateParams = () => {
     const now = new Date();
@@ -102,7 +110,7 @@ const Reports = () => {
       try {
         const params = getDateParams();
 
-        // If custom is selected but dates are missing, don't fetch or fetch all?
+        // Si personalizado está seleccionado pero faltan fechas, no obtener o obtener todo?
         if (dateRange === 'custom' && (!customDates.start || !customDates.end)) {
           setLoading(false);
           return;
@@ -207,21 +215,26 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs - Visibilidad controlada por rol */}
       <div className="flex gap-1 bg-gray-100 dark:bg-dark-surface p-1 rounded-xl mb-8 w-fit border border-gray-200 dark:border-dark-surface">
-        <button
-          onClick={() => setActiveTab('comercial')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'comercial' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-        >
-          <TrendingUp className="w-4 h-4" /> Comercial
-        </button>
-        <button
-          onClick={() => setActiveTab('contabilidad')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'contabilidad' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-        >
-          <Wallet className="w-4 h-4" /> Contabilidad
-        </button>
-
+        {/* Tab Comercial: visible para Administrador y Comercial */}
+        {canViewCommercial && (
+          <button
+            onClick={() => setActiveTab('comercial')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'comercial' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+          >
+            <TrendingUp className="w-4 h-4" /> Comercial
+          </button>
+        )}
+        {/* Tab Contabilidad: visible para Administrador y Contable */}
+        {canViewAccounting && (
+          <button
+            onClick={() => setActiveTab('contabilidad')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'contabilidad' ? 'bg-white dark:bg-dark-primary text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+          >
+            <Wallet className="w-4 h-4" /> Contabilidad
+          </button>
+        )}
       </div>
 
       <AnimatePresence mode="wait">
@@ -232,8 +245,8 @@ const Reports = () => {
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
         >
-          {activeTab === 'comercial' && <CommercialView data={data.commercial} />}
-          {activeTab === 'contabilidad' && <AccountingView data={data.accounting} />}
+          {activeTab === 'comercial' && canViewCommercial && <CommercialView data={data.commercial} />}
+          {activeTab === 'contabilidad' && canViewAccounting && <AccountingView data={data.accounting} />}
 
         </motion.div>
       </AnimatePresence>

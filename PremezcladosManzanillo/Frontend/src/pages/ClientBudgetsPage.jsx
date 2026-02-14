@@ -14,17 +14,17 @@ const ClientBudgetsPage = () => {
   const fetchClientBudgets = useCallback(async () => {
     try {
       setLoading(true);
-      // Fetch the client's budgets
+      // Obtener los presupuestos del cliente
       const budgetResponse = await api.get(`/api/clients/${clientId}/budgets`);
       setBudgets(budgetResponse.data);
 
-      // Fetch client details to display the name
-      // We can infer client details from the first budget if it exists
+      // Obtener detalles del cliente para mostrar el nombre
+      // Podemos inferir detalles del cliente del primer presupuesto si existe
       if (budgetResponse.data.length > 0) {
         setClient(budgetResponse.data[0].client);
       } else {
-        // If there are no budgets, fetch client details directly
-        const clientResponse = await api.get(`/api/clients`); // Assuming an endpoint to get a single client by ID exists
+        // Si no hay presupuestos, obtener detalles del cliente directamente
+        const clientResponse = await api.get(`/api/clients`); // Asumiendo que existe un endpoint para obtener un cliente por ID
         const allClients = clientResponse.data.find(c => c.id === parseInt(clientId));
         setClient(allClients)
       }
@@ -65,16 +65,16 @@ const ClientBudgetsPage = () => {
           </div>
         </div>
       </div>
-      
+
       <div className="bg-white dark:bg-dark-primary rounded-2xl p-6 shadow-lg border border-brand-light dark:border-dark-surface">
         {budgets.length > 0 ? (
           <BudgetList
             budgets={budgets}
-            viewMode="list" 
-            onEdit={() => {}} // Pass empty functions if edit/delete is not needed here
-            onDelete={() => {}}
-            onApprove={() => {}}
-            onReject={() => {}}
+            viewMode="list"
+            onEdit={() => { }} // Pass empty functions if edit/delete is not needed here
+            onDelete={() => { }}
+            onApprove={() => { }}
+            onReject={() => { }}
             userRoles={[]} // Pass roles if needed for actions
             currentUserId={null}
             isClientSpecificPage={true} // Flag to hide client-related columns/filters

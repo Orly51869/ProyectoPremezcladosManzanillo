@@ -8,7 +8,7 @@ const LoginPage = () => {
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
-            // Check if there's a returnTo param in the URL query string
+            // Verificar si hay un par\u00e1metro returnTo en la cadena de consulta de la URL
             const params = new URLSearchParams(location.search);
             const returnTo = params.get('returnTo') || '/dashboard';
 

@@ -36,7 +36,7 @@ ChartJS.register(
 );
 
 import { formatDate, formatCurrency } from "../utils/helpers";
-import CurrencyToggle from "../components/CurrencyToggle"; // Correct relative path from src/pages
+import CurrencyToggle from "../components/CurrencyToggle"; // Ruta relativa correcta desde src/pages
 
 const Dashboard = () => {
   const { user } = useAuth0();

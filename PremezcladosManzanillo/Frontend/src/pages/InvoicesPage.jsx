@@ -98,7 +98,7 @@ const InvoicesPage = () => {
 
     const amount = parseFloat(simulationData.amountUsd) || 0;
     const rate = parseFloat(simulationData.exchangeRate) || 1;
-    const unitPrice = amount; // Simplificado: 1 item con el total
+    const unitPrice = amount; // Simplificado: 1 ítem con el total
 
     const newSimulationInvoice = {
       id: 'sim-' + Date.now(),
@@ -136,19 +136,19 @@ const InvoicesPage = () => {
 
     setInvoices(prev => [newSimulationInvoice, ...prev]);
     handleCloseSimulationModal();
-    // No alert, just appear
+    // Sin alerta, solo aparece
   };
 
   const handleUploadDocuments = async () => {
     if (!selectedInvoice) return;
 
-    // Validation for Contable: both documents are required
+    // Validación para Contable: ambos documentos son requeridos
     if (isContable && (!fiscalInvoiceFile || !deliveryOrderFile)) {
       setUploadError('Para el rol Contable, tanto la Factura Fiscal como la Orden de Entrega son obligatorias.');
       return;
     }
 
-    // Validation: at least one document must be uploaded
+    // Validación: al menos un documento debe ser subido
     if (!fiscalInvoiceFile && !deliveryOrderFile) {
       setUploadError('Por favor, selecciona al menos un documento para subir.');
       return;
@@ -173,9 +173,9 @@ const InvoicesPage = () => {
       });
 
       handleCloseUploadModal();
-      fetchInvoices(); // Refresh the list
+      fetchInvoices(); // Refrescar la lista
     } catch (err) {
-      console.error('Error uploading documents:', err);
+      console.error('Error al subir documentos:', err);
       setUploadError(err.response?.data?.error || 'Error al subir los documentos. Por favor, inténtalo de nuevo.');
     } finally {
       setUploading(false);
@@ -292,7 +292,7 @@ const InvoicesPage = () => {
                             </div>
                           </div>
                         )}
-                        {/* Option to upload documents for Admin/Accountant - only show if status is PROFORMA or if documents are missing */}
+                        {/* Opción para subir documentos para Admin/Contable - solo mostrar si el estado es PROFORMA o si faltan documentos */}
                         <div className="flex gap-2 items-center mt-2">
                           {canUploadDocuments && (invoice.status === 'PROFORMA' || !invoice.fiscalInvoiceUrl || !invoice.deliveryOrderUrl) && (
                             <button

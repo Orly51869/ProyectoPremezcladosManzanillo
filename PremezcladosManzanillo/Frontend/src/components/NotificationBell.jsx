@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Mail, MailOpen, Trash2 } from 'lucide-react';
-import api from '../utils/api'; // Assuming a common API utility
-import { useAuth0 } from '@auth0/auth0-react'; // To get user ID
+import api from '../utils/api'; // Asumiendo una utilidad com\u00fan de API
+import { useAuth0 } from '@auth0/auth0-react'; // Para obtener el ID del usuario
 
 const NotificationBell = () => {
     const { user } = useAuth0();
@@ -57,7 +57,7 @@ const NotificationBell = () => {
         }
     };
 
-    // Close dropdown when clicking outside
+    // Cerrar desplegable al hacer clic fuera
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (bellRef.current && !bellRef.current.contains(event.target) &&
@@ -70,7 +70,7 @@ const NotificationBell = () => {
     }, []);
 
 
-    if (!userId) return null; // Only show bell if user is authenticated
+    if (!userId) return null; // Solo mostrar campana si el usuario está autenticado
 
     return (
         <div className="relative" ref={bellRef}>
@@ -110,11 +110,10 @@ const NotificationBell = () => {
                             notifications.map((notification) => (
                                 <div
                                     key={notification.id}
-                                    className={`flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600 transition-colors ${
-                                        notification.read 
-                                            ? 'bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-dark-primary' 
-                                            : 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border-l-4 border-l-blue-500 dark:border-l-blue-400'
-                                    }`}
+                                    className={`flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600 transition-colors ${notification.read
+                                        ? 'bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-dark-primary'
+                                        : 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border-l-4 border-l-blue-500 dark:border-l-blue-400'
+                                        }`}
                                 >
                                     <div className="flex-1 pr-3">
                                         <p className={`text-sm ${notification.read ? 'text-gray-700 dark:text-gray-300' : 'text-gray-900 dark:text-white font-medium'}`}>

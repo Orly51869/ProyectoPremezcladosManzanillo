@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, MailOpen, Trash2, Bell } from 'lucide-react';
 import api from '../utils/api';
 import { useAuth0 } from '@auth0/auth0-react';
-import { formatDate } from '../utils/helpers'; // Assuming this exists or use native
+import { formatDate } from '../utils/helpers'; // Asumiendo que existe o usar nativo
 
 const NotificationsPage = () => {
     const { user, isLoading } = useAuth0();
@@ -65,7 +65,7 @@ const NotificationsPage = () => {
         <div className="min-h-screen bg-gray-50 dark:bg-dark-primary p-6">
             <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-between mb-6">
-                     <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3">
                         <div className="p-3 bg-white dark:bg-dark-surface rounded-full shadow-sm">
                             <Bell className="w-6 h-6 text-brand-primary dark:text-green-400" />
                         </div>
@@ -92,11 +92,10 @@ const NotificationsPage = () => {
                             {notifications.map((notification) => (
                                 <div
                                     key={notification.id}
-                                    className={`flex items-start justify-between p-6 transition-colors ${
-                                        notification.read 
-                                            ? 'bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-dark-primary' 
+                                    className={`flex items-start justify-between p-6 transition-colors ${notification.read
+                                            ? 'bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-dark-primary'
                                             : 'bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20 border-l-4 border-l-brand-primary'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex-1 pr-6">
                                         <p className={`text-base ${notification.read ? 'text-gray-600 dark:text-gray-300' : 'text-gray-900 dark:text-white font-semibold'}`}>

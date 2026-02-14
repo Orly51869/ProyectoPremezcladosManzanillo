@@ -43,7 +43,7 @@ const Settings = () => {
       alert("Configuraciones guardadas con éxito!");
       refreshSettings();
     } catch (error) {
-      console.error("Error saving settings:", error);
+      console.error("Error al guardar configuraciones:", error);
       alert("Error al guardar las configuraciones.");
     } finally {
       setSaving(false);
@@ -77,7 +77,7 @@ const Settings = () => {
             let resolvedType = 'OTHER';
             if (rawType.includes('CONCRE')) resolvedType = 'CONCRETE';
             else if (rawType.includes('SERVIC')) resolvedType = 'SERVICE';
-            // Blocks are no longer supported, default to OTHER
+            // Los bloques ya no son soportados, por defecto a OTHER
             else resolvedType = 'OTHER';
 
             const productData = {

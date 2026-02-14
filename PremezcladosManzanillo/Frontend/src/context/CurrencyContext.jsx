@@ -13,7 +13,7 @@ export const CurrencyProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
 
   const fetchRates = async () => {
-    if (isManual) return; // Don't overwrite manual rate automatically
+    if (isManual) return; // No sobreescribir la tasa manual autom\u00e1ticamente
     setLoading(true);
     const rates = await getExchangeRates();
     if (rates && rates.USD) {
@@ -36,10 +36,10 @@ export const CurrencyProvider = ({ children }) => {
     setIsManual(true);
     setLastUpdated(new Date());
   };
-  
+
   const resetToOfficial = () => {
-      setIsManual(false);
-      fetchRates();
+    setIsManual(false);
+    fetchRates();
   }
 
   const formatPrice = (amountInUSD) => {
@@ -47,7 +47,7 @@ export const CurrencyProvider = ({ children }) => {
     if (currency === 'USD') {
       return amountInUSD.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     } else {
-      const rate = exchangeRate || 0; 
+      const rate = exchangeRate || 0;
       const val = amountInUSD * rate;
       return val.toLocaleString('es-VE', { style: 'currency', currency: 'VES' });
     }

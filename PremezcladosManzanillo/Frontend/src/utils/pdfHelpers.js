@@ -50,14 +50,14 @@ export const addCompanyHeader = (doc, logoDataUrl, companyInfo = {}) => {
     doc.setFontSize(14);
     doc.setTextColor(22, 163, 74);
     doc.setFont('helvetica', 'bold');
-    // Name wrapped
+    // Nombre con ajuste de línea
     const nameLines = doc.splitTextToSize(name, 75);
     doc.text(nameLines, 48, 20);
 
-    // Calculate new Y based on name lines
-    // Line height factor for Helvetica is approx 1.15, fontSize 14. 
+    // Calcular nueva Y basada en líneas del nombre
+    // Factor de altura de línea para Helvetica es aprox 1.15, tamaño 14. 
     // 14pt ~= 4.9mm. 
-    // We can use a safer increment.
+    // Podemos usar un incremento más seguro.
     let currentY = 20 + (nameLines.length * 6);
 
     doc.setFontSize(9);
@@ -72,9 +72,9 @@ export const addCompanyHeader = (doc, logoDataUrl, companyInfo = {}) => {
     const addressLines = doc.splitTextToSize(address, 75);
     doc.text(addressLines, 48, currentY);
 
-    // Ensure we return a Y that clears all this
+    // Asegurar que retornamos una Y que despeje todo esto
     y = Math.max(45, currentY + (addressLines.length * 4) + 5);
-    // y = 45; removed in favor of dynamic calc above
+    // y = 45; eliminado en favor del cálculo dinámico anterior
   } else {
     doc.setFontSize(16);
     doc.setTextColor(22, 163, 74);

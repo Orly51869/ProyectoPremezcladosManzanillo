@@ -12,7 +12,7 @@ const PaymentValidationModal = ({ onClose, onSubmit, payment }) => {
   useEffect(() => {
     setStatus(payment.status || 'PENDING');
     setObservations(payment.observations || '');
-    // Reset file inputs when payment changes
+    // Reiniciar inputs de archivo cuando cambia el pago
     setFiscalInvoiceFile(null);
     setDeliveryOrderFile(null);
   }, [payment]);
@@ -22,8 +22,8 @@ const PaymentValidationModal = ({ onClose, onSubmit, payment }) => {
     if (status === 'REJECTED' && !observations.trim()) {
       newErrors.observations = 'Debe proporcionar una razón para el rechazo.';
     }
-    // Add validation for file uploads if they are required based on status
-    // For now, assuming optional.
+    // Agregar validación para subida de archivos si son requeridos según el estado
+    // Por ahora, asumiendo opcionales.
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -59,7 +59,7 @@ const PaymentValidationModal = ({ onClose, onSubmit, payment }) => {
             <option value="REJECTED">RECHAZADO</option>
           </select>
         </div>
-        
+
         {status === 'REJECTED' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Motivo de Rechazo</label>

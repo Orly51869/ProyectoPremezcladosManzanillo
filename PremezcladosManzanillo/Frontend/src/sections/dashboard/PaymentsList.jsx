@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { formatCurrency } from "../../utils/helpers";
 import PaymentCard from "./PaymentCard.jsx";
-import PaymentValidationModal from "./PaymentValidationModal.jsx"; // Import the new modal
-import { Download, Eye, Trash2 } from "lucide-react"; // For document downloads
+import PaymentValidationModal from "./PaymentValidationModal.jsx"; // Importar el nuevo modal
+import { Download, Eye, Trash2 } from "lucide-react"; // Para descargas de documentos
 
 const PaymentsList = ({
   payments = [],
   viewMode = 'list',
-  onValidate = () => {},
-  onResend = () => {},
-  onDownloadReceipt = () => {}, // New prop for downloading receipt
-  onPayPending = () => {},
+  onValidate = () => { },
+  onResend = () => { },
+  onDownloadReceipt = () => { }, // Nueva prop para descargar recibo
+  onPayPending = () => { },
   budgetDebtMap = {},
   userRoles = [],
   currentUserId = null,
@@ -19,7 +19,7 @@ const PaymentsList = ({
   const [paymentToValidate, setPaymentToValidate] = useState(null);
 
   const canValidatePayment = (payment) => {
-    // Only Admin or Contable can validate, and only if payment is PENDING
+    // Solo Admin o Contable pueden validar, y solo si el pago est\u00e1 PENDIENTE
     return (userRoles.includes('Administrador') || userRoles.includes('Contable')) && payment.status === 'PENDING';
   };
 
@@ -33,7 +33,7 @@ const PaymentsList = ({
     setPaymentToValidate(null);
   };
 
-  // Helper to call onValidate from parent, with FormData for file uploads
+  // Función auxiliar para llamar onValidate del padre, con FormData para subida de archivos
   const submitValidation = (paymentId, formData) => {
     onValidate(paymentId, formData);
   };
@@ -52,7 +52,7 @@ const PaymentsList = ({
       Metodo: p.method || p.metodo || '',
       Estado: p.status || '',
       Referencia: p.reference || '',
-      Cliente: p.budget?.client?.name || '', // Access client name through budget
+      Cliente: p.budget?.client?.name || '', // Acceder al nombre del cliente a través del presupuesto
       ProcesadoPor: p.validator?.name || '',
       FechaValidacion: p.validatedAt ? new Date(p.validatedAt).toLocaleDateString() : '',
     }));
@@ -69,7 +69,7 @@ const PaymentsList = ({
       .join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const filename = `pagos-${new Date().toISOString().slice(0,19).replace(/[:T]/g, '-')}.csv`;
+    const filename = `pagos-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
 
     if (navigator.msSaveBlob) { // IE 10+
       navigator.msSaveBlob(blob, filename);
@@ -150,13 +150,12 @@ const PaymentsList = ({
                   <td className="p-2 text-sm text-gray-700 dark:text-gray-300">{p.method || "-"}</td>
                   <td className="p-2 text-sm">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        p.status === "PENDING"
-                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
-                          : p.status === "VALIDATED"
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${p.status === "PENDING"
+                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
+                        : p.status === "VALIDATED"
                           ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
                           : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
-                      }`}
+                        }`}
                     >
                       {p.status || "PENDING"}
                     </span>
@@ -176,17 +175,17 @@ const PaymentsList = ({
                         <div key={idx} className="flex items-center gap-2 group">
                           <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 w-16 truncate">{doc.label}</span>
                           <div className="flex gap-1">
-                            <a 
-                              href={doc.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
                               title={`Ver ${doc.label}`}
                             >
                               <Eye size={14} />
                             </a>
-                            <a 
-                              href={doc.url} 
+                            <a
+                              href={doc.url}
                               download
                               className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
                               title={`Descargar ${doc.label}`}
@@ -199,52 +198,52 @@ const PaymentsList = ({
                     </div>
                   </td>
                   <td className="p-2 text-sm">
-                      <div className="flex gap-2">
-                        {canValidatePayment(p) && (
-                          <button
-                            onClick={() => handleOpenValidationModal(p)}
-                            title="Validar pago"
-                            className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
-                          >
-                            Validar
-                          </button>
-                        )}
-                        {p.status === "REJECTED" && (
-                          <button
-                            onClick={() => onResend(p.id)}
-                            className="px-2 py-1 bg-brand-primary text-white rounded-lg"
-                          >
-                            Reenviar
-                          </button>
-                        )}
-                        {budgetDebtMap[p.budgetId] > 0.01 && (
-                          <button
-                            onClick={() => onPayPending(p)}
-                            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1"
-                            title="Registrar abono"
-                          >
-                             Abonar
-                          </button>
-                        )}
-                        {userRoles.includes('Administrador') && (
-                          <button
-                            onClick={async () => {
-                              if (window.confirm("¿Estás 100% seguro de ELIMINAR este pago? Esta acción es irreversible y también borrará la factura asociada.")) {
-                                try {
-                                  await api.delete(`/api/payments/${p.id}`);
-                                  window.location.reload(); // Recarga simple para ver cambios
-                                } catch (err) {
-                                  alert("Error al eliminar el pago.");
-                                }
+                    <div className="flex gap-2">
+                      {canValidatePayment(p) && (
+                        <button
+                          onClick={() => handleOpenValidationModal(p)}
+                          title="Validar pago"
+                          className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
+                        >
+                          Validar
+                        </button>
+                      )}
+                      {p.status === "REJECTED" && (
+                        <button
+                          onClick={() => onResend(p.id)}
+                          className="px-2 py-1 bg-brand-primary text-white rounded-lg"
+                        >
+                          Reenviar
+                        </button>
+                      )}
+                      {budgetDebtMap[p.budgetId] > 0.01 && (
+                        <button
+                          onClick={() => onPayPending(p)}
+                          className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1"
+                          title="Registrar abono"
+                        >
+                          Abonar
+                        </button>
+                      )}
+                      {userRoles.includes('Administrador') && (
+                        <button
+                          onClick={async () => {
+                            if (window.confirm("¿Estás 100% seguro de ELIMINAR este pago? Esta acción es irreversible y también borrará la factura asociada.")) {
+                              try {
+                                await api.delete(`/api/payments/${p.id}`);
+                                window.location.reload(); // Recarga simple para ver cambios
+                              } catch (err) {
+                                alert("Error al eliminar el pago.");
                               }
-                            }}
-                            className="p-1 px-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                            title="ELIMINAR PAGO (Admin)"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
+                            }
+                          }}
+                          className="p-1 px-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          title="ELIMINAR PAGO (Admin)"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -257,9 +256,9 @@ const PaymentsList = ({
             <PaymentCard
               key={p.id}
               payment={p}
-              onOpenValidationModal={handleOpenValidationModal} // Pass function to open validation modal
+              onOpenValidationModal={handleOpenValidationModal} // Pasar función para abrir modal de validación
               onResend={onResend}
-              onDownloadReceipt={onDownloadReceipt} // Pass download receipt handler
+              onDownloadReceipt={onDownloadReceipt} // Pasar manejador de descarga de recibo
               onPayPending={onPayPending}
               budgetRemainingDebt={budgetDebtMap[p.budgetId]}
               canValidatePayment={canValidatePayment}

@@ -52,7 +52,7 @@ const AdminRolesPage = () => {
       setUsers(response.data);
       setError(null);
     } catch (err) {
-      console.error('Error fetching users:', err);
+      console.error('Error al obtener usuarios:', err);
       if (users.length === 0) {
         setError('No se pudieron cargar los usuarios. Asegúrate de tener permisos de administrador.');
       }
@@ -72,7 +72,7 @@ const AdminRolesPage = () => {
       const response = await api.get(`/api/audit?${params.toString()}`);
       setAuditLogs(response.data);
     } catch (err) {
-      console.error('Error fetching audit logs:', err);
+      console.error('Error al obtener registros de auditoría:', err);
     } finally {
       setLoadingLogs(false);
     }
@@ -93,7 +93,7 @@ const AdminRolesPage = () => {
       setSuccess('Rol actualizado correctamente.');
       fetchAuditLogs();
     } catch (err) {
-      console.error('Error updating role:', err);
+      console.error('Error al actualizar rol:', err);
       setError('Error al actualizar el rol.');
     } finally {
       setUpdating(null);
@@ -116,7 +116,7 @@ const AdminRolesPage = () => {
       setSuccess(`Usuario "${userName}" eliminado correctamente.`);
       fetchAuditLogs();
     } catch (err) {
-      console.error('Error deleting user:', err);
+      console.error('Error al eliminar usuario:', err);
       setError(err.response?.data?.error || 'Error al eliminar el usuario.');
     } finally {
       setUpdating(null);
@@ -136,7 +136,7 @@ const AdminRolesPage = () => {
       setEditingNameId(null);
       fetchAuditLogs();
     } catch (err) {
-      console.error('Error updating name:', err);
+      console.error('Error al actualizar nombre:', err);
       setError('Error al actualizar el nombre.');
     } finally {
       setUpdating(null);
@@ -231,7 +231,7 @@ const AdminRolesPage = () => {
         </div>
       )}
 
-      {/* User Table */}
+      {/* Tabla de Usuarios */}
       <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden mb-12">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
@@ -351,7 +351,7 @@ const AdminRolesPage = () => {
         </div>
       </div>
 
-      {/* Audit Log Table */}
+      {/* Tabla de Registros de Auditoría */}
       <div className="mt-12">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -375,7 +375,7 @@ const AdminRolesPage = () => {
           </div>
         </div>
 
-        {/* Filters Section */}
+        {/* Sección de Filtros */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-white dark:bg-dark-surface p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Acción</label>

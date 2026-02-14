@@ -83,7 +83,7 @@ export const getOperationalReports = async (params = {}) => {
   return response.data;
 };
 
-// Portfolio/Projects API
+// API de Portafolio/Proyectos
 export const getProjects = async () => {
   const response = await api.get("/api/projects");
   return response.data;

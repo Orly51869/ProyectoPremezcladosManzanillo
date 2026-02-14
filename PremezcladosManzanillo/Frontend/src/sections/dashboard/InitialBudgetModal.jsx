@@ -10,7 +10,7 @@ const InitialBudgetModal = ({ onSave, onCancel }) => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Fetch clients for the dropdown
+    // Obtener clientes para el desplegable
     const fetchClients = async () => {
       try {
         const response = await api.get('/api/clients');

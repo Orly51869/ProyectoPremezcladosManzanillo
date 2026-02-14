@@ -41,7 +41,7 @@ const PaymentsPage = () => {
       setBudgets(response.data);
     } catch (err) {
       console.error('Error al cargar presupuestos:', err);
-      // Don't set global error, as payments might still load
+      // No establecer error global, ya que los pagos podr\u00edan a\u00fan cargarse
     }
   }, []);
 
@@ -86,11 +86,11 @@ const PaymentsPage = () => {
 
   const handleRegisterPayment = async (formData) => { // Aceptar formData
     try {
-      // Backend validates budget status and amount
+      // El backend valida el estado del presupuesto y el monto
       await api.post('/api/payments', formData); // Enviar formData directamente
       setShowForm(false);
-      setInitialPaymentValues(null); // Reset initial values
-      fetchPayments(); // Refresh payments list
+      setInitialPaymentValues(null); // Reiniciar valores iniciales
+      fetchPayments(); // Actualizar lista de pagos
       alert("Pago registrado con éxito. Pendiente de validación.");
     } catch (err) {
       console.error('Error al registrar pago:', err);
@@ -102,7 +102,7 @@ const PaymentsPage = () => {
   const handleValidatePayment = async (paymentId, validationData) => {
     try {
       await api.put(`/api/payments/${paymentId}`, validationData);
-      fetchPayments(); // Refresh payments list
+      fetchPayments(); // Actualizar lista de pagos
       alert("Pago procesado con éxito.");
     } catch (err) {
       console.error('Error al validar pago:', err);
@@ -119,9 +119,9 @@ const PaymentsPage = () => {
   };
 
   const handleResendForValidation = async (paymentId) => {
-    // This functionality is not yet implemented in backend as a separate endpoint.
-    // For now, it could be a status update or a custom action.
-    // Placeholder for future implementation.
+    // Esta funcionalidad aún no está implementada en el backend como un endpoint separado.
+    // Por ahora, podría ser una actualización de estado o una acción personalizada.
+    // Marcador de posici\u00f3n para implementaci\u00f3n futura.
     alert(`Reenviar para validación ${paymentId} (funcionalidad pendiente de implementar)`);
   };
 

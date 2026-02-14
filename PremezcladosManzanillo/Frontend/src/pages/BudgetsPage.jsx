@@ -72,14 +72,14 @@ const BudgetsPage = () => {
       if (found) {
         setViewingBudget(found);
       } else {
-        // If not found (or not loaded yet), fetch specific budget
-        // This ensures the link works even if the list is empty or loading
+        // Si no se encuentra (o aún no se cargó), obtener el presupuesto específico
+        // Esto asegura que el enlace funcione aunque la lista esté vacía o cargando
         api.get(`/api/budgets/${paramId}`)
           .then(res => setViewingBudget(res.data))
-          .catch(err => console.error("Could not load linked budget:", err));
+          .catch(err => console.error("No se pudo cargar el presupuesto vinculado:", err));
       }
     } else if (!paramId) {
-      // If no ID in URL, close modal (user navigated back/cleared url)
+      // Si no hay ID en la URL, cerrar modal (el usuario navegó atrás/limpió la url)
       setViewingBudget(null);
     }
   }, [paramId, budgets]);
@@ -210,7 +210,7 @@ const BudgetsPage = () => {
 
   const handleCloseDetail = () => {
     setViewingBudget(null);
-    navigate('/budgets'); // Clear ID from URL
+    navigate('/budgets'); // Limpiar ID de la URL
   };
 
   if (loading) {

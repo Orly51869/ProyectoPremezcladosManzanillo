@@ -12,8 +12,8 @@ const formatDate = (value) => {
   try {
     const d = new Date(value);
     if (!isNaN(d)) {
-      // Use UTC to prevent timezone shifts (e.g. previous day)
-      const day = d.getUTCDate(); // numeric day
+      // Usar UTC para prevenir desplazamientos de zona horaria (ej. día anterior)
+      const day = d.getUTCDate(); // d\u00eda num\u00e9rico
       const month = d.toLocaleString('es-VE', { month: 'long', timeZone: 'UTC' });
       const year = d.getUTCFullYear();
       return `${day} de ${month} de ${year}`;
@@ -152,12 +152,12 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
     if (!hidePrices) {
       const igtfPercentage = parseFloat(settings?.company_igtf || "3") / 100;
 
-      // Extract logic for IVA from notes (saved as hack in BudgetForm)
+      // Extraer lógica de IVA de las notas (guardado como hack en BudgetForm)
       const ivaMatch = (budget.observations || "").match(/\[IVA_APLICADO:([\d.]+)%\]/);
       const appliedIvaRate = ivaMatch ? parseFloat(ivaMatch[1]) : 0;
       const appliedIvaPct = appliedIvaRate / 100;
 
-      // Calculate Subtotal (sum of items)
+      // Calcular Subtotal (suma de ítems)
       const calculatedSubtotal = rawItems.reduce((acc, item) => acc + (item.totalPrice || item.total || 0), 0);
 
       const totalsTableRows = [
@@ -166,25 +166,25 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
 
       let runningTotal = calculatedSubtotal;
 
-      // Add IVA row if applied
+      // Agregar fila de IVA si fue aplicado
       if (appliedIvaPct > 0) {
         const ivaAmount = calculatedSubtotal * appliedIvaPct;
         totalsTableRows.push([`IVA (${appliedIvaRate}%):`, formatPrice(ivaAmount)]);
         runningTotal += ivaAmount;
       }
 
-      // Add IGTF logic (if we assume IGTF is ON top of Total including IVA, or base? usually base in Venezuela but let's stick to base for now or standard practice)
-      // Actually user asked for IVA specifically.
-      // If payment is foreign currency, IGTF applies. Since this is budget, we might just show Total.
-      // Let's keep IGTF conditional to settings/payment context, but for Budget PDF often we just show the Total to pay.
-      // However, previous code had IGTF. I will leave IGTF logic as is, but applied to the running total if needed? 
-      // Usually IGTF is at PAYMENT time, not Budget time. But previous code had it. I will keep it simple: Just IVA for now as requested.
+      // Agregar lógica de IGTF (si asumimos que IGTF se aplica sobre el Total incluyendo IVA, o base? usualmente base en Venezuela pero mantengamos base por ahora o práctica estándar)
+      // En realidad el usuario pidió IVA específicamente.
+      // Si el pago es en moneda extranjera, IGTF aplica. Como esto es presupuesto, podríamos solo mostrar el Total.
+      // Mantengamos IGTF condicional al contexto de configuraciones/pago, pero para el PDF de Presupuesto usualmente solo mostramos el Total a pagar.
+      // Sin embargo, el código anterior tenía IGTF. Dejaré la lógica de IGTF como está, pero aplicada al total acumulado si es necesario?
+      // Usualmente IGTF es al momento del PAGO, no del Presupuesto. Pero el código anterior lo tenía. Lo mantendré simple: Solo IVA por ahora como fue solicitado.
 
       /* 
-         Previous code had IGTF logic based on settings. I will re-add it carefully:
-         If the budget pdf implies "This is what you pay in USD", IGTF might be relevant.
-         But usually budgets are Net + IVA. IGTF is a tax on payment transaction.
-         I'll stick to: Subtotal + IVA = Total.
+         El código anterior tenía lógica de IGTF basada en configuraciones. Lo re-agregaré cuidadosamente:
+         Si el PDF del presupuesto implica "Esto es lo que pagas en USD", IGTF podría ser relevante.
+         Pero usualmente los presupuestos son Neto + IVA. IGTF es un impuesto sobre la transacción de pago.
+         Me quedo con: Subtotal + IVA = Total.
       */
 
       totalsTableRows.push(['Total:', formatPrice(runningTotal)]);
@@ -215,7 +215,7 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
 
     y += 5;
 
-    // Notes
+    // Notas
     doc.setFontSize(9);
     doc.text("Notas:", 14, y);
     y += 5;
@@ -233,7 +233,7 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
     y += 4;
     doc.text("3. Favor hacer depósitos ó transferencia al Banco en la cuenta número", 14, y);
 
-    // Save the PDF
+    // Guardar el PDF
     doc.save(`presupuesto-${budget.folio || budget.id}.pdf`);
   };
 

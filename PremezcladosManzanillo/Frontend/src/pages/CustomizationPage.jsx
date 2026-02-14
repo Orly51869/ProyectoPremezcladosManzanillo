@@ -144,7 +144,7 @@ const CustomizationPage = () => {
     }
   };
 
-  // Handlers for Hero
+  // Manejadores para Hero
   const handleHeroImageUpload = async (index, file) => {
     setLoading(true);
     const url = await handleFileUpload(file);
@@ -257,7 +257,7 @@ const CustomizationPage = () => {
         </div>
       )}
 
-      {/* Tabs */}
+      {/* Pestañas */}
       <div className="flex space-x-1 bg-gray-100 dark:bg-dark-surface p-1 rounded-xl mb-8 w-fit">
         <button
           onClick={() => setActiveTab('hero')}
@@ -382,10 +382,10 @@ const CustomizationPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[...new Set(catalogConfig.map(c => c.category || "General"))].map((catName, idx) => {
-                // Check if we have a custom config for this category
+                // Verificar si tenemos una configuración personalizada para esta categoría
                 const existingConfig = productsConfig.find(p => (p.originalCategory === catName) || (p.title === catName));
 
-                // If not, create a derived one for display
+                // Si no, crear uno derivado para visualización
                 const catalogItems = catalogConfig.filter(p => (p.category || 'General') === catName);
                 const firstImg = catalogItems.find(p => p.imgSrc)?.imgSrc || "/assets/Concreto.png";
 
@@ -419,7 +419,7 @@ const CustomizationPage = () => {
                           if (index >= 0) {
                             newProds[index] = { ...newProds[index], title: newTitle };
                           } else {
-                            // Add new override
+                            // Agregar nueva sobreescritura
                             newProds.push({ ...displayProduct, title: newTitle, originalCategory: catName });
                           }
                           setProductsConfig(newProds);
@@ -654,31 +654,31 @@ const CustomizationPage = () => {
                                 const url = await handleFileUpload(e.target.files[0]);
                                 if (url) {
                                   const newLogs = [...catalogConfig];
-                                  // Find the correct index in the original array if needed, but here we are using the filtered/mapped index from the reduce. 
-                                  // Wait, the index passed in the map is 'idx'. 
-                                  // But `items` is a subset of `catalogConfig`.
-                                  // The `items` array contains objects like { product: prod, index: originalIndex }.
-                                  // So I should use `items[idx].index` to update the original `catalogConfig`.
+                                  // Encontrar el índice correcto en el array original si es necesario, pero aquí estamos usando el índice filtrado/mapeado del reduce. 
+                                  // Espera, el índice pasado en el map es 'idx'. 
+                                  // Pero `items` es un subconjunto de `catalogConfig`.
+                                  // El array `items` contiene objetos como { product: prod, index: originalIndex }.
+                                  // Entonces debería usar `items[idx].index` para actualizar el `catalogConfig` original.
 
-                                  // Ah, wait. The previous code usage:
+                                  // Ah, espera. El uso del código anterior:
                                   /*
                                   onChange={(e) => {
                                       const newLogs = [...catalogConfig];
-                                      newLogs[idx].imgSrc = url; // This looks suspicious in the original code!
+                                      newLogs[idx].imgSrc = url; // ¡Esto parece sospechoso en el código original!
                                       setCatalogConfig(newLogs);
                                     }}
                                   */
 
-                                  // Let's check how 'idx' is derived.
+                                  // Verifiquemos cómo se deriva 'idx'.
                                   // {items.map(({ product: prod, index: idx }) => (
 
-                                  // In the reduce: 
+                                  // En el reduce: 
                                   // acc[cat].push({ product, index }); 
-                                  // 'index' here is the index in the original catalogConfig array.
+                                  // 'index' aquí es el índice en el array original de catalogConfig.
 
-                                  // In the map:
+                                  // En el map:
                                   // items.map(({ product: prod, index: idx })
-                                  // So 'idx' IS the original index.
+                                  // Entonces 'idx' ES el índice original.
 
                                   newLogs[idx].technicalDatasheet = url;
                                   setCatalogConfig(newLogs);
@@ -797,7 +797,7 @@ const CustomizationPage = () => {
             <div className="bg-gray-50 dark:bg-dark-primary/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  {/* Title */}
+                  {/* Título */}
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título de la Sección</label>
                     <input
@@ -808,7 +808,7 @@ const CustomizationPage = () => {
                     />
                   </div>
 
-                  {/* Description */}
+                  {/* Descripción */}
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
                     <textarea
@@ -820,7 +820,7 @@ const CustomizationPage = () => {
                     <p className="text-xs text-gray-400 mt-1">Este texto aparecerá en la página principal.</p>
                   </div>
 
-                  {/* Button Text */}
+                  {/* Texto del Botón */}
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Texto del Botón</label>
                     <input
@@ -833,7 +833,7 @@ const CustomizationPage = () => {
                   </div>
                 </div>
 
-                {/* Left Side (Image) */}
+                {/* Lado Izquierdo (Imagen) */}
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagen Principal</label>
                   <div className="relative rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-800 aspect-[4/3] mb-3 group border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-brand-primary transition">
@@ -889,7 +889,7 @@ const CustomizationPage = () => {
             <div className="bg-gray-50 dark:bg-dark-primary/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  {/* Title */}
+                  {/* Título */}
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título de la Sección</label>
                     <input
@@ -900,7 +900,7 @@ const CustomizationPage = () => {
                     />
                   </div>
 
-                  {/* Description */}
+                  {/* Descripción */}
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
                     <textarea
@@ -912,7 +912,7 @@ const CustomizationPage = () => {
                     <p className="text-xs text-gray-400 mt-1">Este texto aparecerá en la página principal.</p>
                   </div>
 
-                  {/* Button Text */}
+                  {/* Texto del Botón */}
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Texto del Botón</label>
                     <input
@@ -925,7 +925,7 @@ const CustomizationPage = () => {
                   </div>
                 </div>
 
-                {/* Left Side (Image) */}
+                {/* Lado Izquierdo (Imagen) */}
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagen Principal</label>
                   <div className="relative rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-800 aspect-[4/3] mb-3 group border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-brand-primary transition">
