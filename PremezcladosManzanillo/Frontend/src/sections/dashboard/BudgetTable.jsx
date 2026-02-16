@@ -55,11 +55,12 @@ const BudgetTable = ({ budgets, onEdit, onDelete, onApprove, onReject, onViewDet
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${budget.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900' :
+                budget.status === 'PAID' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900' :
                   budget.status === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900' :
                     budget.status === 'EXPIRED' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900' :
                       'bg-yellow-100 text-yellow-800 dark:bg-yellow-900'
                 }`}>
-                {budget.status === 'EXPIRED' ? 'VENCIDO' : budget.status}
+                {budget.status === 'EXPIRED' ? 'VENCIDO' : (budget.status === 'PAID' ? 'PAGADO' : (budget.status === 'PENDING' ? 'PENDIENTE' : budget.status))}
               </span>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">

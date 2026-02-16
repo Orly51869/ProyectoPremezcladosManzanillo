@@ -126,21 +126,8 @@ const ClientsPage = () => {
 
   const canCreateClient = userRoles.includes('Administrador') || userRoles.includes('Comercial') || userRoles.includes('Usuario') || userRoles.includes('Contable');
 
-  if (loading) {
-    return (
-      <div className="w-full p-6 dark:bg-dark-primary text-center text-xl dark:text-white">
-        Cargando clientes...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="w-full p-6 dark:bg-dark-primary text-center text-xl text-red-500">
-        {error}
-      </div>
-    );
-  }
+  // if (loading) return ... (Moved inside layout)
+  // if (error) return ... (Moved inside layout)
 
   return (
     <div className="w-full p-6 dark:bg-dark-primary">
@@ -210,14 +197,34 @@ const ClientsPage = () => {
       )}
 
       {!showClientFormModal && (
-        <ClientList
-          clients={filteredClients}
-          viewMode={viewMode}
-          onEdit={handleOpenClientFormModal}
-          onDelete={handleDeleteClient}
-          userRoles={userRoles}
-          currentUserId={user?.sub}
-        />
+        <>
+          {loading ? (
+            <div className="flex flex-col justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary dark:border-green-400"></div>
+              <span className="mt-4 text-brand-primary dark:text-green-400 font-medium">Cargando clientes...</span>
+            </div>
+          ) : error ? (
+            <div className="p-8 text-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
+              <p className="font-bold text-lg mb-2">Error al cargar</p>
+              <p className="mb-4">{error}</p>
+              <button
+                onClick={fetchClients}
+                className="px-4 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg hover:bg-red-200 transition-colors"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : (
+            <ClientList
+              clients={filteredClients}
+              viewMode={viewMode}
+              onEdit={handleOpenClientFormModal}
+              onDelete={handleDeleteClient}
+              userRoles={userRoles}
+              currentUserId={user?.sub}
+            />
+          )}
+        </>
       )}
     </div>
   );

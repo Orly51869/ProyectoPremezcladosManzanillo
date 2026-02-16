@@ -213,14 +213,6 @@ const BudgetsPage = () => {
     navigate('/budgets'); // Limpiar ID de la URL
   };
 
-  if (loading) {
-    return <div className="p-6 text-center">Cargando presupuestos...</div>;
-  }
-
-  if (error) {
-    return <div className="p-6 text-center text-red-500">{error}</div>;
-  }
-
   return (
     <div className="w-full p-6 dark:bg-dark-primary">
       <div className="flex justify-between items-center mb-6">
@@ -306,18 +298,36 @@ const BudgetsPage = () => {
         </div>
       </div>
 
-      <BudgetList
-        budgets={filteredBudgets}
-        viewMode={viewMode}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onApprove={handleApproveBudget}
-        onReject={handleRejectBudget}
-        onViewDetail={handleViewDetail}
-        userRoles={userRoles}
-        currentUserId={user?.sub}
-        processingId={processingId}
-      />
+      {loading ? (
+        <div className="flex flex-col justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary dark:border-green-400"></div>
+          <span className="mt-4 text-brand-primary dark:text-green-400 font-medium">Cargando presupuestos...</span>
+        </div>
+      ) : error ? (
+        <div className="p-8 text-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
+          <p className="font-bold text-lg mb-2">Error al cargar</p>
+          <p className="mb-4">{error}</p>
+          <button
+            onClick={fetchBudgets}
+            className="px-4 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg hover:bg-red-200 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : (
+        <BudgetList
+          budgets={filteredBudgets}
+          viewMode={viewMode}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onApprove={handleApproveBudget}
+          onReject={handleRejectBudget}
+          onViewDetail={handleViewDetail}
+          userRoles={userRoles}
+          currentUserId={user?.sub}
+          processingId={processingId}
+        />
+      )}
 
       {isFormModalOpen && (
         <BudgetFormModal

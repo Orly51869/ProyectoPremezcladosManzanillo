@@ -182,13 +182,8 @@ const InvoicesPage = () => {
     }
   };
 
-  if (loading) {
-    return <div className="p-6 text-center dark:text-white">Cargando facturas...</div>;
-  }
-
-  if (error) {
-    return <div className="p-6 text-center text-red-500 dark:text-red-400">{error}</div>;
-  }
+  // if (loading) return ... (Moved inside layout)
+  // if (error) return ... (Moved inside layout)
 
   return (
     <div className="w-full p-6 dark:bg-dark-primary">
@@ -200,137 +195,155 @@ const InvoicesPage = () => {
 
       </div>
 
-      <div className="bg-white dark:bg-dark-primary rounded-2xl shadow-lg border border-brand-light dark:border-dark-surface mb-6">
-        {invoices.length === 0 ? (
-          <p className="text-center text-gray-500 dark:text-gray-300 p-6">No hay facturas disponibles.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-brand-light dark:divide-dark-surface">
-              <thead className="dark:bg-dark-surface">
-                <tr className="text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  <th scope="col" className="px-6 py-3">No. Factura</th>
-                  <th scope="col" className="px-6 py-3">Presupuesto</th>
-                  <th scope="col" className="px-6 py-3">Cliente</th>
-                  <th scope="col" className="px-6 py-3">Estado</th>
-                  <th scope="col" className="px-6 py-3">Generada</th>
-                  <th scope="col" className="px-6 py-3">Fiscal</th>
-                  <th scope="col" className="relative px-6 py-3"><span className="sr-only">Acciones</span></th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-dark-primary divide-y divide-brand-light dark:divide-dark-surface">
-                {invoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-gray-50 dark:hover:bg-dark-surface">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-primary dark:text-gray-100">
-                      {invoice.invoiceNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
-                      {invoice.payment?.budget?.title || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
-                      {invoice.payment?.budget?.client?.name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${invoice.status === 'FISCAL_ISSUED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                        }`}>
-                        {invoice.status === 'PROFORMA' ? 'Proforma' : 'Fiscal Emitida'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
-                      {format(new Date(invoice.proformaGeneratedAt), 'dd/MM/yyyy')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <InvoicePDF invoice={invoice} small={false} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex flex-col gap-1 items-end">
-                        {invoice.fiscalInvoiceUrl && (
-                          <div className="flex items-center gap-2 group">
-                            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500">Factura</span>
-                            <div className="flex gap-1">
-                              <a
-                                href={invoice.fiscalInvoiceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
-                                title="Ver Factura Fiscal"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </a>
-                              <a
-                                href={invoice.fiscalInvoiceUrl}
-                                download
-                                className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
-                                title="Descargar Factura Fiscal"
-                              >
-                                <Download className="w-4 h-4" />
-                              </a>
-                            </div>
-                          </div>
-                        )}
-                        {invoice.deliveryOrderUrl && (
-                          <div className="flex items-center gap-2 group">
-                            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500">Entrega</span>
-                            <div className="flex gap-1">
-                              <a
-                                href={invoice.deliveryOrderUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
-                                title="Ver Orden de Entrega"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </a>
-                              <a
-                                href={invoice.deliveryOrderUrl}
-                                download
-                                className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
-                                title="Descargar Orden de Entrega"
-                              >
-                                <Download className="w-4 h-4" />
-                              </a>
-                            </div>
-                          </div>
-                        )}
-                        {/* Opción para subir documentos para Admin/Contable - solo mostrar si el estado es PROFORMA o si faltan documentos */}
-                        <div className="flex gap-2 items-center mt-2">
-                          {canUploadDocuments && (invoice.status === 'PROFORMA' || !invoice.fiscalInvoiceUrl || !invoice.deliveryOrderUrl) && (
-                            <button
-                              onClick={() => handleOpenUploadModal(invoice)}
-                              className="text-brand-mid hover:text-brand-primary dark:text-green-400 dark:hover:text-green-300 transition-colors"
-                              title="Subir documentos"
-                            >
-                              <Upload className="w-5 h-5" />
-                            </button>
-                          )}
-                          {isAdminOrContable && (
-                            <button
-                              onClick={async () => {
-                                if (window.confirm("¿Estás seguro de eliminar esta factura? Solo el registro se borrará.")) {
-                                  try {
-                                    await api.delete(`/api/invoices/${invoice.id}`);
-                                    fetchInvoices();
-                                  } catch (err) {
-                                    alert("Error al eliminar la factura.");
-                                  }
-                                }
-                              }}
-                              className="text-red-500 hover:text-red-700 transition-colors p-1"
-                              title="Eliminar Factura (Admin)"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </td>
+      {loading ? (
+        <div className="flex flex-col justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary dark:border-green-400"></div>
+          <span className="mt-4 text-brand-primary dark:text-green-400 font-medium">Cargando facturas...</span>
+        </div>
+      ) : error ? (
+        <div className="p-8 text-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
+          <p className="font-bold text-lg mb-2">Error al cargar facturas</p>
+          <p className="mb-4">{error}</p>
+          <button
+            onClick={fetchInvoices}
+            className="px-4 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg hover:bg-red-200 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-dark-primary rounded-2xl shadow-lg border border-brand-light dark:border-dark-surface mb-6">
+          {invoices.length === 0 ? (
+            <p className="text-center text-gray-500 dark:text-gray-300 p-6">No hay facturas disponibles.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-brand-light dark:divide-dark-surface">
+                <thead className="dark:bg-dark-surface">
+                  <tr className="text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3">No. Factura</th>
+                    <th scope="col" className="px-6 py-3">Presupuesto</th>
+                    <th scope="col" className="px-6 py-3">Cliente</th>
+                    <th scope="col" className="px-6 py-3">Estado</th>
+                    <th scope="col" className="px-6 py-3">Generada</th>
+                    <th scope="col" className="px-6 py-3">Fiscal</th>
+                    <th scope="col" className="relative px-6 py-3"><span className="sr-only">Acciones</span></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody className="bg-white dark:bg-dark-primary divide-y divide-brand-light dark:divide-dark-surface">
+                  {invoices.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-gray-50 dark:hover:bg-dark-surface">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-primary dark:text-gray-100">
+                        {invoice.invoiceNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
+                        {invoice.payment?.budget?.title || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
+                        {invoice.payment?.budget?.client?.name || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${invoice.status === 'FISCAL_ISSUED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                          }`}>
+                          {invoice.status === 'PROFORMA' ? 'Proforma' : 'Fiscal Emitida'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text dark:text-gray-300">
+                        {format(new Date(invoice.proformaGeneratedAt), 'dd/MM/yyyy')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <InvoicePDF invoice={invoice} small={false} />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex flex-col gap-1 items-end">
+                          {invoice.fiscalInvoiceUrl && (
+                            <div className="flex items-center gap-2 group">
+                              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500">Factura</span>
+                              <div className="flex gap-1">
+                                <a
+                                  href={invoice.fiscalInvoiceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                                  title="Ver Factura Fiscal"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </a>
+                                <a
+                                  href={invoice.fiscalInvoiceUrl}
+                                  download
+                                  className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
+                                  title="Descargar Factura Fiscal"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </a>
+                              </div>
+                            </div>
+                          )}
+                          {invoice.deliveryOrderUrl && (
+                            <div className="flex items-center gap-2 group">
+                              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500">Entrega</span>
+                              <div className="flex gap-1">
+                                <a
+                                  href={invoice.deliveryOrderUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                                  title="Ver Orden de Entrega"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </a>
+                                <a
+                                  href={invoice.deliveryOrderUrl}
+                                  download
+                                  className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
+                                  title="Descargar Orden de Entrega"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </a>
+                              </div>
+                            </div>
+                          )}
+                          {/* Opción para subir documentos para Admin/Contable - solo mostrar si el estado es PROFORMA o si faltan documentos */}
+                          <div className="flex gap-2 items-center mt-2">
+                            {canUploadDocuments && (invoice.status === 'PROFORMA' || !invoice.fiscalInvoiceUrl || !invoice.deliveryOrderUrl) && (
+                              <button
+                                onClick={() => handleOpenUploadModal(invoice)}
+                                className="text-brand-mid hover:text-brand-primary dark:text-green-400 dark:hover:text-green-300 transition-colors"
+                                title="Subir documentos"
+                              >
+                                <Upload className="w-5 h-5" />
+                              </button>
+                            )}
+                            {isAdminOrContable && (
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm("¿Estás seguro de eliminar esta factura? Solo el registro se borrará.")) {
+                                    try {
+                                      await api.delete(`/api/invoices/${invoice.id}`);
+                                      fetchInvoices();
+                                    } catch (err) {
+                                      alert("Error al eliminar la factura.");
+                                    }
+                                  }
+                                }}
+                                className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                title="Eliminar Factura (Admin)"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Modal para subir documentos */}
       {showUploadModal && selectedInvoice && (

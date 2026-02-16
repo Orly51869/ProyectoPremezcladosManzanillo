@@ -125,13 +125,8 @@ const PaymentsPage = () => {
     alert(`Reenviar para validación ${paymentId} (funcionalidad pendiente de implementar)`);
   };
 
-  if (loading) {
-    return <div className="p-6 text-center">Cargando pagos...</div>;
-  }
-
-  if (error) {
-    return <div className="p-6 text-center text-red-500">{error}</div>;
-  }
+  // if (loading) return ... (Moved inside layout)
+  // if (error) return ... (Moved inside layout)
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -173,33 +168,53 @@ const PaymentsPage = () => {
         </div>
       </div>
 
-      {showForm && (
-        <div className="mb-6">
-          <PaymentForm
-            onCancel={() => setShowForm(false)}
-            onSubmit={handleRegisterPayment}
-            approvedBudgets={approvedBudgets}
-          />
+      {loading ? (
+        <div className="flex flex-col justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary dark:border-green-400"></div>
+          <span className="mt-4 text-brand-primary dark:text-green-400 font-medium">Cargando pagos...</span>
         </div>
-      )}
+      ) : error ? (
+        <div className="p-8 text-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
+          <p className="font-bold text-lg mb-2">Error al cargar pagos</p>
+          <p className="mb-4">{error}</p>
+          <button
+            onClick={() => { fetchPayments(); fetchBudgets(); }}
+            className="px-4 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg hover:bg-red-200 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : (
+        <>
+          {showForm && (
+            <div className="mb-6">
+              <PaymentForm
+                onCancel={() => setShowForm(false)}
+                onSubmit={handleRegisterPayment}
+                approvedBudgets={approvedBudgets}
+              />
+            </div>
+          )}
 
-      <PaymentsList
-        payments={filteredPayments}
-        viewMode={viewMode}
-        onValidate={handleValidatePayment}
-        onResend={handleResendForValidation}
-        onDownloadReceipt={handleDownloadReceipt}
-        onPayPending={handlePayPending}
-        userRoles={userRoles}
-        currentUserId={currentUserId}
-      />
+          <PaymentsList
+            payments={filteredPayments}
+            viewMode={viewMode}
+            onValidate={handleValidatePayment}
+            onResend={handleResendForValidation}
+            onDownloadReceipt={handleDownloadReceipt}
+            onPayPending={handlePayPending}
+            userRoles={userRoles}
+            currentUserId={currentUserId}
+          />
 
-      {receipt && (
-        <ReceiptModal
-          receipt={receipt}
-          onClose={() => setReceipt(null)}
-          onDownload={handleDownloadReceipt}
-        />
+          {receipt && (
+            <ReceiptModal
+              receipt={receipt}
+              onClose={() => setReceipt(null)}
+              onDownload={handleDownloadReceipt}
+            />
+          )}
+        </>
       )}
     </div>
   );

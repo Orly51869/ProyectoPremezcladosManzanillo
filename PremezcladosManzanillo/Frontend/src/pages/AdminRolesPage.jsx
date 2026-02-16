@@ -198,7 +198,7 @@ const AdminRolesPage = () => {
     document.body.removeChild(link);
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-600 dark:text-gray-300">Cargando usuarios...</div>;
+  // if (loading) return ... (Moved inside layout)
 
   return (
     <div className="w-full p-6 dark:bg-dark-primary min-h-screen">
@@ -233,122 +233,129 @@ const AdminRolesPage = () => {
 
       {/* Tabla de Usuarios */}
       <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden mb-12">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-            <thead className="bg-gray-50 dark:bg-dark-primary">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Usuario
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Email
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Rol Actual
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-dark-surface divide-y divide-gray-100 dark:divide-gray-800">
-              {users.map((u) => (
-                <tr key={u.user_id} className="hover:bg-gray-50 dark:hover:bg-dark-primary transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <UserAvatar user={u} />
+        {loading ? (
+          <div className="flex flex-col justify-center items-center h-48">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-primary dark:border-green-400"></div>
+            <span className="mt-3 text-sm text-gray-500 dark:text-gray-400">Cargando usuarios...</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+              <thead className="bg-gray-50 dark:bg-dark-primary">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Usuario
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Rol Actual
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-dark-surface divide-y divide-gray-100 dark:divide-gray-800">
+                {users.map((u) => (
+                  <tr key={u.user_id} className="hover:bg-gray-50 dark:hover:bg-dark-primary transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <UserAvatar user={u} />
+                        </div>
+                        <div className="ml-4 flex items-center gap-2">
+                          {editingNameId === u.user_id ? (
+                            <>
+                              <input
+                                type="text"
+                                value={newNameValue}
+                                onChange={(e) => setNewNameValue(e.target.value)}
+                                className="text-sm font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-dark-primary border-b border-brand-primary focus:outline-none px-1"
+                                autoFocus
+                              />
+                              <button onClick={() => handleUpdateName(u.user_id)} className="text-green-600 hover:text-green-700">
+                                <Check size={16} />
+                              </button>
+                              <button onClick={() => setEditingNameId(null)} className="text-red-600 hover:text-red-700">
+                                <X size={16} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-sm font-bold text-gray-900 dark:text-white">{u.name || 'Sin nombre'}</div>
+                              <button
+                                onClick={() => {
+                                  setEditingNameId(u.user_id);
+                                  setNewNameValue(u.name || '');
+                                }}
+                                className="text-gray-400 hover:text-brand-primary"
+                                title="Editar nombre"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <div className="ml-4 flex items-center gap-2">
-                        {editingNameId === u.user_id ? (
-                          <>
-                            <input
-                              type="text"
-                              value={newNameValue}
-                              onChange={(e) => setNewNameValue(e.target.value)}
-                              className="text-sm font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-dark-primary border-b border-brand-primary focus:outline-none px-1"
-                              autoFocus
-                            />
-                            <button onClick={() => handleUpdateName(u.user_id)} className="text-green-600 hover:text-green-700">
-                              <Check size={16} />
-                            </button>
-                            <button onClick={() => setEditingNameId(null)} className="text-red-600 hover:text-red-700">
-                              <X size={16} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <div className="text-sm font-bold text-gray-900 dark:text-white">{u.name || 'Sin nombre'}</div>
-                            <button
-                              onClick={() => {
-                                setEditingNameId(u.user_id);
-                                setNewNameValue(u.name || '');
-                              }}
-                              className="text-gray-400 hover:text-brand-primary"
-                              title="Editar nombre"
-                            >
-                              <Edit2 size={14} />
-                            </button>
-                          </>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{u.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${u.roles && u.roles.length > 0
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                        }`}>
+                        {u.roles && u.roles.length > 0 ? u.roles.join(', ') : 'Sin rol'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex items-center gap-3">
+                        <select
+                          disabled={updating === u.user_id}
+                          className="block w-full pl-3 pr-10 py-2 text-sm font-medium border-gray-200 focus:outline-none focus:ring-brand-primary focus:border-brand-primary rounded-lg dark:bg-dark-primary dark:border-gray-700 dark:text-white transition-shadow shadow-sm"
+                          value={u.roles && u.roles.length > 0 ? u.roles[0] : ''}
+                          onChange={(e) => {
+                            const newRole = e.target.value;
+                            if (window.confirm(`¿Estás seguro de asignar el rol ${newRole} a ${u.name}?`)) {
+                              handleRoleChange(u.user_id, newRole);
+                            }
+                          }}
+                        >
+                          <option value="" disabled>Seleccionar Rol</option>
+                          <option value="">Sin rol (Ninguno)</option>
+                          <option value="Administrador">Administrador</option>
+                          <option value="Contable">Contable</option>
+
+                          <option value="Comercial">Comercial</option>
+                          <option value="Usuario">Usuario</option>
+                        </select>
+
+                        <button
+                          onClick={() => handleDeleteUser(u.user_id, u.name)}
+                          disabled={updating === u.user_id || u.email === user.email}
+                          className={`p-2 rounded-lg transition-colors ${u.email === user.email
+                            ? 'text-gray-300 cursor-not-allowed'
+                            : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                            }`}
+                          title={u.email === user.email ? "No puedes eliminarte a ti mismo" : "Eliminar usuario definitivamente"}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+
+                        {updating === u.user_id && (
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-brand-primary border-t-transparent"></div>
                         )}
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{u.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${u.roles && u.roles.length > 0
-                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                      }`}>
-                      {u.roles && u.roles.length > 0 ? u.roles.join(', ') : 'Sin rol'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex items-center gap-3">
-                      <select
-                        disabled={updating === u.user_id}
-                        className="block w-full pl-3 pr-10 py-2 text-sm font-medium border-gray-200 focus:outline-none focus:ring-brand-primary focus:border-brand-primary rounded-lg dark:bg-dark-primary dark:border-gray-700 dark:text-white transition-shadow shadow-sm"
-                        value={u.roles && u.roles.length > 0 ? u.roles[0] : ''}
-                        onChange={(e) => {
-                          const newRole = e.target.value;
-                          if (window.confirm(`¿Estás seguro de asignar el rol ${newRole} a ${u.name}?`)) {
-                            handleRoleChange(u.user_id, newRole);
-                          }
-                        }}
-                      >
-                        <option value="" disabled>Seleccionar Rol</option>
-                        <option value="">Sin rol (Ninguno)</option>
-                        <option value="Administrador">Administrador</option>
-                        <option value="Contable">Contable</option>
-
-                        <option value="Comercial">Comercial</option>
-                        <option value="Usuario">Usuario</option>
-                      </select>
-
-                      <button
-                        onClick={() => handleDeleteUser(u.user_id, u.name)}
-                        disabled={updating === u.user_id || u.email === user.email}
-                        className={`p-2 rounded-lg transition-colors ${u.email === user.email
-                          ? 'text-gray-300 cursor-not-allowed'
-                          : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-                          }`}
-                        title={u.email === user.email ? "No puedes eliminarte a ti mismo" : "Eliminar usuario definitivamente"}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-
-                      {updating === u.user_id && (
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-brand-primary border-t-transparent"></div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Tabla de Registros de Auditoría */}

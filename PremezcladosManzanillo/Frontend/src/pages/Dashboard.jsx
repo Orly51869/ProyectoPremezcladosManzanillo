@@ -131,13 +131,8 @@ const Dashboard = () => {
   // Por ahora, se mantendrá estático o se removerá si no hay una fuente clara de datos.
   const growthPercent = 0; // Mantener estático o remover si no hay datos.
 
-  if (loading) {
-    return <div className="text-center py-8 dark:text-gray-200">Cargando datos del dashboard...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-8 text-red-600 dark:text-red-400">Error: {error}</div>;
-  }
+  // if (loading) return ... (Moved inside layout)
+  // if (error) return ... (Moved inside layout)
 
   return (
     <div className="min-h-screen">
@@ -156,244 +151,258 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto mb-6 sm:grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-dark-primary rounded-2xl p-4 shadow-soft border border-brand-light dark:border-dark-surface"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/50">
-                  <Users className="w-6 h-6 text-brand-dark dark:text-green-300" />
-                </div>
-                <div>
-                  <p className="text-sm text-brand-text dark:text-gray-300">Clientes</p>
-                  <p className="text-2xl font-bold text-brand-dark dark:text-gray-100">
-                    {totalClients}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div
-                  className={`inline-flex items-center gap-1 text-sm text-gray-500`}>
-                  <span>{growthPercent}%</span>
-                </div>
-                <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="bg-white dark:bg-dark-primary rounded-2xl p-4 shadow-soft border border-brand-light dark:border-dark-surface"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-yellow-100 dark:bg-yellow-900/50">
-                  <FileText className="w-6 h-6 text-yellow-700 dark:text-yellow-300" />
-                </div>
-                <div>
-                  <p className="text-sm text-brand-text dark:text-gray-300">Presupuestos</p>
-                  <p className="text-2xl font-bold text-brand-dark dark:text-gray-100">
-                    {totalBudgets}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="inline-flex items-center gap-1 text-sm text-gray-500">
-                  <span>+0%</span>
-                </div>
-                <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-dark-primary rounded-2xl p-4 shadow-soft border border-brand-light dark:border-dark-surface"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/50">
-                  <DollarSign className="w-6 h-6 text-brand-dark dark:text-green-300" />
-                </div>
-                <div>
-                  <p className="text-sm text-brand-text dark:text-gray-300">Ingresos</p>
-                  <p className="text-2xl font-bold text-brand-dark dark:text-gray-100">
-                    {formatCurrency(totalIncome)}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="inline-flex items-center gap-1 text-sm text-gray-500">
-                  <span>+0%</span>
-                </div>
-                <p className="text-xs text-brand-text dark:text-gray-400">crecimiento mensual</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="bg-white dark:bg-dark-primary rounded-2xl p-4 shadow-soft border border-brand-light dark:border-dark-surface"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/50">
-                  <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-300" />
-                </div>
-                <div>
-                  <p className="text-sm text-brand-text dark:text-gray-300">Pendientes</p>
-                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                    {formatCurrency(pending)}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="inline-flex items-center gap-1 text-sm text-gray-500">
-                  <span>-0%</span>
-                </div>
-                <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white dark:bg-dark-primary rounded-2xl p-4 sm:p-6 shadow-lg border border-brand-light dark:border-dark-surface order-1">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-brand-dark dark:text-gray-100">
-                Ingresos vs Pagos pendientes
-              </h3>
-              <div className="flex items-center gap-2">
-                <select
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                  className="px-3 py-2 border border-brand-light dark:border-dark-surface rounded-lg bg-white dark:bg-dark-surface dark:text-gray-200 text-sm"
-                >
-                  <option value="30d">Últimos 30 días</option>
-                  <option value="6m">Últimos 6 meses</option>
-                  <option value="ytd">Año actual</option>
-                </select>
-                <div className="text-sm text-brand-text dark:text-gray-300">
-                  ↑ {growthPercent}% respecto a mes anterior
-                </div>
-              </div>
-            </div>
-
-            <div className="min-h-[220px]">
-              <Line data={chartData} options={chartOptions} />
-            </div>
-
-            <div className="mt-6 bg-brand-light dark:bg-dark-surface/50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-brand-dark dark:text-gray-200 mb-3">
-                Resumen
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-3 bg-white dark:bg-dark-primary rounded-lg shadow-sm">
-                  <p className="text-xs text-brand-text dark:text-gray-400">
-                    Presupuestos aprobados
-                  </p>
-                  <p className="font-bold text-brand-dark dark:text-gray-100">
-                    {approvedBudgetsCount}
-                  </p>
-                </div>
-                <div className="p-3 bg-white dark:bg-dark-primary rounded-lg shadow-sm">
-                  <p className="text-xs text-brand-text dark:text-gray-400">Pagos recibidos</p>
-                  <p className="font-bold text-brand-dark dark:text-gray-100">
-                    {totalPaymentsCount}
-                  </p>
-                </div>
-                <div className="p-3 bg-white dark:bg-dark-primary rounded-lg shadow-sm w-full">
-                  <p className="text-xs text-brand-text dark:text-gray-400">Pendientes de Validar</p>
-                  <p className="font-bold text-brand-dark dark:text-gray-100">
-                    {pendingValidationCount}
-                  </p>
-                </div>
-              </div>
-            </div>
+        {loading ? (
+          <div className="flex flex-col justify-center items-center h-96">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary dark:border-green-400"></div>
+            <span className="mt-4 text-brand-primary dark:text-green-400">Cargando métricas...</span>
           </div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
+            <p className="font-bold">Error al cargar dashboard</p>
+            <p>{error}</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-4 overflow-x-auto mb-6 sm:grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-dark-primary rounded-2xl p-4 shadow-soft border border-brand-light dark:border-dark-surface"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/50">
+                      <Users className="w-6 h-6 text-brand-dark dark:text-green-300" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-brand-text dark:text-gray-300">Clientes</p>
+                      <p className="text-2xl font-bold text-brand-dark dark:text-gray-100">
+                        {totalClients}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div
+                      className={`inline-flex items-center gap-1 text-sm text-gray-500`}>
+                      <span>{growthPercent}%</span>
+                    </div>
+                    <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
+                  </div>
+                </div>
+              </motion.div>
 
-          <div className="bg-white dark:bg-dark-primary rounded-2xl p-4 sm:p-6 shadow-lg border border-brand-light dark:border-dark-surface order-2">
-            <h3 className="text-lg font-semibold text-brand-dark dark:text-gray-100 mb-3">
-              Alertas rápidas
-            </h3>
-            <ul className="space-y-3 mb-4">
-              <li className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-green-50 dark:bg-green-900/50 text-green-600 dark:text-green-400">
-                  <Check className="w-4 h-4" />
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 }}
+                className="bg-white dark:bg-dark-primary rounded-2xl p-4 shadow-soft border border-brand-light dark:border-dark-surface"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-lg bg-yellow-100 dark:bg-yellow-900/50">
+                      <FileText className="w-6 h-6 text-yellow-700 dark:text-yellow-300" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-brand-text dark:text-gray-300">Presupuestos</p>
+                      <p className="text-2xl font-bold text-brand-dark dark:text-gray-100">
+                        {totalBudgets}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="inline-flex items-center gap-1 text-sm text-gray-500">
+                      <span>+0%</span>
+                    </div>
+                    <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium dark:text-gray-200">
-                    {approvedBudgetsCount} presupuestos aprobados
-                  </p>
-                  <button
-                    onClick={() => navigate('/budgets?status=APPROVED')}
-                    className="text-xs text-brand-mid dark:text-green-400 mt-1 hover:underline focus:outline-none"
-                  >
-                    Ver detalle
-                  </button>
-                </div>
-              </li>
+              </motion.div>
 
-              <li className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-yellow-50 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400">
-                  <Clock className="w-4 h-4" />
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white dark:bg-dark-primary rounded-2xl p-4 shadow-soft border border-brand-light dark:border-dark-surface"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/50">
+                      <DollarSign className="w-6 h-6 text-brand-dark dark:text-green-300" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-brand-text dark:text-gray-300">Ingresos</p>
+                      <p className="text-2xl font-bold text-brand-dark dark:text-gray-100">
+                        {formatCurrency(totalIncome)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="inline-flex items-center gap-1 text-sm text-gray-500">
+                      <span>+0%</span>
+                    </div>
+                    <p className="text-xs text-brand-text dark:text-gray-400">crecimiento mensual</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium dark:text-gray-200">
-                    {upcomingBudgetsCount} presupuestos por vencer
-                  </p>
-                  <button
-                    onClick={() => navigate('/budgets?status=APPROVED')} // Idealmente filtrar por fecha
-                    className="text-xs text-brand-mid dark:text-green-400 mt-1 hover:underline focus:outline-none"
-                  >
-                    Ver detalle
-                  </button>
-                </div>
-              </li>
+              </motion.div>
 
-              <li className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400">
-                  <AlertTriangle className="w-4 h-4" />
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="bg-white dark:bg-dark-primary rounded-2xl p-4 shadow-soft border border-brand-light dark:border-dark-surface"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/50">
+                      <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-300" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-brand-text dark:text-gray-300">Pendientes</p>
+                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                        {formatCurrency(pending)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="inline-flex items-center gap-1 text-sm text-gray-500">
+                      <span>-0%</span>
+                    </div>
+                    <p className="text-xs text-brand-text dark:text-gray-400">vs mes anterior</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium dark:text-gray-200">
-                    {overdueBudgetsCount} presupuestos vencidos
-                  </p>
-                  <button
-                    onClick={() => navigate('/budgets?status=APPROVED')} // Idealmente filtrar por vencidos
-                    className="text-xs text-brand-mid dark:text-green-400 mt-1 hover:underline focus:outline-none"
-                  >
-                    Ver detalle
-                  </button>
-                </div>
-              </li>
-            </ul>
+              </motion.div>
+            </div>
 
-            <h4 className="text-md font-semibold text-brand-dark dark:text-gray-100 mb-3">
-              Actividad reciente
-            </h4>
-            <ul className="space-y-2 text-sm text-brand-text dark:text-gray-400">
-              {recentActivityList.length > 0 ? (
-                recentActivityList.map((activity, i) => (
-                  <li key={i} className="py-2 border-b border-brand-light/50 dark:border-dark-surface/50">
-                    {activity.text}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 bg-white dark:bg-dark-primary rounded-2xl p-4 sm:p-6 shadow-lg border border-brand-light dark:border-dark-surface order-1">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-brand-dark dark:text-gray-100">
+                    Ingresos vs Pagos pendientes
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={period}
+                      onChange={(e) => setPeriod(e.target.value)}
+                      className="px-3 py-2 border border-brand-light dark:border-dark-surface rounded-lg bg-white dark:bg-dark-surface dark:text-gray-200 text-sm"
+                    >
+                      <option value="30d">Últimos 30 días</option>
+                      <option value="6m">Últimos 6 meses</option>
+                      <option value="ytd">Año actual</option>
+                    </select>
+                    <div className="text-sm text-brand-text dark:text-gray-300">
+                      ↑ {growthPercent}% respecto a mes anterior
+                    </div>
+                  </div>
+                </div>
+
+                <div className="min-h-[220px]">
+                  <Line data={chartData} options={chartOptions} />
+                </div>
+
+                <div className="mt-6 bg-brand-light dark:bg-dark-surface/50 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-brand-dark dark:text-gray-200 mb-3">
+                    Resumen
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-3 bg-white dark:bg-dark-primary rounded-lg shadow-sm">
+                      <p className="text-xs text-brand-text dark:text-gray-400">
+                        Presupuestos aprobados
+                      </p>
+                      <p className="font-bold text-brand-dark dark:text-gray-100">
+                        {approvedBudgetsCount}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-white dark:bg-dark-primary rounded-lg shadow-sm">
+                      <p className="text-xs text-brand-text dark:text-gray-400">Pagos recibidos</p>
+                      <p className="font-bold text-brand-dark dark:text-gray-100">
+                        {totalPaymentsCount}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-white dark:bg-dark-primary rounded-lg shadow-sm w-full">
+                      <p className="text-xs text-brand-text dark:text-gray-400">Pendientes de Validar</p>
+                      <p className="font-bold text-brand-dark dark:text-gray-100">
+                        {pendingValidationCount}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-dark-primary rounded-2xl p-4 sm:p-6 shadow-lg border border-brand-light dark:border-dark-surface order-2">
+                <h3 className="text-lg font-semibold text-brand-dark dark:text-gray-100 mb-3">
+                  Alertas rápidas
+                </h3>
+                <ul className="space-y-3 mb-4">
+                  <li className="flex items-start gap-3">
+                    <div className="p-2 rounded-full bg-green-50 dark:bg-green-900/50 text-green-600 dark:text-green-400">
+                      <Check className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium dark:text-gray-200">
+                        {approvedBudgetsCount} presupuestos aprobados
+                      </p>
+                      <button
+                        onClick={() => navigate('/budgets?status=APPROVED')}
+                        className="text-xs text-brand-mid dark:text-green-400 mt-1 hover:underline focus:outline-none"
+                      >
+                        Ver detalle
+                      </button>
+                    </div>
                   </li>
-                ))
-              ) : (
-                <li className="py-2">No hay actividad reciente.</li>
-              )}
-            </ul>
-          </div>
-        </div>
+
+                  <li className="flex items-start gap-3">
+                    <div className="p-2 rounded-full bg-yellow-50 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium dark:text-gray-200">
+                        {upcomingBudgetsCount} presupuestos por vencer
+                      </p>
+                      <button
+                        onClick={() => navigate('/budgets?status=APPROVED')} // Idealmente filtrar por fecha
+                        className="text-xs text-brand-mid dark:text-green-400 mt-1 hover:underline focus:outline-none"
+                      >
+                        Ver detalle
+                      </button>
+                    </div>
+                  </li>
+
+                  <li className="flex items-start gap-3">
+                    <div className="p-2 rounded-full bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400">
+                      <AlertTriangle className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium dark:text-gray-200">
+                        {overdueBudgetsCount} presupuestos vencidos
+                      </p>
+                      <button
+                        onClick={() => navigate('/budgets?status=APPROVED')} // Idealmente filtrar por vencidos
+                        className="text-xs text-brand-mid dark:text-green-400 mt-1 hover:underline focus:outline-none"
+                      >
+                        Ver detalle
+                      </button>
+                    </div>
+                  </li>
+                </ul>
+
+                <h4 className="text-md font-semibold text-brand-dark dark:text-gray-100 mb-3">
+                  Actividad reciente
+                </h4>
+                <ul className="space-y-2 text-sm text-brand-text dark:text-gray-400">
+                  {recentActivityList.length > 0 ? (
+                    recentActivityList.map((activity, i) => (
+                      <li key={i} className="py-2 border-b border-brand-light/50 dark:border-dark-surface/50">
+                        {activity.text}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="py-2">No hay actividad reciente.</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

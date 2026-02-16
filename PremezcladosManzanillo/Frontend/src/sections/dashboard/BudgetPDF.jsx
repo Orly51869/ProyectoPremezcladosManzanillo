@@ -89,7 +89,7 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
     doc.text(`Ubiciación: ${budget.address || 'No especificada'}`, 18, y + 14);
     doc.text(`Tipo de Obra: ${budget.workType || 'No especificado'}`, 18, y + 19);
     doc.text(`Resistencia (f'c): ${budget.resistance || 'N/A'} kg/cm²`, 18, y + 24);
-    doc.text(`Tipo Concreto: ${budget.concreteType || 'N/A'}`, 100, y + 24);
+    doc.text(`Categoría: ${budget.concreteType || 'N/A'}`, 100, y + 24);
     doc.text(`Volumen Est.: ${budget.volume || 0} m³`, 18, y + 29);
     doc.text(`Fecha Colado: ${formatDate(budget.deliveryDate)}`, 100, y + 29);
 
@@ -237,16 +237,22 @@ const BudgetPDF = ({ budget, client, small = false, className = '' }) => {
     doc.save(`presupuesto-${budget.folio || budget.id}.pdf`);
   };
 
+  if (budget.status !== 'APPROVED' && budget.status !== 'PAID') return null;
+
+  const isPaid = budget.status === 'PAID';
+  const label = isPaid ? 'Descargar Presupuesto' : 'Generar Presupuesto';
+  const smallLabel = isPaid ? 'Descargar' : 'Generar';
+
   return (
     <div>
       <button
         onClick={generatePDF}
-        aria-label="Generar Presupuesto"
-        title="Generar Presupuesto"
+        aria-label={label}
+        title={label}
         className={`${small ? 'px-3 py-1 text-sm rounded-md' : 'px-4 py-2 text-base rounded-md'} bg-green-700 text-white hover:bg-green-600 flex items-center gap-2 ${className}`}
       >
         <Download className={`${small ? 'w-3 h-3' : 'w-5 h-5'}`} />
-        {small ? 'Generar' : 'Generar Presupuesto'}
+        {small ? smallLabel : label}
       </button>
     </div>
   );

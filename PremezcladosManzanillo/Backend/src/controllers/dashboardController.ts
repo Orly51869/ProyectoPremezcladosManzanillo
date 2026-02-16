@@ -81,10 +81,12 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
       };
     }
 
-    const validatedPayments = await prisma.payment.findMany({
-      where: incomeWhereClause,
+    // Optimized: Use aggregate instead of findMany + reduce
+    const incomeAgg = await prisma.payment.aggregate({
+      _sum: { paidAmount: true },
+      where: incomeWhereClause
     });
-    const totalIncome = validatedPayments.reduce((sum, p) => sum + p.paidAmount, 0);
+    const totalIncome = incomeAgg._sum.paidAmount || 0;
 
     // Calculate "Cuentas por Cobrar" (Accounts Receivable) based on Budgets in range
     // User request: "monto de los presupuesto aprobado que aun no han sido pagado"

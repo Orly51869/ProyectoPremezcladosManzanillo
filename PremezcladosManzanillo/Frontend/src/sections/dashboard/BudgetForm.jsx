@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
 import api from "../../utils/api";
 import { format } from "date-fns";
@@ -19,8 +19,8 @@ const calculateBusinessExpirationDate = (startDate, days) => {
   }
   return currentDate;
 };
-import ClientFormModal from "./ClientFormModal";
-import ProductCatalog from "./ProductCatalog";
+import BudgetPDF from './BudgetPDF';
+import ClientFormModal from './ClientFormModal';
 
 import { useSettings } from "../../context/SettingsContext"; // Importar Contexto
 
@@ -35,6 +35,7 @@ const BudgetForm = ({
 
   // Estado para datos obtenidos de la API
   const [clients, setClients] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [showClientFormModal, setShowClientFormModal] = useState(false);
   const [serverError, setServerError] = useState(null);
 
@@ -76,16 +77,58 @@ const BudgetForm = ({
 
   const fetchData = async () => {
     try {
-      const clientsRes = await api.get("/api/clients");
+      const [clientsRes, productsRes] = await Promise.all([
+        api.get("/api/clients"),
+        api.get("/api/products"),
+      ]);
       setClients(clientsRes.data);
+      setAllProducts(productsRes.data);
     } catch (error) {
-      console.error("Failed to fetch clients", error);
+      console.error("Failed to fetch data", error);
     }
   };
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Tipos de concreto dinámicos basados en las categorías de productos tipo CONCRETE
+  const concreteTypes = useMemo(() => {
+    const concreteProducts = allProducts.filter(p => p.type === 'CONCRETE');
+    const categoriesMap = new Map();
+    concreteProducts.forEach(p => {
+      const catName = p.category?.name || p.category || 'Sin Categoría';
+      if (!categoriesMap.has(catName)) {
+        categoriesMap.set(catName, catName);
+      }
+    });
+    // Convertir a array de opciones
+    const types = Array.from(categoriesMap.keys()).map(name => ({
+      value: name.toLowerCase().replace(/\s+/g, '_'),
+      label: name,
+      isPavement: name.toLowerCase().includes('pavimento'),
+    }));
+    return types.length > 0 ? types : [
+      { value: 'convencional', label: 'Convencional', isPavement: false },
+    ];
+  }, [allProducts]);
+
+  // Efecto para asegurar que el 'concreteType' seleccionado sea válido según los productos disponibles
+  useEffect(() => {
+    if (concreteTypes.length > 0) {
+      const currentTypeValid = concreteTypes.some(t => t.value === formState.concreteType);
+      if (!currentTypeValid) {
+        // Si el valor actual no es válido (ej: "convencional" pero cargaron "estructural"), seleccionar el primero disponible
+        setFormState(prev => ({ ...prev, concreteType: concreteTypes[0].value }));
+      }
+    }
+  }, [concreteTypes, formState.concreteType]);
+
+  // Detectar si el tipo seleccionado es un tipo de pavimento
+  const selectedTypeIsPavement = useMemo(() => {
+    const found = concreteTypes.find(t => t.value === formState.concreteType);
+    return found?.isPavement || false;
+  }, [concreteTypes, formState.concreteType]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -107,16 +150,19 @@ const BudgetForm = ({
 
     // Si selecciona tipo "Bombeable", se activa automáticamente el servicio de bomba
     if (name === "concreteType") {
-      if (value === "bombeable") {
+      // Detectar si el nuevo tipo es "bombeable" (por nombre de categoría)
+      if (value.toLowerCase().includes('bombeable') || value.toLowerCase().includes('bomba')) {
         updates.pumpRequired = "true";
       }
 
-      // Si cambia a Pavimento (MR), resetear resistencia a un valor de MR
-      if (value === "mr") {
+      // Detectar si el nuevo tipo es pavimento
+      const newType = concreteTypes.find(t => t.value === value);
+      const oldType = concreteTypes.find(t => t.value === formState.concreteType);
+      if (newType?.isPavement) {
         updates.resistance = "MR 40";
       }
       // Si deja de ser Pavimento, volver a una resistencia estándar
-      else if (formState.concreteType === 'mr' && value !== 'mr') {
+      else if (oldType?.isPavement && !newType?.isPavement) {
         updates.resistance = "150";
       }
     }
@@ -147,6 +193,152 @@ const BudgetForm = ({
       }
     });
   };
+
+  // --- AUTOMATIZACIÓN DE ÍTEMS ---
+  // Función helper para encontrar el producto del catálogo que coincida con la selección
+  const findMatchingProduct = (catValue, resistanceVal) => {
+    if (!catValue || !resistanceVal || allProducts.length === 0) return null;
+
+    // Normalizar valores de búsqueda
+    const normalizedCat = catValue.toLowerCase().replace(/\s+/g, '');
+    const normalizedRes = resistanceVal.toLowerCase().replace(/\s+/g, '');
+
+    // Función auxiliar para verificar si el nombre del producto coincide con la resistencia
+    const matchesResistance = (prod, resVal) => {
+      const name = prod.name.toLowerCase().replace(/\s+/g, '');
+      const res = resVal.toLowerCase().replace(/\s+/g, '');
+
+      // Coincidencia directa (ej: "250" en "concreto250")
+      if (name.includes(res)) return true;
+
+      // Lógica especial para Pavimentos (MR)
+      // Si buscamos "mr40", probar buscar solo "40" si el nombre tiene "pavi" o "vial"
+      if (res.includes('mr')) {
+        const numberPart = res.replace('mr', ''); // "40"
+        if (name.includes(numberPart) && (name.includes('pavi') || name.includes('vial'))) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // 1. Filtrar primero por categoría (Intentar ser específico)
+    const categoryCandidates = allProducts.filter(p => {
+      const pCat = (p.category?.name || p.category || '').toLowerCase().replace(/\s+/g, '');
+      return p.type === 'CONCRETE' && (pCat.includes(normalizedCat) || normalizedCat.includes(pCat));
+    });
+
+    let match = categoryCandidates.find(p => matchesResistance(p, resistanceVal));
+
+    // 2. FALLBACK: Si no hay match en la categoría, buscar en TODOS los concretos
+    // Esto es crucial si la categoría está mal etiquetada o no coincide exactamente
+    if (!match) {
+      const allConcretes = allProducts.filter(p => p.type === 'CONCRETE');
+      match = allConcretes.find(p => matchesResistance(p, resistanceVal));
+    }
+
+    return match;
+  };
+
+  // Efecto para sincronizar automáticamente el producto de concreto principal
+  useEffect(() => {
+    // Si no hay datos suficientes, no hacemos nada automágico
+    if (!formState.concreteType || !formState.resistance || !formState.volume) return;
+
+    const vol = parseFloat(formState.volume);
+    if (isNaN(vol) || vol <= 0) return;
+
+    const matchingProduct = findMatchingProduct(formState.concreteType, formState.resistance);
+
+    if (matchingProduct) {
+      setProductItems(prev => {
+        // Buscar si ya tenemos ESTE producto
+        const exists = prev.find(item => item.productId === matchingProduct.id);
+
+        // Buscar si tenemos OTRO producto de concreto (para reemplazarlo, ya que cambió la selección)
+        // Asumimos que es "otro" si tiene type CONCRETE o si su nombre incluye "Concreto"
+        const otherConcreteIndex = prev.findIndex(item =>
+          (item.name.toLowerCase().includes('concreto') || item.type === 'CONCRETE' || item.name.toLowerCase().includes('pavimento')) &&
+          item.productId !== matchingProduct.id
+        );
+
+        let newItems = [...prev];
+
+        if (exists) {
+          // Solo actualizamos cantidad si es diferente
+          if (exists.quantity !== vol) {
+            newItems = newItems.map(item =>
+              item.productId === matchingProduct.id ? { ...item, quantity: vol } : item
+            );
+          }
+          // Si había otro concreto diferente (ej: antes era 200, ahora 250), lo quitamos
+          if (otherConcreteIndex !== -1) {
+            newItems.splice(otherConcreteIndex, 1);
+          }
+        } else {
+          // No existe este producto exacto.
+          // Si existe OTRO concreto, lo REEMPLAZAMOS
+          if (otherConcreteIndex !== -1) {
+            newItems[otherConcreteIndex] = {
+              productId: matchingProduct.id,
+              name: matchingProduct.name,
+              quantity: vol,
+              unitPrice: matchingProduct.price,
+              type: matchingProduct.type
+            };
+          } else {
+            // Si no hay ninguno, lo agregamos
+            newItems.push({
+              productId: matchingProduct.id,
+              name: matchingProduct.name,
+              quantity: vol,
+              unitPrice: matchingProduct.price,
+              type: matchingProduct.type
+            });
+          }
+        }
+        return newItems;
+      });
+    }
+  }, [formState.concreteType, formState.resistance, formState.volume, allProducts]);
+
+  // Efecto para sincronizar Servicio de Bomba
+  useEffect(() => {
+    const vol = parseFloat(formState.volume);
+    const isValidVol = !isNaN(vol) && vol > 0;
+
+    // Buscar producto de bomba en el catálogo
+    const pumpProduct = allProducts.find(p =>
+      p.name.toLowerCase().includes('bombeo') || p.name.toLowerCase().includes('bomba')
+    );
+
+    if (!pumpProduct) return;
+
+    if (formState.pumpRequired === 'true' && isValidVol) {
+      setProductItems(prev => {
+        const exists = prev.find(p => p.productId === pumpProduct.id);
+        if (exists) {
+          // Actualizar cantidad si difiere
+          if (exists.quantity !== vol) {
+            return prev.map(p => p.productId === pumpProduct.id ? { ...p, quantity: vol } : p);
+          }
+          return prev;
+        } else {
+          // Agregar bomba
+          return [...prev, {
+            productId: pumpProduct.id,
+            name: pumpProduct.name,
+            quantity: vol,
+            unitPrice: pumpProduct.price,
+            type: pumpProduct.type
+          }];
+        }
+      });
+    } else if (formState.pumpRequired === 'false') {
+      // Remover bomba si existe Y fue agregada (podría ser manual, pero asumimos sync)
+      setProductItems(prev => prev.filter(p => p.productId !== pumpProduct.id));
+    }
+  }, [formState.pumpRequired, formState.volume, allProducts]);
 
   const handleUpdateQuantity = (productId, value) => {
     if (value === '') {
@@ -188,6 +380,27 @@ const BudgetForm = ({
     const subtotal = calculateSubtotal();
     return applyIva ? subtotal * (1 + ivaRate / 100) : subtotal;
   };
+
+  // Ordenar ítems para visualización: Concreto primero, luego Bomba, luego otros
+  const sortedProductItems = useMemo(() => {
+    return [...productItems].sort((a, b) => {
+      const isConcreteA = a.type === 'CONCRETE' || a.name.toLowerCase().includes('concreto') || a.name.toLowerCase().includes('pavimento') || a.name.toLowerCase().includes('pavi');
+      const isConcreteB = b.type === 'CONCRETE' || b.name.toLowerCase().includes('concreto') || b.name.toLowerCase().includes('pavimento') || b.name.toLowerCase().includes('pavi');
+
+      const isPumpA = a.name.toLowerCase().includes('bombeo') || a.name.toLowerCase().includes('bomba');
+      const isPumpB = b.name.toLowerCase().includes('bombeo') || b.name.toLowerCase().includes('bomba');
+
+      // 1. Concreto va PRIMERO
+      if (isConcreteA && !isConcreteB) return -1;
+      if (!isConcreteA && isConcreteB) return 1;
+
+      // 2. Bomba va SEGUNDO (después de concreto, antes de otros)
+      if (isPumpA && !isPumpB) return -1;
+      if (!isPumpA && isPumpB) return 1;
+
+      return 0;
+    });
+  }, [productItems]);
 
   const validate = () => {
     const err = {};
@@ -309,9 +522,9 @@ const BudgetForm = ({
   };
 
   return (
-    <div className="flex gap-6">
-      {/* Columna Izquierda: Formulario y Carrito */}
-      <div className="w-1/2 space-y-4">
+    <div className="w-full max-w-5xl mx-auto">
+      {/* Formulario completo */}
+      <div className="w-full space-y-4">
         <form className="space-y-4">
           {/* Campos del formulario */}
           {/* Sección 1: Datos del Proyecto */}
@@ -428,17 +641,18 @@ const BudgetForm = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo Concreto</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoría</label>
               <select
                 name="concreteType"
                 value={formState.concreteType}
                 onChange={handleFormChange}
                 className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
               >
-                <option value="convencional">Convencional</option>
-                <option value="bombeable">Bombeable</option>
-                <option value="mr">MR (Pavimento)</option>
-                <option value="fino">Fino</option>
+                {concreteTypes.map(ct => (
+                  <option key={ct.value} value={ct.value}>
+                    {ct.label}{ct.isPavement ? ' (Pavimento)' : ''}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -449,7 +663,7 @@ const BudgetForm = ({
                 onChange={handleFormChange}
                 className="mt-1 block w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-dark-surface px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200"
               >
-                {formState.concreteType === 'mr' ? (
+                {selectedTypeIsPavement ? (
                   <>
                     <option value="MR 40">MR 40</option>
                     <option value="MR 45">MR 45</option>
@@ -494,8 +708,8 @@ const BudgetForm = ({
                 name="pumpRequired"
                 value={formState.pumpRequired}
                 onChange={handleFormChange}
-                disabled={formState.concreteType === 'bombeable'}
-                className={`mt-1 block w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200 ${formState.concreteType === 'bombeable'
+                disabled={formState.concreteType.toLowerCase().includes('bombeable') || formState.concreteType.toLowerCase().includes('bomba')}
+                className={`mt-1 block w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-green-200 dark:text-gray-200 ${formState.concreteType.toLowerCase().includes('bombeable') || formState.concreteType.toLowerCase().includes('bomba')
                   ? 'bg-gray-100 dark:bg-dark-surface/50 border-gray-200 text-gray-500 cursor-not-allowed'
                   : 'bg-white dark:bg-dark-surface border-gray-200 dark:border-gray-600'
                   }`}
@@ -503,7 +717,7 @@ const BudgetForm = ({
                 <option value="false">No requiere</option>
                 <option value="true">Sí requiere</option>
               </select>
-              {formState.concreteType === 'bombeable' && (
+              {(formState.concreteType.toLowerCase().includes('bombeable') || formState.concreteType.toLowerCase().includes('bomba')) && (
                 <p className="text-[10px] text-gray-400 mt-1 italic">Requerido automáticamente por tipo de concreto.</p>
               )}
 
@@ -529,8 +743,7 @@ const BudgetForm = ({
         {/* Carrito de Productos - Tabla de Alta Densidad */}
         <div className="bg-gray-50 dark:bg-dark-primary/30 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-dark-surface flex justify-between items-center">
-            <h3 className="text-xs font-black text-brand-primary uppercase tracking-widest">Ítems del Presupuesto</h3>
-            <span className="text-[10px] font-bold text-gray-400">{productItems.length} productos</span>
+            <h3 className="text-xs font-black text-brand-primary uppercase tracking-widest">Resumen del Presupuesto</h3>
           </div>
 
           <div className="overflow-x-auto">
@@ -544,42 +757,53 @@ const BudgetForm = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {productItems.length === 0 ? (
+                {sortedProductItems.length === 0 ? (
                   <tr>
                     <td colSpan={canViewPrices ? 4 : 3} className="px-4 py-8 text-center text-[11px] text-gray-400 italic">
-                      No hay productos seleccionados. Usa el catálogo a la derecha.
+                      No hay productos seleccionados.
                     </td>
                   </tr>
                 ) : (
-                  productItems.map(item => (
-                    <tr key={item.productId} className="hover:bg-white dark:hover:bg-dark-surface/30 transition-colors group">
-                      <td className="px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200">
-                        {item.name}
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) => handleUpdateQuantity(item.productId, e.target.value)}
-                          className="w-full h-8 rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface text-center text-xs font-black text-brand-primary focus:ring-1 focus:ring-brand-primary"
-                        />
-                      </td>
-                      {canViewPrices && (
-                        <td className="px-2 py-2 text-right text-xs font-bold text-gray-500 dark:text-gray-400">
-                          ${item.unitPrice.toFixed(2)}
+                  sortedProductItems.map(item => {
+                    const isAutomated = item.type === 'CONCRETE' || item.name.toLowerCase().includes('bombeo') || item.name.toLowerCase().includes('bomba');
+                    return (
+                      <tr key={item.productId} className="hover:bg-white dark:hover:bg-dark-surface/30 transition-colors group">
+                        <td className="px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200">
+                          {item.name}
                         </td>
-                      )}
-                      <td className="px-4 py-2 text-right">
-                        <button
-                          onClick={() => handleRemoveItem(item.productId)}
-                          className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                        <td className="px-2 py-2">
+                          {isAutomated ? (
+                            <div className="w-full h-8 flex items-center justify-center text-xs font-black text-gray-500 dark:text-gray-400">
+                              {item.quantity}
+                            </div>
+                          ) : (
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateQuantity(item.productId, e.target.value)}
+                              className="w-full h-8 rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface text-center text-xs font-black text-brand-primary focus:ring-1 focus:ring-brand-primary"
+                            />
+                          )}
+                        </td>
+                        {canViewPrices && (
+                          <td className="px-2 py-2 text-right text-xs font-bold text-gray-500 dark:text-gray-400">
+                            ${item.unitPrice.toFixed(2)}
+                          </td>
+                        )}
+                        <td className="px-4 py-2 text-right">
+                          <button
+                            onClick={() => handleRemoveItem(item.productId)}
+                            className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all"
+                            disabled={isAutomated}
+                            title={isAutomated ? "Item automático (modificar volumen arriba)" : "Eliminar item"}
+                          >
+                            <Trash2 size={14} className={isAutomated ? "opacity-30" : ""} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -635,12 +859,7 @@ const BudgetForm = ({
             <button type="button" onClick={handleSubmit} className="px-6 py-2 rounded-lg text-white bg-brand-primary hover:bg-brand-mid">Guardar</button>
           </div>
         </div>
-      </div >
-
-      {/* Columna Derecha: Catálogo */}
-      < div className="w-1/2" >
-        <ProductCatalog onAddProduct={handleAddProduct} />
-      </div >
+      </div>
 
       {showClientFormModal && (
         <ClientFormModal
@@ -650,7 +869,7 @@ const BudgetForm = ({
           serverError={serverError}
         />
       )}
-    </div >
+    </div>
   );
 };
 

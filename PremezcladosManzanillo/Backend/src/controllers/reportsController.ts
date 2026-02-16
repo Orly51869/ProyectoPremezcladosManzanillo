@@ -35,43 +35,41 @@ export const getCommercialReports = async (req: AuthenticatedRequest, res: Respo
     }
 
     // A. Top Clientes (Filtered by budget date)
-    // Note: We want clients who have budgets in this period.
-    // Calculating totals ONLY for budgets in this period.
-    const topClients = await prisma.client.findMany({
+    // Correct approach using groupBy to find actual top clients by total amount
+    const topBudgetsByClient = await prisma.budget.groupBy({
+      by: ['clientId'],
       where: {
-        ...whereClause,
-        budgets: {
-          some: dateFilter // Only clients with budgets in this period
-        }
+        ...dateFilter, // Filter budgets by date
+        client: whereClause // Filter by client ownership
       },
-      include: {
-        _count: {
-          select: {
-            budgets: { where: dateFilter }
-          }
-        },
-        budgets: {
-          where: dateFilter, // Only include budgets in this period for sum
-          select: {
-            volume: true,
-            total: true
-          }
+      _sum: {
+        total: true,
+        volume: true
+      },
+      _count: {
+        id: true
+      },
+      orderBy: {
+        _sum: {
+          total: 'desc'
         }
       },
       take: 10
     });
 
-    const clientsData = topClients.map(c => {
-      const totalVolume = c.budgets.reduce((acc, b) => acc + (b.volume || 0), 0);
-      const totalAmount = c.budgets.reduce((acc, b) => acc + (b.total || 0), 0);
+    const clientsData = await Promise.all(topBudgetsByClient.map(async (item) => {
+      const client = await prisma.client.findUnique({
+        where: { id: item.clientId }
+      });
+
       return {
-        id: c.id,
-        name: c.name,
-        budgetCount: c._count.budgets,
-        totalVolume,
-        totalAmount
+        id: item.clientId,
+        name: client?.name || 'Cliente Desconocido',
+        budgetCount: item._count.id,
+        totalVolume: item._sum.volume || 0,
+        totalAmount: item._sum.total || 0
       };
-    }).sort((a, b) => b.totalAmount - a.totalAmount);
+    }));
 
     // B. Productos más vendidos
     const productSales = await prisma.budgetProduct.groupBy({

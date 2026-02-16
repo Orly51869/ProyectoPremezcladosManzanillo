@@ -101,10 +101,10 @@ const BudgetDetail = ({ budget, onClose = () => { }, userRoles = [], onApprove, 
                 <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Especificaciones del concreto</h4>
                 <div className="space-y-2">
                   <div><span className="font-medium">Resistencia (f’c):</span> {project.resistencia || <span className="text-gray-400 italic">No especificada</span>}</div>
-                  <div><span className="font-medium">Tipo de concreto:</span> {project.tipoConcreto || <span className="text-gray-400 italic">No especificado</span>}</div>
+                  <div><span className="font-medium">Categoría:</span> {project.tipoConcreto || <span className="text-gray-400 italic">No especificada</span>}</div>
                   <div><span className="font-medium">Volumen (m³):</span> {project.volumen !== '' ? project.volumen : <span className="text-gray-400 italic">—</span>}</div>
                   <div><span className="font-medium">Elemento a colar:</span> {project.elemento || <span className="text-gray-400 italic">No especificado</span>}</div>
-                  <div><span className="font-medium">Requiere bomba:</span> {project.requiereBomba || <span className="text-gray-400 italic">No especificado</span>}</div>
+                  <div><span className="font-medium">Servicio de Bomba:</span> {project.requiereBomba || <span className="text-gray-400 italic">No especificado</span>}</div>
                 </div>
               </div>
 
@@ -165,7 +165,7 @@ const BudgetDetail = ({ budget, onClose = () => { }, userRoles = [], onApprove, 
                 onClick={onClose} // Cerrar el modal al navegar
                 className="px-4 py-2 rounded-md bg-blue-600 text-white border border-blue-700 text-sm hover:bg-blue-700 transition duration-150 flex items-center gap-1"
               >
-                <DollarSign size={16} /> Ver/Registrar Pagos
+                <DollarSign size={16} /> Registrar Pago
               </Link>
             )}
             <BudgetPDF budget={budget} client={budget.client} className="ml-1" />

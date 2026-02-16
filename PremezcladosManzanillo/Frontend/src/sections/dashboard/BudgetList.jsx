@@ -15,6 +15,7 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
 
   const canEditOrDeleteBudget = (budget) => {
+    if (budget.status === 'PAID') return false;
     // Admin y Comercial siempre pueden editar/eliminar
     if (userRoles.includes('Administrador') || userRoles.includes('Comercial')) return true;
 
@@ -97,10 +98,11 @@ const BudgetList = ({ budgets = [], viewMode, onEdit, onDelete, onApprove, onRej
                       <div className="flex justify-between items-start">
                         <h4 className="text-lg font-semibold text-brand-primary dark:text-gray-100 mb-1 pr-2">{budget.title}</h4>
                         <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${budget.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900' :
-                          budget.status === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900' :
-                            budget.status === 'EXPIRED' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900' :
-                              'bg-yellow-100 text-yellow-800 dark:bg-yellow-900'
-                          }`}>{budget.status === 'EXPIRED' ? 'VENCIDO' : budget.status}</span>
+                          budget.status === 'PAID' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900' :
+                            budget.status === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900' :
+                              budget.status === 'EXPIRED' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900' :
+                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900'
+                          }`}>{budget.status === 'EXPIRED' ? 'VENCIDO' : (budget.status === 'PAID' ? 'PAGADO' : (budget.status === 'PENDING' ? 'PENDIENTE' : budget.status))}</span>
                       </div>
                       <p className="text-sm text-brand-text dark:text-gray-400">{format(new Date(budget.createdAt), 'dd/MM/yyyy')}</p>
                       {budget.processedBy && (

@@ -105,31 +105,37 @@ const Reports = () => {
   };
 
   useEffect(() => {
-    const fetchAllData = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
         const params = getDateParams();
 
-        // Si personalizado está seleccionado pero faltan fechas, no obtener o obtener todo?
+        // Validar fechas personalizadas
         if (dateRange === 'custom' && (!customDates.start || !customDates.end)) {
           setLoading(false);
           return;
         }
 
-        const [gen, com, acc] = await Promise.all([
-          getDashboardStats(params),
-          getCommercialReports(params),
-          getAccountingReports(params)
-        ]);
-        setData({ general: gen, commercial: com, accounting: acc });
+        if (activeTab === 'comercial') {
+          const com = await getCommercialReports(params);
+          setData(prev => ({ ...prev, commercial: com }));
+        } else if (activeTab === 'contabilidad') {
+          const acc = await getAccountingReports(params);
+          setData(prev => ({ ...prev, accounting: acc }));
+        }
+
+        // Obtenemos estadísticas generales en segundo plano o bajo demanda para no bloquear
+        // (Optimización: Se eliminó la llamada a getDashboardStats del bloqueante)
+
       } catch (err) {
         console.error("Error fetching reports data:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchAllData();
-  }, [dateRange, customDates]);
+
+    fetchData();
+  }, [activeTab, dateRange, customDates]); // Agregado activeTab a dependencias
 
   const rangeLabels = {
     all: 'Todo el Historial',
@@ -140,23 +146,32 @@ const Reports = () => {
     custom: 'Rango Personalizado'
   };
 
-  const handleExport = (format) => {
+  const handleExport = async (format) => {
     alert(`Generando reporte ${format.toUpperCase()}...`);
     if (format === 'pdf') {
-      let specificData = null;
-      if (activeTab === 'comercial') specificData = data.commercial;
-      else if (activeTab === 'contabilidad') specificData = data.accounting;
+      try {
+        let specificData = null;
+        if (activeTab === 'comercial') specificData = data.commercial;
+        else if (activeTab === 'contabilidad') specificData = data.accounting;
 
-      let dateText = rangeLabels[dateRange] || dateRange;
-      if (dateRange === 'custom' && customDates.start && customDates.end) {
-        dateText = `${customDates.start} al ${customDates.end}`;
+        // Fetch general stats on demand if not present (or always for fresh data)
+        const params = getDateParams();
+        const generalStats = await getDashboardStats(params);
+
+        let dateText = rangeLabels[dateRange] || dateRange;
+        if (dateRange === 'custom' && customDates.start && customDates.end) {
+          dateText = `${customDates.start} al ${customDates.end}`;
+        }
+
+        generateReportPDF(specificData, generalStats, activeTab, user?.name || 'Usuario', dateText);
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+        alert("Error al generar el PDF. Intente nuevamente.");
       }
-
-      generateReportPDF(specificData, data.general, activeTab, user?.name || 'Usuario', dateText);
     }
   };
 
-  if (loading) return <div className="text-center py-12 dark:text-gray-300">Construyendo análisis detallado...</div>;
+  // if (loading) return ... (Moved inside layout)
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -237,19 +252,26 @@ const Reports = () => {
         )}
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-        >
-          {activeTab === 'comercial' && canViewCommercial && <CommercialView data={data.commercial} />}
-          {activeTab === 'contabilidad' && canViewAccounting && <AccountingView data={data.accounting} />}
+      {loading ? (
+        <div className="flex flex-col justify-center items-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary dark:border-green-400"></div>
+          <span className="mt-4 text-brand-primary dark:text-green-400 font-medium">Actualizando análisis...</span>
+        </div>
+      ) : (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {activeTab === 'comercial' && canViewCommercial && <CommercialView data={data.commercial} />}
+            {activeTab === 'contabilidad' && canViewAccounting && <AccountingView data={data.accounting} />}
 
-        </motion.div>
-      </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
+      )}
     </div>
   );
 };
