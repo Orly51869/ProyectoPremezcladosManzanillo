@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import api from '../utils/api';
+import { useRealtimeEvents } from '../hooks/useRealtimeEvents';
 import { UserCog, ShieldAlert, Trash2, FileDown, Edit2, Check, X } from 'lucide-react';
 
 const UserAvatar = ({ user }) => {
@@ -40,24 +41,52 @@ const AdminRolesPage = () => {
   const [editingNameId, setEditingNameId] = useState(null);
   const [newNameValue, setNewNameValue] = useState('');
 
+  // ⚡ HANDLER PARA EVENTOS EN TIEMPO REAL (SSE)
+  const handleRealtimeEvent = useCallback((event) => {
+    console.log('[⚡ Realtime Update] Recibido:', event.type);
+
+    if (event.type === 'role_updated' || event.type === 'user_updated') {
+      // Refrescar datos instantáneamente cuando llega notificación
+      console.log('[⚡ Realtime Update] Actualizando usuarios...');
+      fetchUsers(true); // Silent refresh
+    }
+  }, []);
+
+  // ⚡ CONECTAR A EVENTOS SSE EN TIEMPO REAL
+  useRealtimeEvents(handleRealtimeEvent);
+
   useEffect(() => {
     fetchUsers();
     fetchAuditLogs();
+
+    // LIVE MODE: Refrescar automáticamente cada 5 segundos
+    // Esto da la sensación de "Tiempo Real" sin saturar la red (Polling inteligente)
+    const intervalId = setInterval(() => {
+      // Solo refrescamos usuarios, la auditoría requiere más carga
+      if (!document.hidden) { // Solo si la pestaña está visible
+        fetchUsers(true); // true para indicar que es silencioso (sin spinner global)
+      }
+    }, 2000); // ⚡ Actualizar cada 2 segundos - Modo ultra-rápido
+
+    return () => clearInterval(intervalId);
   }, [filters]);
 
-  const fetchUsers = async () => {
+
+
+  const fetchUsers = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      setError(null);
       const response = await api.get('/api/users');
       setUsers(response.data);
-      setError(null);
+      if (!silent) setError(null);
     } catch (err) {
       console.error('Error al obtener usuarios:', err);
-      if (users.length === 0) {
+      if (users.length === 0 && !silent) {
         setError('No se pudieron cargar los usuarios. Asegúrate de tener permisos de administrador.');
       }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -84,17 +113,28 @@ const AdminRolesPage = () => {
       setError(null);
       setSuccess(null);
 
-      const roles = [newRole];
-      await api.put(`/api/users/${userId}/roles`, { roles });
-
+      // 1. Optimistic Update (Cambio Instantáneo Visual)
       setUsers(prevUsers => prevUsers.map(u =>
         u.user_id === userId ? { ...u, roles: [newRole] } : u
       ));
-      setSuccess('Rol actualizado correctamente.');
+
+      // 2. Llamada al Backend
+      const roles = [newRole];
+      await api.put(`/api/users/${userId}/roles`, { roles });
+
+      setSuccess(`Rol actualizado a "${newRole}" correctamente.`);
+
+      // 3. ⚡ FETCH INMEDIATO con bypass de caché para reflejar el cambio instantáneamente
+      // Forzamos ?refresh=true para que el backend ignore su caché y obtenga datos frescos de Auth0
+      const response = await api.get('/api/users?refresh=true');
+      setUsers(response.data);
       fetchAuditLogs();
+
     } catch (err) {
       console.error('Error al actualizar rol:', err);
-      setError('Error al actualizar el rol.');
+      setError('Error al actualizar el rol. Por favor recarga la página.');
+      // Revertir cambio optimista si falla
+      fetchUsers();
     } finally {
       setUpdating(null);
     }
@@ -207,15 +247,19 @@ const AdminRolesPage = () => {
           <UserCog className="w-8 h-8 text-brand-primary dark:text-green-400" />
         </div>
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-          Gestión de Usuarios y Roles
+          Gestión de Usuarios y Roles <span className="text-lg text-gray-500 font-medium">({users.length})</span>
         </h1>
-        <button
-          onClick={exportUsersCSV}
-          className="ml-auto flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-primary transition-all shadow-sm"
-        >
-          <FileDown className="w-4 h-4 text-brand-primary" />
-          Reporte de Usuarios
-        </button>
+        <div className="ml-auto flex gap-3">
+
+
+          <button
+            onClick={exportUsersCSV}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-primary transition-all shadow-sm"
+          >
+            <FileDown className="w-4 h-4 text-brand-primary" />
+            Reporte de Usuarios
+          </button>
+        </div>
       </div>
 
       {error && (

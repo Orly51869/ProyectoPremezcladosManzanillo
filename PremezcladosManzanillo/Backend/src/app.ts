@@ -59,6 +59,17 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/projects', projectsRouter);
 app.use('/api/currency', currencyRoutes);
 
+// ⚡ Rutas de Tiempo Real (SSE + Webhooks)
+import { streamUserEvents } from './controllers/eventsController';
+import { handleAuth0Webhook, webhookHealth } from './controllers/webhookController';
+
+// SSE: Stream de eventos en tiempo real (Frontend escucha aquí)
+app.get('/api/events/users', streamUserEvents);
+
+// Webhook: Auth0 envía notificaciones aquí
+app.post('/api/webhooks/auth0', handleAuth0Webhook);
+app.get('/api/webhooks/auth0/health', webhookHealth);
+
 app.get('/', (req, res) => {
   res.send('Backend is running!');
 });
